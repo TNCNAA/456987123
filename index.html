@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간호사 임상 통합 시스템</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #334155;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --danger: #ef4444;
+            --pink-btn: #ec4899;
+            --pink-btn-hover: #db2777;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --highlight-bg: #fef08a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: #0f172a;
+            padding: 10px;
+            line-height: 1.35;
+        }
+
+        .container { max-width: 1550px; margin: 0 auto; }
+
+        /* 상단 파란색 책갈피(Tab) 스타일 헤더 */
+        .tab-header-wrapper {
+            background: linear-gradient(135deg, #0284c7, #0f172a);
+            padding: 10px 14px 0 14px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-title-area h1 { color: white; font-size: 1.1rem; margin-bottom: 0; }
+
+        .bookmark-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tab-btn {
+            background: #0369a1;
+            color: rgba(255,255,255,0.75);
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { background: #0284c7; color: white; }
+        .tab-btn.active { background: var(--card-bg); color: var(--primary-dark); border-top: 3px solid var(--primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 레이아웃 */
+        .top-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .input-section {
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .patient-sidebar {
+            background: var(--card-bg);
+            border: 2px solid #94a3b8;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            max-height: 340px;
+        }
+
+        .sidebar-header {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        .saved-patient-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .patient-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .patient-list-item:hover { background: #e0f2fe; }
+
+        .patient-info-click { cursor: pointer; flex: 1; display: flex; justify-content: space-between; align-items: center; padding-right: 6px; }
+        .patient-name-txt { font-weight: bold; color: var(--primary-dark); }
+        .patient-date-txt { font-size: 0.72rem; color: #64748b; }
+
+        .delete-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9rem; padding: 2px 4px; }
+        .delete-btn:hover { color: var(--danger); background: #fee2e2; }
+
+        .input-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .input-title { font-size: 1rem; font-weight: bold; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
+        .pt-name-group { display: flex; align-items: center; gap: 6px; }
+        .pt-name-group label { font-size: 0.82rem; font-weight: bold; color: var(--secondary); }
+        .pt-name-group input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; width: 140px; }
+
+        .btn-group-top { display: flex; gap: 6px; }
+        .btn-pink { background: var(--pink-btn); color: white; border: none; padding: 6px 12px; font-size: 0.85rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-pink:hover { background: var(--pink-btn-hover); }
+        .btn-save { background: #10b981; color: white; border: none; padding: 6px 12px; font-size: 0.85rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-save:hover { background: #059669; }
+        .btn-red { background: var(--danger); color: white; border: none; padding: 6px 10px; font-size: 0.85rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+
+        .group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px;
+        }
+
+        .input-card-group {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 8px 10px;
+            border-top: 3px solid var(--primary);
+        }
+
+        .input-card-group h3 { font-size: 0.82rem; color: var(--secondary); margin-bottom: 6px; }
+        .input-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        
+        .input-group { 
+            flex: 1; 
+            min-width: 85px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .input-group label { font-size: 0.68rem; font-weight: 600; color: var(--secondary); margin-bottom: 2px; white-space: nowrap; }
+        .input-group input { 
+            padding: 3px 4px; 
+            border: 1px solid var(--border); 
+            border-radius: 3px; 
+            font-size: 0.78rem; 
+            color: #334155;
+            background: #ffffff; 
+            height: 26px; 
+            width: 100%; 
+        }
+        .input-group input::placeholder {
+            color: #94a3b8;
+            font-size: 0.72rem;
+        }
+
+        /* 메인 결과 그리드 */
+        .main-result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .col-left, .col-right { display: flex; flex-direction: column; gap: 12px; }
+
+        .result-box-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .box-results { border-color: var(--secondary); }
+        .box-noti { background: #fff5f5; border-color: var(--danger); }
+        .box-patient-check { border-color: var(--warning); background: #fffbeb; }
+        .box-treatment { border-color: var(--success); background: #f0fdf4; }
+
+        .box-header {
+            font-size: 0.95rem;
+            font-weight: bold;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .box-results .box-header { color: var(--secondary); }
+        .box-noti .box-header { color: var(--danger); }
+        .box-patient-check .box-header { color: #b45309; }
+        .box-treatment .box-header { color: #15803d; }
+
+        .result-item { background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 5px; margin-bottom: 6px; }
+        .result-item-title { font-size: 0.78rem; color: #64748b; font-weight: 600; }
+        .result-item-val { font-size: 1.02rem; font-weight: bold; color: #0f172a; margin: 2px 0; }
+
+        .badge { display: inline-block; font-size: 0.68rem; padding: 1px 5px; border-radius: 3px; font-weight: bold; color: white; }
+        .badge-normal { background-color: var(--success); }
+        .badge-warning { background-color: var(--warning); color: #0f172a; }
+        .badge-danger { background-color: var(--danger); }
+
+        .work-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); min-height: 400px; }
+        .work-card h2 { font-size: 1.2rem; color: var(--primary-dark); margin-bottom: 12px; border-bottom: 2px solid #e0f2fe; padding-bottom: 6px; }
+        .work-card p { font-size: 0.9rem; color: var(--secondary); margin-bottom: 10px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .ext-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .ext-card h3 { font-size: 1rem; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 2px solid #e0f2fe; padding-bottom: 5px; }
+        .ext-group { margin-bottom: 10px; }
+        .ext-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--secondary); margin-bottom: 3px; }
+        .ext-group input, .ext-group select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
+        .ext-btn { background: var(--primary); color: white; border: none; padding: 8px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
+        .ext-btn:hover { background: var(--primary-dark); }
+        .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; white-space: pre-line; }
+
+        .guide-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-top: 15px; }
+        .guide-section h2 { font-size: 0.95rem; color: var(--secondary); border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px; }
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        .ref-table th, .ref-table td { border: 1px solid var(--border); padding: 4px 6px; text-align: left; }
+        .ref-table th { background-color: #f1f5f9; color: var(--secondary); font-weight: bold; }
+
+        @media (max-width: 1024px) {
+            .top-wrapper { grid-template-columns: 1fr; }
+            .main-result-grid { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 상단 파란색 책갈피 헤더 -->
+    <div class="tab-header-wrapper">
+        <div class="tab-title-area">
+            <h1>🩺 임상 업무 통합 시스템</h1>
+        </div>
+        <div class="bookmark-tabs">
+            <button class="tab-btn active" onclick="switchTab('basic')">기본</button>
+            <button class="tab-btn" onclick="switchTab('extended')">확장</button>
+            <button class="tab-btn" onclick="switchTab('work_d')">D근무</button>
+            <button class="tab-btn" onclick="switchTab('work_e')">E근무</button>
+            <button class="tab-btn" onclick="switchTab('work_n')">N근무</button>
+            <button class="tab-btn" onclick="switchTab('work_dressing')">드레싱</button>
+            <button class="tab-btn" onclick="switchTab('work_empty1')">무제1</button>
+            <button class="tab-btn" onclick="switchTab('work_empty2')">무제2</button>
+        </div>
+    </div>
+
+    <!-- [TAB 1] 기본 분석기 -->
+    <div id="tab_basic" class="tab-content active">
+        <div class="top-wrapper">
+            <!-- 좌측 입력칸 -->
+            <div class="input-section">
+                <div class="input-header-row">
+                    <div class="input-title">
+                        <span>📝 수치 입력칸</span>
+                        <div class="pt-name-group">
+                            <label for="i_pt_name">환자명/번호:</label>
+                            <input type="text" id="i_pt_name" placeholder="예: 홍길동">
+                        </div>
+                    </div>
+                    <div class="btn-group-top">
+                        <button class="btn-pink" onclick="runAnalysis()">⚡ 자동 분석</button>
+                        <button class="btn-save" onclick="saveCurrentAnalysis()">💾 저장</button>
+                        <button class="btn-red" onclick="resetForm()">🔄 초기화</button>
+                    </div>
+                </div>
+                
+                <div class="group-grid">
+                    <div class="input-card-group">
+                        <h3>1. 간 손상 & 응고계</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_ast">AST</label><input type="number" id="i_ast" placeholder="7~38"></div>
+                            <div class="input-group"><label for="i_alt">ALT</label><input type="number" id="i_alt" placeholder="4~44"></div>
+                            <div class="input-group"><label for="i_ggt">γ-GTP 🔺</label><input type="number" id="i_ggt" placeholder="12~73"></div>
+                        </div>
+                        <div class="input-row" style="margin-top:4px;">
+                            <div class="input-group"><label for="i_pt_sec">PT(sec) 🔺</label><input type="number" id="i_pt_sec" placeholder="11~15" step="0.1"></div>
+                            <div class="input-group"><label for="i_pt_inr">PT(INR) 🔺</label><input type="number" id="i_pt_inr" placeholder="0.8~1.2" step="0.01"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>2. 신장 기능 & 전해질</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_bun">BUN</label><input type="number" id="i_bun" placeholder="6~23"></div>
+                            <div class="input-group"><label for="i_cr">Cr</label><input type="number" id="i_cr" placeholder="0.6~1.2" step="0.01"></div>
+                        </div>
+                        <div class="input-row" style="margin-top:4px;">
+                            <div class="input-group"><label for="i_na">Na 🔺</label><input type="number" id="i_na" placeholder="136~145"></div>
+                            <div class="input-group"><label for="i_k">K 🔺</label><input type="number" id="i_k" placeholder="3.5~5.5" step="0.1"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>3. 백혈구 (ANC)</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_wbc">WBC</label><input type="number" id="i_wbc" placeholder="4~10"></div>
+                            <div class="input-group"><label for="i_seg">Seg (%)</label><input type="number" id="i_seg" placeholder="50~70"></div>
+                            <div class="input-group"><label for="i_band">Band (%)</label><input type="number" id="i_band" value="0"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>4. 인슐린 저항성</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_tg">TG</label><input type="number" id="i_tg" placeholder="<200"></div>
+                            <div class="input-group"><label for="i_hdl">HDL</label><input type="number" id="i_hdl" placeholder=">40"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>5. 심혈관 지질</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_ldl">LDL</label><input type="number" id="i_ldl" placeholder="0~130"></div>
+                            <div class="input-group"><label for="i_hdl_2">HDL</label><input type="number" id="i_hdl_2" placeholder=">40"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>6. 콩팥 나이 (eGFR)</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_egfr">eGFR</label><input type="number" id="i_egfr" placeholder="≥60"></div>
+                            <div class="input-group"><label for="i_age">만 나이</label><input type="number" id="i_age" placeholder="나이"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측 환자 목록 -->
+            <div class="patient-sidebar">
+                <div class="sidebar-header"><span>📁 저장된 환자 목록</span></div>
+                <div class="saved-patient-list" id="saved_list_container">
+                    <p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:20px 0;">저장된 기록 없음</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 결과 레이아웃 -->
+        <div class="main-result-grid">
+            <div class="col-left">
+                <div class="result-box-card box-patient-check">
+                    <div class="box-header"><span>🔍 환자 사정 & 상세 임상해석</span></div>
+                    <div id="out_patient_check"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p></div>
+                </div>
+                <div class="result-box-card box-treatment">
+                    <div class="box-header"><span>💊 치료 및 간호 중재</span></div>
+                    <div id="out_treatment_guide"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p></div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="result-box-card box-noti">
+                    <div class="box-header"><span>🚨 노티할 내용 (SBAR)</span></div>
+                    <div id="out_noti_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p></div>
+                </div>
+                <div class="result-box-card box-results">
+                    <div class="box-header"><span>📊 계산결과값</span></div>
+                    <div id="out_calc_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 2] 확장 기능 모듈 -->
+    <div id="tab_extended" class="tab-content">
+        <div class="grid-2">
+            <div class="ext-card">
+                <h3>🧪 ABGA (산염기 평형) 상세 판독기</h3>
+                <div class="ext-group"><label>pH (7.35 ~ 7.45)</label><input type="number" id="ext_ph" placeholder="예: 7.31" step="0.01"></div>
+                <div class="ext-group"><label>PaCO2 (35 ~ 45 mmHg)</label><input type="number" id="ext_paco2" placeholder="예: 52"></div>
+                <div class="ext-group"><label>HCO3- (22 ~ 26 mEq/L)</label><input type="number" id="ext_hco3" placeholder="예: 24"></div>
+                <button class="ext-btn" onclick="analyzeABGA()">ABGA 판독 실행</button>
+                <div id="ext_abga_res" class="ext-result" style="display:none;"></div>
+            </div>
+
+            <div class="ext-card">
+                <h3>⚖️ 24시간 I/O Balance 및 체중 모니터링</h3>
+                <div class="ext-group"><label>총 섭취량 (Intake, mL)</label><input type="number" id="ext_io_in" placeholder="예: 2500"></div>
+                <div class="ext-group"><label>총 배설량 (Output, mL)</label><input type="number" id="ext_io_out" placeholder="예: 1100"></div>
+                <div class="ext-group"><label>체중 변화 (전일 대비, kg)</label><input type="number" id="ext_wt" placeholder="예: +0.3" step="0.1"></div>
+                <button class="ext-btn" onclick="calcIOBalance()">I/O Balance 계산</button>
+                <div id="ext_io_res" class="ext-result" style="display:none;"></div>
+            </div>
+
+            <div class="ext-card" style="grid-column: span 2;">
+                <h3>💊 신장 약물 용량 조절용 CrCl (Cockcroft-Gault) 산출기 & SBAR 노티</h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <div class="ext-group"><label>성별</label><select id="ext_gender"><option value="male">남성</option><option value="female">여성 (×0.85)</option></select></div>
+                    <div class="ext-group"><label>만 나이 (세)</label><input type="number" id="ext_age" placeholder="예: 65"></div>
+                    <div class="ext-group"><label>체중 (kg)</label><input type="number" id="ext_wt_val" placeholder="예: 60"></div>
+                    <div class="ext-group"><label>크레아티닌 (Cr, mg/dL)</label><input type="number" id="ext_cr" placeholder="예: 1.4" step="0.1"></div>
+                </div>
+                <button class="ext-btn" style="margin-top:10px;" onclick="calcCrCl()">신장 청소율(CrCl) 계산 및 노티 생성</button>
+                <div id="ext_crcl_res" class="ext-result" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 3~7] 근무 및 드레싱 탭 페이지들 -->
+    <div id="tab_work_d" class="tab-content"><div class="work-card"><h2>☀️ D 근무 (Day Duty) 업무 체크리스트</h2><p>• 오전 바이탈 및 인계 준비</p><p>• 정규 투약 및 주치의 회진 보조</p><p>• 각종 검사(Lab, X-ray 등) 확인 및 결과 보고</p></div></div>
+    <div id="tab_work_e" class="tab-content"><div class="work-card"><h2>🌆 E 근무 (Evening Duty) 업무 체크리스트</h2><p>• 오후 활력징후 측정 및 상태 관찰</p><p>• 저녁 투약 및 처치 수행</p><p>• 신규 환자 입원 맞이 및 오더 확인</p></div></div>
+    <div id="tab_work_n" class="tab-content"><div class="work-card"><h2>🌙 N 근무 (Night Duty) 업무 체크리스트</h2><p>• 야간 바이탈 및 수면 상태 확인</p><p>• 익일 아침 검사 오더 최종 확인 및 라운딩</p><p>• 새벽 응급 Lab 및 주치의 노티 기록 정리</p></div></div>
+    
+    <!-- 드레싱 탭 (이미지 삽입용 공간 포함) -->
+    <div id="tab_work_dressing" class="tab-content">
+        <div class="work-card">
+            <h2>🩹 드레싱 (Dressing) 및 상처 관리 템플릿</h2>
+            <p>• <strong>거즈 및 부직포:</strong> 방수 기능 없음, 교환주기 짧음 (1~2일)</p>
+            <p>• <strong>Foam 드레싱 (메디폼 등):</strong> 다량의 분비물 흡수에 용이함, 교환주기 7일</p>
+            <p>• <strong>Film 드레싱 (테가덤 등):</strong> 방수 기능 있음, 교환주기 3~7일</p>
+            <p>• <strong>하이드로콜로이드 (듀오덤 등):</strong> 소량의 분비물 상처에 사용</p>
+            <!-- 이미지를 넣으실 때 아래와 같이 src에 파일명을 지정해 주시면 됩니다 -->
+            <!-- <img src="dressing_tape.jpg" alt="드레싱 재료 이미지" style="max-width:300px; margin-top:10px;"> -->
+        </div>
+    </div>
+
+    <div id="tab_work_empty1" class="tab-content"><div class="work-card"><h2>📌 무제 1 (커스텀 업무 메모 공간)</h2><p>필요한 내용을 자유롭게 작성하고 활용할 수 있는 빈 공간입니다.</p></div></div>
+    <div id="tab_work_empty2" class="tab-content"><div class="work-card"><h2>📌 무제 2 (커스텀 업무 메모 공간)</h2><p>필요한 내용을 자유롭게 작성하고 활용할 수 있는 빈 공간입니다.</p></div></div>
+</div>
+
+<script>
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const targetTab = document.getElementById('tab_' + tabName);
+        if (targetTab) targetTab.classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function analyzeABGA() {
+        const ph = parseFloat(document.getElementById('ext_ph').value);
+        const paco2 = parseFloat(document.getElementById('ext_paco2').value);
+        const hco3 = parseFloat(document.getElementById('ext_hco3').value);
+        const resBox = document.getElementById('ext_abga_res');
+        if (!ph || !paco2 || !hco3) { alert('수치를 모두 입력해주세요.'); return; }
+        let diag = ph < 7.35 ? (paco2 > 45 ? '호흡성 산증 (Respiratory Acidosis)' : '대사성 산증 (Metabolic Acidosis)') : (ph > 7.45 ? (paco2 < 35 ? '호흡성 알칼리증' : '대사성 알칼리증') : '정상 범위');
+        resBox.style.display = 'block';
+        resBox.innerHTML = `<strong>[ABGA 정밀 판독]</strong> ${diag}<br>• 임상적 의미: 환자의 폐 환기 상태와 신장의 대사적 보상 능력을 평가한 결과입니다.`;
+    }
+
+    function calcIOBalance() {
+        const intake = parseFloat(document.getElementById('ext_io_in').value) || 0;
+        const output = parseFloat(document.getElementById('ext_io_out').value) || 0;
+        const wt = parseFloat(document.getElementById('ext_wt').value) || 0;
+        const resBox = document.getElementById('ext_io_res');
+        const net = intake - output;
+        let typeStr = net > 0 ? 'Positive Balance (수분 저류 상태)' : (net < 0 ? 'Negative Balance (수분 배설 우위)' : 'Balanced');
+        let sign = net > 0 ? '+' : '';
+        let status = net > 1000 ? '⚠️ 과수분(Fluid Overload) 위험 - 부종 및 호흡곤란 모니터링 필요' : (net < -500 ? '⚠️ 탈수(Dehydration) 위험 - 신장 퍼퓨전 및 혈압 체크 필요' : '양호한 체액 균형 유지 중');
+
+        resBox.style.display = 'block';
+        resBox.innerHTML = `<strong>Net Balance:</strong> ${sign}${net} mL [${typeStr}]<br><strong>체중 변화:</strong> ${wt >= 0 ? '+' : ''}${wt} kg<br><strong>평가 및 중재:</strong> ${status}`;
+    }
+
+    function calcCrCl() {
+        const gender = document.getElementById('ext_gender').value;
+        const age = parseFloat(document.getElementById('ext_age').value);
+        const wt = parseFloat(document.getElementById('ext_wt_val').value);
+        const cr = parseFloat(document.getElementById('ext_cr').value);
+        const resBox = document.getElementById('ext_crcl_res');
+
+        if (!age || !wt || !cr) { alert('나이, 체중, Cr을 모두 입력하세요.'); return; }
+        let crcl = ((140 - age) * wt) / (72 * cr);
+        if (gender === 'female') crcl *= 0.85;
+
+        let guide = crcl >= 50 ? '정상 용량 투여 가능' : (crcl >= 30 ? '약물 용량 감량(Dose reduction) 검토 필요' : '신독성 약물 주의 및 주치의 용량 조절 필수');
+        let notiTemplate = '';
+        if (crcl < 50) {
+            notiTemplate = `<br><br><strong>[SBAR 노티 템플릿]</strong><br>• S: 환자 CrCl ${crcl.toFixed(1)} mL/min으로 저하 확인.<br>• B: 신장 배설 약물의 체내 축적 및 독성 위험성 존재.<br>• A: 신기능 저하에 따른 항생제 등 약물 용량 조절(Dose adjustment) 필요.<br>• R: 처방 약물 용량 감량 검토 요청.`;
+        }
+
+        resBox.style.display = 'block';
+        resBox.innerHTML = `<strong>산출 CrCl:</strong> ${crcl.toFixed(1)} mL/min<br><strong>용량 조절 가이드:</strong> ${guide} ${notiTemplate}`;
+    }
+
+    let savedPatientRecords = [];
+    let currentLastAnalysis = null;
+    
+    function loadSavedRecords() {
+        const stored = localStorage.getItem('nurse_patient_records_v12');
+        if (stored) {
+            try {
+                savedPatientRecords = JSON.parse(stored);
+            } catch(e) {
+                savedPatientRecords = [];
+            }
+        }
+        renderSavedPatientList();
+    }
+
+    function saveRecordsToStorage() {
+        localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
+    }
+
+    window.addEventListener('DOMContentLoaded', loadSavedRecords);
+
+    document.getElementById('i_hdl').addEventListener('input', function() { document.getElementById('i_hdl_2').value = this.value; });
+    document.getElementById('i_hdl_2').addEventListener('input', function() { document.getElementById('i_hdl').value = this.value; });
+
+    function updateCheckboxStatesInCurrentObj() {
+        if (!currentLastAnalysis) return;
+        const checkContainer = document.getElementById('out_patient_check');
+        const treatContainer = document.getElementById('out_treatment_guide');
+        if (checkContainer) currentLastAnalysis.patientCheckHtml = checkContainer.innerHTML;
+        if (treatContainer) currentLastAnalysis.treatmentHtml = treatContainer.innerHTML;
+    }
+
+    function toggleCheckState(checkbox) {
+        if (checkbox.checked) {
+            checkbox.setAttribute('checked', 'checked');
+        } else {
+            checkbox.removeAttribute('checked');
+        }
+        updateCheckboxStatesInCurrentObj();
+    }
+
+    function runAnalysis() {
+        const ptNameInput = document.getElementById('i_pt_name').value.trim();
+        const ptName = ptNameInput || '미명 환자';
+        const dateStr = new Date().toLocaleDateString();
+
+        const wbc = parseFloat(document.getElementById('i_wbc').value);
+        let seg = parseFloat(document.getElementById('i_seg').value);
+        const band = parseFloat(document.getElementById('i_band').value) || 0;
+        const ast = parseFloat(document.getElementById('i_ast').value);
+        const alt = parseFloat(document.getElementById('i_alt').value);
+        const ggt = parseFloat(document.getElementById('i_ggt').value);
+        const bun = parseFloat(document.getElementById('i_bun').value);
+        const cr = parseFloat(document.getElementById('i_cr').value);
+        const hdl = parseFloat(document.getElementById('i_hdl').value) || parseFloat(document.getElementById('i_hdl_2').value);
+        const tg = parseFloat(document.getElementById('i_tg').value);
+        const ldl = parseFloat(document.getElementById('i_ldl').value);
+        const egfr = parseFloat(document.getElementById('i_egfr').value);
+        const age = parseFloat(document.getElementById('i_age').value);
+        const na = parseFloat(document.getElementById('i_na').value);
+        const k = parseFloat(document.getElementById('i_k').value);
+        const ptSec = parseFloat(document.getElementById('i_pt_sec').value);
+        const ptInr = parseFloat(document.getElementById('i_pt_inr').value);
+
+        let calcHtml = '';
+        let notiHtml = '';
+        let patientCheckListHtml = '';
+        let treatmentListHtml = '';
+        let abnormalSummaryText = [];
+
+        if (wbc) {
+            let actualWbc = wbc < 100 ? wbc * 1000 : wbc;
+            if (isNaN(seg)) seg = 60;
+            const anc = actualWbc * ((seg + band) / 100);
+            let badge = anc >= 1500 ? '<span class="badge badge-normal">정상</span>' : (anc >= 500 ? '<span class="badge badge-warning">감소</span>' : '<span class="badge badge-danger">위험</span>');
+            
+            calcHtml += `
+                <div class="result-item">
+                    <div class="result-item-title">절대호중구수 (ANC)</div>
+                    <div class="result-item-val">${Math.round(anc)} /µL ${badge}</div>
+                    <div style="font-size:0.7rem; color:#64748b;">공식: WBC(${actualWbc}) × (Seg%+Band%) / 100</div>
+                </div>
+            `;
+
+            if (anc < 500) {
+                abnormalSummaryText.push(`ANC ${Math.round(anc)}/µL (호중구 감소증)`);
+                notiHtml += `
+                    <div class="sbar-card">
+                        <h4>🚨 ANC &lt; 500 /µL (심각한 호중구 감소증)</h4>
+                        <div class="sbar-line"><span class="sbar-lbl">S</span> "선생님, ${ptName} 님 오늘 CBC 결과 ANC ${Math.round(anc)}/µL로 급감하여 보고드립니다."</div>
+                        <div class="sbar-line"><span class="sbar-lbl">B</span> "현재 WBC ${actualWbc}, Seg ${seg}% 상태입니다."</div>
+                        <div class="sbar-line"><span class="sbar-lbl">A</span> "<span class="highlight-text">Neutropenic Fever 진행 고위험 상태</span>입니다."</div>
+                        <div class="sbar-line"><span class="sbar-lbl">R</span> "즉시 역격리 실행 및 Culture 검사, G-CSF 처방 확인 부탁드립니다."</div>
+                    </div>
+                `;
+                patientCheckListHtml += `
+                    <div class="action-card">
+                        <h4 style="color:var(--danger);">🛡️ 호중구 감소 사정 항목</h4>
+                        <div class="interp-card">
+                            <h4>🔴 ANC ${Math.round(anc)} /µL (Neutropenia)</h4>
+                            <ul><li>면역 기능 극도 저하. BT &ge; 37.8℃ 시 Neutropenic Fever 진행 가능.</li></ul>
+                        </div>
+                        <ul class="check-item-list">
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span>발열(BT &ge; 37.8℃), 오한 유무 확인</span><span class="check-status-tag">확인</span></label></li>
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span>구강 궤양, 인후통, 피부 상처 부위 발적 사정</span><span class="check-status-tag">확인</span></label></li>
+                        </ul>
+                    </div>
+                `;
+                treatmentListHtml += `
+                    <div class="action-card">
+                        <h4 style="color:#15803d;">💊 호중구 감소 시 처치</h4>
+                        <ul class="check-item-list">
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span><strong>역격리:</strong> 1인실 이동, 마스크 착용, 날음식 제한</span><span class="check-status-tag">확인</span></label></li>
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span><strong>검사/약물:</strong> Blood Culture × 2, G-CSF 투여 확인</span><span class="check-status-tag">확인</span></label></li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        if (ast || alt || ggt || ptInr) {
+            let isAstAltAbnormal = (ast && ast > 38) || (alt && alt > 44);
+            let isGgtAbnormal = ggt && ggt > 73;
+            let isPtInrAbnormal = ptInr && ptInr > 1.2;
+
+            if (ast && alt) {
+                const astAltRatio = ast / alt;
+                let badge = (!isAstAltAbnormal && astAltRatio >= 0.8 && astAltRatio <= 1.2) ? '<span class="badge badge-normal">정상</span>' : '<span class="badge badge-warning">주의</span>';
+                if (isAstAltAbnormal) badge = '<span class="badge badge-danger">수치상승</span>';
+                let ggtInfo = ggt ? ` (γ-GTP: ${ggt} IU/L)` : '';
+
+                calcHtml += `
+                    <div class="result-item">
+                        <div class="result-item-title">AST / ALT 비율</div>
+                        <div class="result-item-val">${astAltRatio.toFixed(2)} ${badge}</div>
+                        <div style="font-size:0.7rem; color:#64748b;">AST: ${ast} / ALT: ${alt} U/L${ggtInfo}</div>
+                    </div>
+                `;
+
+                if (isAstAltAbnormal || isPtInrAbnormal) {
+                    let causeText = astAltRatio < 0.8 ? '비알코올성 지방간(ALT 우세)' : '알코올성/약물성 손상(AST 우세)';
+                    let inrText = isPtInrAbnormal ? ` 및 PT/INR 연장(${ptInr}) 동반` : '';
+                    abnormalSummaryText.push(`간수치 상승 및 응고계 이상`);
+
+                    notiHtml += `
+                        <div class="sbar-card">
+                            <h4>⚠️ 간수치 및 응고계 이상 <span class="noti-ref-text">(참고치: AST 7~38 / ALT 4~44 / INR 0.8~1.2)</span></h4>
+                            <div class="sbar-line"><span class="sbar-lbl">S</span> "선생님, ${ptName} 님 LFT 상승(AST/ALT ${ast}/${alt}) 및 PT/INR ${ptInr || '측정안함'} 확인되어 보고드립니다."</div>
+                            <div class="sbar-line"><span class="sbar-lbl">B</span> "AST/ALT 비율 ${astAltRatio.toFixed(2)}로 <span class="highlight-text">${causeText}${inrText} 의심</span>됩니다."</div>
+                            <div class="sbar-line"><span class="sbar-lbl">A</span> "급성 간 손상에 따른 간 합성 능력 저하 및 출혈 경향 사정이 필요합니다."</div>
+                            <div class="sbar-line"><span class="sbar-lbl">R</span> "간독성 약물 홀드 및 FFP/Vit K 투여 여부 검토 부탁드립니다."</div>
+                        </div>
+                    `;
+                    patientCheckListHtml += `
+                        <div class="action-card">
+                            <h4 style="color:#b45309;">🍷 간 기능 & 응고계 사정 항목</h4>
+                            <div class="interp-card">
+                                <h4>🟡 LFT 상승 및 PT/INR 연장 해석</h4>
+                                <ul><li>PT/INR 연장은 간 합성 기능 저하 또는 출혈 경향을 시사합니다.</li></ul>
+                            </div>
+                            <ul class="check-item-list">
+                                <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span>최근 음주력, 한약, 건강기능식품 복용 여부 확인</span><span class="check-status-tag">확인</span></label></li>
+                                <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span>잇몸 출혈, 멍(Ecchymosis), 흑색변(Melena) 유무 사정</span><span class="check-status-tag">확인</span></label></li>
+                            </ul>
+                        </div>
+                    `;
+                    treatmentListHtml += `
+                        <div class="action-card">
+                            <h4 style="color:#15803d;">💊 간 질환 & 출혈 경향 중재</h4>
+                            <ul class="check-item-list">
+                                <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span><strong>약물 홀드:</strong> Acetaminophen, Statin 등 간독성 약물 홀드 노티</span><span class="check-status-tag">확인</span></label></li>
+                                <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span><strong>처방 확인:</strong> 간보호제(Godex/Ursosa) 및 Vit K / FFP 처방 확인</span><span class="check-status-tag">확인</span></label></li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            }
+
+            if (!isAstAltAbnormal && isGgtAbnormal) {
+                calcHtml += `
+                    <div class="result-item">
+                        <div class="result-item-title">γ-GTP (GGT) 단독 상승</div>
+                        <div class="result-item-val">${ggt} IU/L <span class="badge badge-warning">단독상승</span></div>
+                        <div style="font-size:0.7rem; color:#64748b;">참고치: 12~73 IU/L</div>
+                    </div>
+                `;
+            }
+        }
+
+        if (bun || cr || k || na) {
+            let isBunCrAbnormal = (bun && bun > 23.0) || (cr && cr > 1.20);
+            let bunCrRatio = (bun && cr) ? (bun / cr) : 0;
+            let isKAbnormal = k && (k > 5.5 || k < 3.5);
+
+            if (bun && cr) {
+                let badge = (!isBunCrAbnormal && bunCrRatio >= 10 && bunCrRatio < 20) ? '<span class="badge badge-normal">정상</span>' : '<span class="badge badge-warning">주의</span>';
+                if (bunCrRatio >= 20 || isBunCrAbnormal) badge = '<span class="badge badge-danger">탈수/신손상의심</span>';
+
+                calcHtml += `
+                    <div class="result-item">
+                        <div class="result-item-title">BUN / Cr 비율</div>
+                        <div class="result-item-val">${bunCrRatio.toFixed(1)} : 1 ${badge}</div>
+                        <div style="font-size:0.7rem; color:#64748b;">BUN: ${bun} / Cr: ${cr} mg/dL</div>
+                    </div>
+                `;
+            }
+
+            if (k) {
+                let kBadge = (k >= 3.5 && k <= 5.5) ? '<span class="badge badge-normal">정상</span>' : '<span class="badge badge-danger">이상수치</span>';
+                calcHtml += `
+                    <div class="result-item">
+                        <div class="result-item-title">칼륨 (K) 전해질</div>
+                        <div class="result-item-val">${k} mmol/L ${kBadge}</div>
+                        <div style="font-size:0.7rem; color:#64748b;">참고치: 3.5 ~ 5.5 mmol/L</div>
+                    </div>
+                `;
+            }
+
+            if (bunCrRatio >= 20 || isBunCrAbnormal || isKAbnormal) {
+                let causeText = bunCrRatio >= 20 ? 'Prerenal 탈수 및 AKI 가능성' : 'Renal 신실질 손상 가능성';
+                let kMsg = (k && k > 5.5) ? ' 및 고칼륨혈증(심정지 위험)' : '';
+                abnormalSummaryText.push(`신장 수치 및 전해질 이상`);
+
+                notiHtml += `
+                    <div class="sbar-card">
+                        <h4>⚠️ 신장 기능 및 전해질 이상 <span class="noti-ref-text">(참고치: BUN 6~23 / Cr 0.6~1.2 / K 3.5~5.5)</span></h4>
+                        <div class="sbar-line"><span class="sbar-lbl">S</span> "선생님, ${ptName} 님 BUN/Cr(${bun}/${cr}) 및 K+(${k || '미측정'}) 수치 이상으로 보고드립니다."</div>
+                        <div class="sbar-line"><span class="sbar-lbl">B</span> "신장 여과능 저하 및 <span class="highlight-text">${causeText}${kMsg}</span>이 의심됩니다."</div>
+                        <div class="sbar-line"><span class="sbar-lbl">A</span> "체액 부족 상태 및 고칼륨혈증에 따른 EKG 변화 모니터링이 필요합니다."</div>
+                        <div class="sbar-line"><span class="sbar-lbl">R</span> "수액 공급(Hydration) 및 K+ 강하 처방(Kalimate) 확인 부탁드립니다."</div>
+                    </div>
+                `;
+                patientCheckListHtml += `
+                    <div class="action-card">
+                        <h4 style="color:#b45309;">💧 신장 & 전해질 불균형 사정 항목</h4>
+                        <div class="interp-card">
+                            <h4>🔵 신장 지표 및 칼륨(K+) 불균형 해석</h4>
+                            <ul><li>콩팥 기능 저하 시 칼륨 배설 장애로 고칼륨혈증 발생 위험이 매우 높음.</li></ul>
+                        </div>
+                        <ul class="check-item-list">
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span>24시간 소변량(Urine Output, Oliguria 유무) 철저 사정</span><span class="check-status-tag">확인</span></label></li>
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span>근육 약화, 마비감 및 서맥(Bradycardia) 증상 사정</span><span class="check-status-tag">확인</span></label></li>
+                        </ul>
+                    </div>
+                `;
+                treatmentListHtml += `
+                    <div class="action-card">
+                        <h4 style="color:#15803d;">💧 신장 보호 & 고칼륨혈증 처치</h4>
+                        <ul class="check-item-list">
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span><strong>심전도:</strong> 고칼륨혈증 시 즉시 EKG 모니터링 (T파 뾰족함 확인)</span><span class="check-status-tag">확인</span></label></li>
+                            <li><label class="check-item-label"><input type="checkbox" onchange="toggleCheckState(this)"><span><strong>수액 및 약물:</strong> Hydration 챌린지 및 Kalimate, 인슐린+포도당 믹스 준비</span><span class="check-status-tag">확인</span></label></li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        if (!calcHtml) calcHtml = '<p style="color:#ef4444; font-size:0.82rem; text-align:center; padding:20px 0;">계산할 수 있는 수치가 입력되지 않았습니다.</p>';
+        if (!notiHtml) notiHtml = '<p style="color:#10b981; font-size:0.82rem; text-align:center; padding:15px 0;">✅ 즉시 의사 노티가 필요한 뚜렷한 심각 이상 소견이 없습니다.</p>';
+        if (!patientCheckListHtml) patientCheckListHtml = '<p style="color:#334155; font-size:0.82rem; text-align:center; padding:15px 0;">특이 사정 항목이 없습니다.</p>';
+        if (!treatmentListHtml) treatmentListHtml = '<p style="color:#334155; font-size:0.82rem; text-align:center; padding:15px 0;">특이 중재 처치가 없습니다.</p>';
+
+        document.getElementById('out_calc_list').innerHTML = calcHtml;
+        document.getElementById('out_noti_list').innerHTML = notiHtml;
+        document.getElementById('out_patient_check').innerHTML = patientCheckListHtml;
+        document.getElementById('out_treatment_guide').innerHTML = treatmentListHtml;
+
+        currentLastAnalysis = {
+            name: ptName,
+            date: dateStr,
+            inputs: {
+                wbc, seg, band, ast, alt, ggt, bun, cr, hdl, tg, ldl, egfr, age, na, k, ptSec, ptInr
+            },
+            calcHtml: calcHtml,
+            notiHtml: notiHtml,
+            patientCheckHtml: patientCheckListHtml,
+            treatmentHtml: treatmentListHtml
+        };
+    }
+
+    function saveCurrentAnalysis() {
+        if (!currentLastAnalysis) {
+            alert('먼저 [자동 분석하기]를 실행해주세요.');
+            return;
+        }
+
+        const checkContainer = document.getElementById('out_patient_check');
+        const treatContainer = document.getElementById('out_treatment_guide');
+        if (checkContainer) currentLastAnalysis.patientCheckHtml = checkContainer.innerHTML;
+        if (treatContainer) currentLastAnalysis.treatmentHtml = treatContainer.innerHTML;
+
+        const recordObj = {
+            id: Date.now(),
+            name: currentLastAnalysis.name,
+            date: currentLastAnalysis.date,
+            inputs: currentLastAnalysis.inputs,
+            calcHtml: currentLastAnalysis.calcHtml,
+            notiHtml: currentLastAnalysis.notiHtml,
+            patientCheckHtml: currentLastAnalysis.patientCheckHtml,
+            treatmentHtml: currentLastAnalysis.treatmentHtml
+        };
+
+        savedPatientRecords.unshift(recordObj);
+        saveRecordsToStorage();
+        renderSavedPatientList();
+    }
+
+    function renderSavedPatientList() {
+        const container = document.getElementById('saved_list_container');
+        if (savedPatientRecords.length === 0) {
+            container.innerHTML = `<p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:30px 0;">저장된 기록이 없습니다.</p>`;
+            return;
+        }
+
+        let html = '';
+        savedPatientRecords.forEach(rec => {
+            html += `
+                <div class="patient-list-item">
+                    <div class="patient-info-click" onclick="loadPatientToMain(${rec.id})">
+                        <span class="patient-name-txt">${rec.name}</span>
+                        <span class="patient-date-txt">${rec.date}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deletePatientRecord(event, ${rec.id})" title="삭제">🗑️</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function loadPatientToMain(id) {
+        const rec = savedPatientRecords.find(r => r.id === id);
+        if (!rec) return;
+
+        document.getElementById('i_pt_name').value = rec.name;
+        if (rec.inputs) {
+            document.getElementById('i_wbc').value = rec.inputs.wbc || '';
+            document.getElementById('i_seg').value = rec.inputs.seg || '';
+            document.getElementById('i_band').value = rec.inputs.band || '0';
+            document.getElementById('i_ast').value = rec.inputs.ast || '';
+            document.getElementById('i_alt').value = rec.inputs.alt || '';
+            document.getElementById('i_ggt').value = rec.inputs.ggt || '';
+            document.getElementById('i_bun').value = rec.inputs.bun || '';
+            document.getElementById('i_cr').value = rec.inputs.cr || '';
+            document.getElementById('i_hdl').value = rec.inputs.hdl || '';
+            document.getElementById('i_hdl_2').value = rec.inputs.hdl || '';
+            document.getElementById('i_tg').value = rec.inputs.tg || '';
+            document.getElementById('i_ldl').value = rec.inputs.ldl || '';
+            document.getElementById('i_egfr').value = rec.inputs.egfr || '';
+            document.getElementById('i_age').value = rec.inputs.age || '';
+            document.getElementById('i_na').value = rec.inputs.na || '';
+            document.getElementById('i_k').value = rec.inputs.k || '';
+            document.getElementById('i_pt_sec').value = rec.inputs.ptSec || '';
+            document.getElementById('i_pt_inr').value = rec.inputs.ptInr || '';
+        }
+
+        document.getElementById('out_calc_list').innerHTML = rec.calcHtml;
+        document.getElementById('out_noti_list').innerHTML = rec.notiHtml;
+        document.getElementById('out_patient_check').innerHTML = rec.patientCheckHtml;
+        document.getElementById('out_treatment_guide').innerHTML = rec.treatmentHtml;
+
+        currentLastAnalysis = rec;
+    }
+
+    function deletePatientRecord(e, id) {
+        e.stopPropagation();
+        savedPatientRecords = savedPatientRecords.filter(r => r.id !== id);
+        saveRecordsToStorage();
+        renderSavedPatientList();
+    }
+
+    function resetForm() {
+        document.querySelectorAll('.input-section input').forEach(inp => inp.value = '');
+        document.getElementById('i_band').value = '0';
+        currentLastAnalysis = null;
+        document.getElementById('out_calc_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:30px 0;">상단 입력칸에 값을 입력 후<br><strong>[자동 분석하기]</strong> 버튼을 누르세요.</p>';
+        document.getElementById('out_noti_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">이상 소견 감지 시 <strong>SBAR 노티 템플릿</strong>이 자동 생성됩니다.</p>';
+        document.getElementById('out_patient_check').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">결과에 따라 <strong>임상해석 및 환자 확인/사정 사항</strong>이 생성됩니다.</p>';
+        document.getElementById('out_treatment_guide').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">예상되는 <strong>약물 처방, 홀드, 추가 검사 및 간호 처치 가이드</strong>가 출력됩니다.</p>';
+    }
+</script>
+
+</body>
+</html>
