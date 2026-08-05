@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>간호사 임상 통합 시스템</title>
+    <!-- Firebase SDK 로드 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     
     <style>
         :root {
@@ -142,7 +145,6 @@
 
         .input-title { font-size: 1rem; font-weight: bold; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
         .pt-name-group { display: flex; align-items: center; gap: 6px; }
-        .pt-name-group label { font-size: 0.82rem; font-weight: bold; color: var(--secondary); }
         .pt-name-group input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; width: 140px; }
 
         .btn-group-top { display: flex; gap: 6px; }
@@ -191,7 +193,7 @@
             font-size: 0.72rem;
         }
 
-        /* 메인 결과 그리드 */
+        /* 세로 일렬 정렬 구조 (환자사정 -> 치료및중재 -> 노티 -> 계산결과값) */
         .main-result-grid {
             display: flex;
             flex-direction: column;
@@ -207,8 +209,6 @@
             }
         }
 
-        .col-left, .col-right { display: flex; flex-direction: column; gap: 12px; }
-
         .result-box-card {
             background: var(--card-bg);
             border: 2px solid var(--border);
@@ -221,7 +221,6 @@
         .box-noti { background: #fff5f5; border-color: var(--danger); }
         .box-patient-check { border-color: var(--warning); background: #fffbeb; }
         .box-treatment { border-color: var(--success); background: #f0fdf4; }
-        .box-emr-copy { border-color: #0284c7; background: #f0f9ff; }
 
         .box-header {
             font-size: 0.95rem;
@@ -238,7 +237,6 @@
         .box-noti .box-header { color: var(--danger); }
         .box-patient-check .box-header { color: #b45309; }
         .box-treatment .box-header { color: #15803d; }
-        .box-emr-copy .box-header { color: var(--primary-dark); }
 
         .result-item { background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 5px; margin-bottom: 6px; }
         .result-item-title { font-size: 0.78rem; color: #64748b; font-weight: 600; }
@@ -275,7 +273,7 @@
         .work-card h2 { font-size: 1.2rem; color: var(--primary-dark); margin-bottom: 12px; border-bottom: 2px solid #e0f2fe; padding-bottom: 6px; }
         .work-card p { font-size: 0.9rem; color: var(--secondary); margin-bottom: 10px; }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; }
         .ext-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
         .ext-card h3 { font-size: 1rem; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 2px solid #e0f2fe; padding-bottom: 5px; }
         .ext-group { margin-bottom: 10px; }
@@ -284,19 +282,17 @@
         .ext-btn { background: var(--primary); color: white; border: none; padding: 8px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
         .ext-btn:hover { background: var(--primary-dark); }
         .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; white-space: pre-line; }
-        .copy-btn { background: #10b981; color: white; border: none; padding: 4px 8px; font-size: 0.75rem; border-radius: 3px; cursor: pointer; float: right; }
-        .copy-btn:hover { background: #059669; }
 
-        @media (max-width: 1024px) {
-            .top-wrapper { grid-template-columns: 1fr; }
-            .main-result-grid { grid-template-columns: 1fr; }
-            .grid-2 { grid-template-columns: 1fr; }
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+            .ext-card.full-width { grid-column: span 2; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- 상단 파란색 책갈피 헤더 -->
     <div class="tab-header-wrapper">
         <div class="tab-title-area">
             <h1>🩺 임상 업무 통합 시스템</h1>
@@ -307,34 +303,30 @@
             <button class="tab-btn" onclick="switchTab('work_d')">D근무</button>
             <button class="tab-btn" onclick="switchTab('work_e')">E근무</button>
             <button class="tab-btn" onclick="switchTab('work_n')">N근무</button>
-            <button class="tab-btn" onclick="switchTab('work_dressing')">드레싱</button>
-            <button class="tab-btn" onclick="switchTab('work_empty1')">무제1</button>
-            <button class="tab-btn" onclick="switchTab('work_empty2')">무제2</button>
         </div>
     </div>
 
     <!-- [TAB 1] 기본 분석기 -->
     <div id="tab_basic" class="tab-content active">
         <div class="top-wrapper">
+            <!-- 좌측 입력칸 -->
             <div class="input-section">
                 <div class="input-header-row">
                     <div class="input-title">
-                        <span>📝 수치 입력칸</span>
                         <div class="pt-name-group">
-                            <label for="i_pt_name">환자명/번호:</label>
-                            <input type="text" id="i_pt_name" placeholder="예: 홍길동">
+                            <input type="text" id="i_pt_name" placeholder="이름">
                         </div>
                     </div>
                     <div class="btn-group-top">
-                        <button class="btn-pink" onclick="runAnalysis()">⚡ 자동 분석</button>
-                        <button class="btn-save" onclick="saveCurrentAnalysis()">💾 저장</button>
-                        <button class="btn-red" onclick="resetForm()">🔄 초기화</button>
+                        <button class="btn-pink" onclick="runAnalysis()">⚡분석</button>
+                        <button class="btn-save" onclick="saveCurrentAnalysis()">💾저장</button>
+                        <button class="btn-red" onclick="resetForm()">🔄초기화</button>
                     </div>
                 </div>
                 
                 <div class="group-grid">
                     <div class="input-card-group">
-                        <h3>1. 간 손상 & 응고계</h3>
+                        <h3>1. 간손상 & 응고계</h3>
                         <div class="input-row">
                             <div class="input-group"><label for="i_ast">AST</label><input type="number" id="i_ast" placeholder="7~38"></div>
                             <div class="input-group"><label for="i_alt">ALT</label><input type="number" id="i_alt" placeholder="4~44"></div>
@@ -347,7 +339,7 @@
                     </div>
 
                     <div class="input-card-group">
-                        <h3>2. 신장 기능 & 전해질</h3>
+                        <h3>2. 신장기능 & 전해질</h3>
                         <div class="input-row">
                             <div class="input-group"><label for="i_bun">BUN</label><input type="number" id="i_bun" placeholder="6~23"></div>
                             <div class="input-group"><label for="i_cr">Cr</label><input type="number" id="i_cr" placeholder="0.6~1.2" step="0.01"></div>
@@ -376,7 +368,7 @@
                     </div>
 
                     <div class="input-card-group">
-                        <h3>5. 심혈관 지질</h3>
+                        <h3>5. 심혈관</h3>
                         <div class="input-row">
                             <div class="input-group"><label for="i_ldl">LDL</label><input type="number" id="i_ldl" placeholder="0~130"></div>
                             <div class="input-group"><label for="i_hdl_2">HDL</label><input type="number" id="i_hdl_2" placeholder=">40"></div>
@@ -384,7 +376,7 @@
                     </div>
 
                     <div class="input-card-group">
-                        <h3>6. 콩팥 나이 (eGFR)</h3>
+                        <h3>6. 신장나이</h3>
                         <div class="input-row">
                             <div class="input-group"><label for="i_egfr">eGFR</label><input type="number" id="i_egfr" placeholder="≥60"></div>
                             <div class="input-group"><label for="i_age">만 나이</label><input type="number" id="i_age" placeholder="나이"></div>
@@ -402,34 +394,23 @@
             </div>
         </div>
 
-        <!-- 메인 결과 레이아웃 -->
+        <!-- 메인 결과 레이아웃 (환자사정 -> 치료및중재 -> 노티 -> 계산결과값 순서) -->
         <div class="main-result-grid">
-            <div class="col-left">
-                <div class="result-box-card box-patient-check">
-                    <div class="box-header"><span>🔍 환자 사정 & 상세 임상해석</span></div>
-                    <div id="out_patient_check"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p></div>
-                </div>
-                <div class="result-box-card box-treatment">
-                    <div class="box-header"><span>💊 치료 및 간호 중재</span></div>
-                    <div id="out_treatment_guide"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p></div>
-                </div>
+            <div class="result-box-card box-patient-check">
+                <div class="box-header"><span>🔍 환자사정 & 임상해석</span></div>
+                <div id="out_patient_check"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p></div>
             </div>
-            <div class="col-right">
-                <div class="result-box-card box-noti">
-                    <div class="box-header"><span>🚨 노티할 내용 (SBAR)</span></div>
-                    <div id="out_noti_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p></div>
-                </div>
-                <div class="result-box-card box-emr-copy">
-                    <div class="box-header">
-                        <span>📋 EMR 간호기록 서식 복사</span>
-                        <button class="copy-btn" onclick="copyEmrText()">복사</button>
-                    </div>
-                    <textarea id="emr_text_area" rows="3" style="width:100%; padding:6px; font-size:0.8rem; border:1px solid var(--border); border-radius:4px; background:#fff;">[혈액검사 이상 소견 요약] - 분석 후 자동 생성됩니다.</textarea>
-                </div>
-                <div class="result-box-card box-results">
-                    <div class="box-header"><span>📊 계산결과값</span></div>
-                    <div id="out_calc_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p></div>
-                </div>
+            <div class="result-box-card box-treatment">
+                <div class="box-header"><span>💊 치료 및 중재</span></div>
+                <div id="out_treatment_guide"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-noti">
+                <div class="box-header"><span>🚨 노티 (SBAR)</span></div>
+                <div id="out_noti_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-results">
+                <div class="box-header"><span>📊 계산결과값</span></div>
+                <div id="out_calc_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p></div>
             </div>
         </div>
     </div>
@@ -437,61 +418,69 @@
     <!-- [TAB 2] 확장 기능 모듈 -->
     <div id="tab_extended" class="tab-content">
         <div class="grid-2">
-            <div class="ext-card">
-                <h3>🧪 ABGA (산염기 평형) 상세 판독기</h3>
-                <div class="ext-group"><label>pH (7.35 ~ 7.45)</label><input type="number" id="ext_ph" placeholder="예: 7.31" step="0.01"></div>
-                <div class="ext-group"><label>PaCO2 (35 ~ 45 mmHg)</label><input type="number" id="ext_paco2" placeholder="예: 52"></div>
-                <div class="ext-group"><label>HCO3- (22 ~ 26 mEq/L)</label><input type="number" id="ext_hco3" placeholder="예: 24"></div>
-                <button class="ext-btn" onclick="analyzeABGA()">ABGA 판독 실행</button>
-                <div id="ext_abga_res" class="ext-result" style="display:none;"></div>
-            </div>
-
-            <div class="ext-card">
-                <h3>⚖️ 24시간 I/O Balance 및 체중 모니터링</h3>
+            <div class="ext-card full-width">
+                <h3>⚖️ 24시간 I/O </h3>
                 <div class="ext-group"><label>총 섭취량 (Intake, mL)</label><input type="number" id="ext_io_in" placeholder="예: 2500"></div>
                 <div class="ext-group"><label>총 배설량 (Output, mL)</label><input type="number" id="ext_io_out" placeholder="예: 1100"></div>
                 <div class="ext-group"><label>체중 변화 (전일 대비, kg)</label><input type="number" id="ext_wt" placeholder="예: +0.3" step="0.1"></div>
-                <button class="ext-btn" onclick="calcIOBalance()">I/O Balance 계산</button>
+                <button class="ext-btn" onclick="calcIOBalance()">I/O 계산</button>
                 <div id="ext_io_res" class="ext-result" style="display:none;"></div>
             </div>
 
-            <div class="ext-card" style="grid-column: span 2;">
-                <h3>💊 신장 약물 용량 조절용 CrCl (Cockcroft-Gault) 산출기 & SBAR 노티</h3>
+            <div class="ext-card full-width">
+                <h3>💊 신장약물 용량조절용 CrCl</h3>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
                     <div class="ext-group"><label>성별</label><select id="ext_gender"><option value="male">남성</option><option value="female">여성 (×0.85)</option></select></div>
                     <div class="ext-group"><label>만 나이 (세)</label><input type="number" id="ext_age" placeholder="예: 65"></div>
                     <div class="ext-group"><label>체중 (kg)</label><input type="number" id="ext_wt_val" placeholder="예: 60"></div>
                     <div class="ext-group"><label>크레아티닌 (Cr, mg/dL)</label><input type="number" id="ext_cr" placeholder="예: 1.4" step="0.1"></div>
                 </div>
-                <button class="ext-btn" style="margin-top:10px;" onclick="calcCrCl()">신장 청소율(CrCl) 계산 및 노티 생성</button>
+                <button class="ext-btn" style="margin-top:10px;" onclick="calcCrCl()">신장 청소율(CrCl) 계산</button>
                 <div id="ext_crcl_res" class="ext-result" style="display:none;"></div>
+            </div>
+
+            <div class="ext-card full-width">
+                <h3>🧪 ABGA</h3>
+                <div class="ext-group"><label>pH (7.35 ~ 7.45)</label><input type="number" id="ext_ph" placeholder="예: 7.31" step="0.01"></div>
+                <div class="ext-group"><label>PaCO2 (35 ~ 45 mmHg)</label><input type="number" id="ext_paco2" placeholder="예: 52"></div>
+                <div class="ext-group"><label>HCO3- (22 ~ 26 mEq/L)</label><input type="number" id="ext_hco3" placeholder="예: 24"></div>
+                <button class="ext-btn" onclick="analyzeABGA()">ABGA 판독 실행</button>
+                <div id="ext_abga_res" class="ext-result" style="display:none;"></div>
             </div>
         </div>
     </div>
 
-    <!-- [TAB 3~8] 근무 탭 페이지들 -->
+    <!-- [TAB 3~5] 근무 탭 페이지들 -->
     <div id="tab_work_d" class="tab-content"><div class="work-card"><h2>☀️ D 근무 (Day Duty) 업무 체크리스트</h2><p>• 오전 바이탈 및 인계 준비</p><p>• 정규 투약 및 주치의 회진 보조</p><p>• 각종 검사(Lab, X-ray 등) 확인 및 결과 보고</p></div></div>
     <div id="tab_work_e" class="tab-content"><div class="work-card"><h2>🌆 E 근무 (Evening Duty) 업무 체크리스트</h2><p>• 오후 활력징후 측정 및 상태 관찰</p><p>• 저녁 투약 및 처치 수행</p><p>• 신규 환자 입원 맞이 및 오더 확인</p></div></div>
     <div id="tab_work_n" class="tab-content"><div class="work-card"><h2>🌙 N 근무 (Night Duty) 업무 체크리스트</h2><p>• 야간 바이탈 및 수면 상태 확인</p><p>• 익일 아침 검사 오더 최종 확인 및 라운딩</p><p>• 새벽 응급 Lab 및 주치의 노티 기록 정리</p></div></div>
-    <div id="tab_work_dressing" class="tab-content"><div class="work-card"><h2>🩹 드레싱 (Dressing) 및 상처 관리 템플릿</h2><p>• Surgical Wound (수술 부위 드레싱 및 소독)</p><p>• Pressure Ulcer (욕창 단계별 드레싱 및 기재 사항)</p><p>• Drain 관리 (JP, Suction 배액량 및 삼출물 성상 기록)</p></div></div>
-    <div id="tab_work_empty1" class="tab-content"><div class="work-card"><h2>📌 무제 1 (커스텀 업무 메모 공간)</h2><p>필요한 내용을 자유롭게 작성하고 활용할 수 있는 빈 공간입니다.</p></div></div>
-    <div id="tab_work_empty2" class="tab-content"><div class="work-card"><h2>📌 무제 2 (커스텀 업무 메모 공간)</h2><p>필요한 내용을 자유롭게 작성하고 활용할 수 있는 빈 공간입니다.</p></div></div>
 </div>
 
 <script>
+    // ===== Firebase 클라우드 연동 설정 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류 발생:", e);
+    }
+
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         const targetTab = document.getElementById('tab_' + tabName);
         if (targetTab) targetTab.classList.add('active');
         event.currentTarget.classList.add('active');
-    }
-
-    function copyEmrText() {
-        const textVal = document.getElementById('emr_text_area').value;
-        navigator.clipboard.writeText(textVal).then(() => {
-            alert('EMR 기록용 서식이 클립보드에 복사되었습니다.');
-        }).catch(err => { alert('복사 실패'); });
     }
 
     function analyzeABGA() {
@@ -543,17 +532,39 @@
     let savedPatientRecords = [];
     let currentLastAnalysis = null;
     
+    // 데이터 불러오기 (파이어베이스 Firestore 연동)
     function loadSavedRecords() {
-        const stored = localStorage.getItem('nurse_patient_records_v12');
-        if (stored) {
-            try { savedPatientRecords = JSON.parse(stored); } catch(e) { savedPatientRecords = []; }
+        if (db) {
+            db.collection("patients").orderBy("id", "desc").get().then((querySnapshot) => {
+                savedPatientRecords = [];
+                querySnapshot.forEach((doc) => {
+                    savedPatientRecords.push(doc.data());
+                });
+                renderSavedPatientList();
+            }).catch((error) => {
+                console.log("데이터 불러오기 실패:", error);
+            });
+        } else {
+            const stored = localStorage.getItem('nurse_patient_records_v12');
+            if (stored) {
+                try { savedPatientRecords = JSON.parse(stored); } catch(e) { savedPatientRecords = []; }
+            }
+            renderSavedPatientList();
         }
-        renderSavedPatientList();
     }
 
-    function saveRecordsToStorage() {
-        localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
-        renderSavedPatientList();
+    function saveRecordsToStorage(recordObj) {
+        if (db) {
+            db.collection("patients").doc(String(recordObj.id)).set(recordObj).then(() => {
+                loadSavedRecords();
+                alert("클라우드에 안전하게 저장되었습니다!");
+            }).catch((error) => {
+                alert("클라우드 저장 실패: " + error.message);
+            });
+        } else {
+            localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
+            renderSavedPatientList();
+        }
     }
 
     window.addEventListener('DOMContentLoaded', loadSavedRecords);
@@ -578,6 +589,7 @@
         if (treatContainer) currentLastAnalysis.treatmentHtml = treatContainer.innerHTML;
     }
 
+    // [분석 함수] - 수치를 분석하여 결과 HTML 생성
     function runAnalysis() {
         const ptNameInput = document.getElementById('i_pt_name').value.trim();
         const ptName = ptNameInput || '미명 환자';
@@ -605,7 +617,6 @@
         let notiHtml = '';
         let patientCheckListHtml = '';
         let treatmentListHtml = '';
-        let abnormalSummaryText = [];
 
         if (wbc) {
             let actualWbc = wbc < 100 ? wbc * 1000 : wbc;
@@ -622,7 +633,6 @@
             `;
 
             if (anc < 500) {
-                abnormalSummaryText.push(`ANC ${Math.round(anc)}/µL (호중구 감소증)`);
                 notiHtml += `
                     <div class="sbar-card">
                         <h4>🚨 ANC &lt; 500 /µL (심각한 호중구 감소증)</h4>
@@ -679,7 +689,6 @@
                 if (isAstAltAbnormal || isPtInrAbnormal) {
                     let causeText = astAltRatio < 0.8 ? '비알코올성 지방간(ALT 우세)' : '알코올성/약물성 손상(AST 우세)';
                     let inrText = isPtInrAbnormal ? ` 및 PT/INR 연장(${ptInr}) 동반` : '';
-                    abnormalSummaryText.push(`간수치 상승 및 응고계 이상`);
 
                     notiHtml += `
                         <div class="sbar-card">
@@ -758,7 +767,6 @@
             if (bunCrRatio >= 20 || isBunCrAbnormal || isKAbnormal) {
                 let causeText = bunCrRatio >= 20 ? 'Prerenal 탈수 및 AKI 가능성' : 'Renal 신실질 손상 가능성';
                 let kMsg = (k && k > 5.5) ? ' 및 고칼륨혈증(심정지 위험)' : '';
-                abnormalSummaryText.push(`신장 수치 및 전해질 이상`);
 
                 notiHtml += `
                     <div class="sbar-card">
@@ -794,7 +802,7 @@
             }
         }
 
-        if (!calcHtml) calcHtml = '<p style="color:#ef4444; font-size:0.82rem; text-align:center; padding:20px 0;">계산할 수 있는 수치가 입력되지 않았습니다.</p>';
+        if (!calcHtml) calcHtml = '<p style="color:#ef4444; font-size:0.82rem; text-align:center; padding:20px 0;">입력된 수치가 없습니다.</p>';
         if (!notiHtml) notiHtml = '<p style="color:#10b981; font-size:0.82rem; text-align:center; padding:15px 0;">✅ 즉시 의사 노티가 필요한 뚜렷한 심각 이상 소견이 없습니다.</p>';
         if (!patientCheckListHtml) patientCheckListHtml = '<p style="color:#334155; font-size:0.82rem; text-align:center; padding:15px 0;">특이 사정 항목이 없습니다.</p>';
         if (!treatmentListHtml) treatmentListHtml = '<p style="color:#334155; font-size:0.82rem; text-align:center; padding:15px 0;">특이 중재 처치가 없습니다.</p>';
@@ -804,27 +812,24 @@
         document.getElementById('out_patient_check').innerHTML = patientCheckListHtml;
         document.getElementById('out_treatment_guide').innerHTML = treatmentListHtml;
 
-        let emrSummary = `[혈액검사 이상 소견 및 노티 요약]\n- 환자명: ${ptName} (${dateStr})\n- 특이소견: ${abnormalSummaryText.length > 0 ? abnormalSummaryText.join(', ') : '특이소견 없음'}\n- 조치: 주치의 노티 완료 및 처치 가이드 확인`;
-        document.getElementById('emr_text_area').value = emrSummary;
-
         currentLastAnalysis = {
             name: ptName,
             date: dateStr,
-            inputs: {
-                wbc, seg, band, ast, alt, ggt, bun, cr, hdl, tg, ldl, egfr, age, na, k, ptSec, ptInr
-            },
+            inputs: { wbc, seg, band, ast, alt, ggt, bun, cr, hdl, tg, ldl, egfr, age, na, k, ptSec, ptInr },
             calcHtml: calcHtml,
             notiHtml: notiHtml,
             patientCheckHtml: patientCheckListHtml,
-            treatmentHtml: treatmentListHtml,
-            emrSummary: emrSummary
+            treatmentHtml: treatmentListHtml
         };
 
         return currentLastAnalysis;
     }
 
+    // [저장 버튼 함수] - 분석을 안 했어도 입력된 내용이 있으면 자동으로 분석해서 곧바로 저장!
     function saveCurrentAnalysis() {
         let analysisData = currentLastAnalysis;
+        
+        // 만약 분석 버튼을 안 누르고 바로 저장 버튼을 눌렀다면 현재 입력값으로 즉시 분석 객체 생성
         if (!analysisData) {
             analysisData = runAnalysis();
         }
@@ -842,13 +847,11 @@
             calcHtml: analysisData.calcHtml,
             notiHtml: analysisData.notiHtml,
             patientCheckHtml: analysisData.patientCheckHtml,
-            treatmentHtml: analysisData.treatmentHtml,
-            emrSummary: analysisData.emrSummary
+            treatmentHtml: analysisData.treatmentHtml
         };
 
         savedPatientRecords.unshift(recordObj);
-        saveRecordsToStorage();
-        alert("환자 기록이 성공적으로 저장되었습니다!");
+        saveRecordsToStorage(recordObj);
     }
 
     function renderSavedPatientList() {
@@ -903,28 +906,33 @@
         document.getElementById('out_noti_list').innerHTML = rec.notiHtml;
         document.getElementById('out_patient_check').innerHTML = rec.patientCheckHtml;
         document.getElementById('out_treatment_guide').innerHTML = rec.treatmentHtml;
-        if (rec.emrSummary) {
-            document.getElementById('emr_text_area').value = rec.emrSummary;
-        }
 
         currentLastAnalysis = rec;
     }
 
     function deletePatientRecord(e, id) {
         e.stopPropagation();
-        savedPatientRecords = savedPatientRecords.filter(r => r.id !== id);
-        saveRecordsToStorage();
+        if (db) {
+            db.collection("patients").doc(String(id)).delete().then(() => {
+                loadSavedRecords();
+            }).catch((error) => {
+                alert("삭제 실패: " + error.message);
+            });
+        } else {
+            savedPatientRecords = savedPatientRecords.filter(r => r.id !== id);
+            localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
+            renderSavedPatientList();
+        }
     }
 
     function resetForm() {
         document.querySelectorAll('.input-section input').forEach(inp => inp.value = '');
         document.getElementById('i_band').value = '0';
         currentLastAnalysis = null;
-        document.getElementById('out_calc_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:30px 0;">상단 입력칸에 값을 입력 후<br><strong>[자동 분석하기]</strong> 버튼을 누르세요.</p>';
-        document.getElementById('out_noti_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">이상 소견 감지 시 <strong>SBAR 노티 템플릿</strong>이 자동 생성됩니다.</p>';
-        document.getElementById('out_patient_check').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">결과에 따라 <strong>임상해석 및 환자 확인/사정 사항</strong>이 생성됩니다.</p>';
-        document.getElementById('out_treatment_guide').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">예상되는 <strong>약물 처방, 홀드, 추가 검사 및 간호 처치 가이드</strong>가 출력됩니다.</p>';
-        document.getElementById('emr_text_area').value = '[혈액검사 이상 소견 요약] - 분석 후 자동 생성됩니다.';
+        document.getElementById('out_calc_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:30px 0;">계산 수치가 표시됩니다.</p>';
+        document.getElementById('out_noti_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p>';
+        document.getElementById('out_patient_check').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p>';
+        document.getElementById('out_treatment_guide').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p>';
     }
 </script>
 
