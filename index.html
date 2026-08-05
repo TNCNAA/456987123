@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>간호사 임상 통합 시스템</title>
-    <!-- Firebase SDK 로드 -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     
     <style>
         :root {
@@ -482,24 +479,6 @@
 </div>
 
 <script>
-    // ===== Firebase 클라우드 연동 설정 (회원님의 실제 설정값 적용) =====
-    const firebaseConfig = {
-        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
-        authDomain: "tncnaaa.firebaseapp.com",
-        projectId: "tncnaaa",
-        storageBucket: "tncnaaa.firebasestorage.app",
-        messagingSenderId: "822557545187",
-        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
-    };
-
-    let db = null;
-    try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-    } catch(e) {
-        console.log("Firebase 초기화 오류:", e);
-    }
-
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -564,25 +543,7 @@
     let savedPatientRecords = [];
     let currentLastAnalysis = null;
     
-    // 데이터 불러오기 (파이어베이스 Firestore 우선 연동)
     function loadSavedRecords() {
-        if (db) {
-            db.collection("patients").orderBy("id", "desc").get().then((querySnapshot) => {
-                savedPatientRecords = [];
-                querySnapshot.forEach((doc) => {
-                    savedPatientRecords.push(doc.data());
-                });
-                renderSavedPatientList();
-            }).catch((error) => {
-                console.log("클라우드 불러오기 실패, 로컬 저장소 사용:", error);
-                loadFromLocalStorage();
-            });
-        } else {
-            loadFromLocalStorage();
-        }
-    }
-
-    function loadFromLocalStorage() {
         const stored = localStorage.getItem('nurse_patient_records_v12');
         if (stored) {
             try { savedPatientRecords = JSON.parse(stored); } catch(e) { savedPatientRecords = []; }
@@ -590,19 +551,9 @@
         renderSavedPatientList();
     }
 
-    function saveRecordsToStorage(recordObj) {
-        if (db) {
-            db.collection("patients").doc(String(recordObj.id)).set(recordObj).then(() => {
-                loadSavedRecords();
-                alert("클라우드(모바일 연동)에 안전하게 저장되었습니다!");
-            }).catch((error) => {
-                alert("클라우드 저장 실패: " + error.message);
-            });
-        } else {
-            localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
-            renderSavedPatientList();
-            alert("로컬 저장소에 저장되었습니다.");
-        }
+    function saveRecordsToStorage() {
+        localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
+        renderSavedPatientList();
     }
 
     window.addEventListener('DOMContentLoaded', loadSavedRecords);
@@ -896,7 +847,8 @@
         };
 
         savedPatientRecords.unshift(recordObj);
-        saveRecordsToStorage(recordObj);
+        saveRecordsToStorage();
+        alert("환자 기록이 성공적으로 저장되었습니다!");
     }
 
     function renderSavedPatientList() {
@@ -960,17 +912,8 @@
 
     function deletePatientRecord(e, id) {
         e.stopPropagation();
-        if (db) {
-            db.collection("patients").doc(String(id)).delete().then(() => {
-                loadSavedRecords();
-            }).catch((error) => {
-                alert("삭제 실패: " + error.message);
-            });
-        } else {
-            savedPatientRecords = savedPatientRecords.filter(r => r.id !== id);
-            localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
-            renderSavedPatientList();
-        }
+        savedPatientRecords = savedPatientRecords.filter(r => r.id !== id);
+        saveRecordsToStorage();
     }
 
     function resetForm() {
