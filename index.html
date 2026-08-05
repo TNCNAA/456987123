@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>간호사 임상 통합 시스템</title>
+    <!-- Firebase SDK 로드 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
     <style>
         :root {
             --primary: #0284c7;
@@ -141,7 +145,6 @@
 
         .input-title { font-size: 1rem; font-weight: bold; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
         .pt-name-group { display: flex; align-items: center; gap: 6px; }
-        .pt-name-group label { font-size: 0.82rem; font-weight: bold; color: var(--secondary); }
         .pt-name-group input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; width: 140px; }
 
         .btn-group-top { display: flex; gap: 6px; }
@@ -190,15 +193,21 @@
             font-size: 0.72rem;
         }
 
-        /* 메인 결과 그리드 */
+        /* 세로 일렬 정렬 구조 (환자사정 -> 치료및중재 -> 노티 -> 계산결과값) */
         .main-result-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 12px;
             margin-bottom: 15px;
         }
 
-        .col-left, .col-right { display: flex; flex-direction: column; gap: 12px; }
+        @media (min-width: 900px) {
+            .main-result-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+        }
 
         .result-box-card {
             background: var(--card-bg);
@@ -252,7 +261,6 @@
         .check-item-list { list-style: none; padding-left: 0; font-size: 0.8rem; }
         .check-item-label { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px; cursor: pointer; color: #334155; }
         .check-item-label input[type="checkbox"] { margin-top: 2px; cursor: pointer; accent-color: var(--primary); }
-        .check-item-label input[type="checkbox"]:checked + span { text-decoration: none !important; color: #334155 !important; }
         .check-status-tag { font-size: 0.68rem; padding: 1px 5px; border-radius: 3px; font-weight: bold; margin-left: 4px; display: none; }
         .check-item-label input[type="checkbox"]:checked ~ .check-status-tag { display: inline-block; background-color: var(--success); color: white; }
 
@@ -274,12 +282,6 @@
         .ext-btn:hover { background: var(--primary-dark); }
         .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; white-space: pre-line; }
 
-        .guide-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-top: 15px; }
-        .guide-section h2 { font-size: 0.95rem; color: var(--secondary); border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px; }
-        .ref-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-        .ref-table th, .ref-table td { border: 1px solid var(--border); padding: 4px 6px; text-align: left; }
-        .ref-table th { background-color: #f1f5f9; color: var(--secondary); font-weight: bold; }
-
         @media (min-width: 768px) {
             .grid-2 { grid-template-columns: 1fr 1fr; }
             .ext-card.full-width { grid-column: span 2; }
@@ -289,7 +291,7 @@
 <body>
 
 <div class="container">
-    <!-- 상단 파란색 책갈피 헤더 (드레싱, 무제1, 무제2 메뉴 삭제 완료) -->
+    <!-- 상단 파란색 책갈피 헤더 -->
     <div class="tab-header-wrapper">
         <div class="tab-title-area">
             <h1>🩺 임상 업무 통합 시스템</h1>
@@ -310,9 +312,7 @@
             <div class="input-section">
                 <div class="input-header-row">
                     <div class="input-title">
-                        
                         <div class="pt-name-group">
-                            
                             <input type="text" id="i_pt_name" placeholder="이름">
                         </div>
                     </div>
@@ -393,32 +393,28 @@
             </div>
         </div>
 
-        <!-- 메인 결과 레이아웃 -->
+        <!-- 메인 결과 레이아웃 (환자사정 -> 치료및중재 -> 노티 -> 계산결과값 순서) -->
         <div class="main-result-grid">
-            <div class="col-left">
-                <div class="result-box-card box-patient-check">
-                    <div class="box-header"><span>🔍 환자사정 & 임상해석</span></div>
-                    <div id="out_patient_check"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p></div>
-                </div>
-                <div class="result-box-card box-treatment">
-                    <div class="box-header"><span>💊 치료 및 중재</span></div>
-                    <div id="out_treatment_guide"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p></div>
-                </div>
+            <div class="result-box-card box-patient-check">
+                <div class="box-header"><span>🔍 환자사정 & 임상해석</span></div>
+                <div id="out_patient_check"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p></div>
             </div>
-            <div class="col-right">
-                <div class="result-box-card box-noti">
-                    <div class="box-header"><span>🚨 노티 (SBAR)</span></div>
-                    <div id="out_noti_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p></div>
-                </div>
-                <div class="result-box-card box-results">
-                    <div class="box-header"><span>📊 계산결과값</span></div>
-                    <div id="out_calc_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p></div>
-                </div>
+            <div class="result-box-card box-treatment">
+                <div class="box-header"><span>💊 치료 및 중재</span></div>
+                <div id="out_treatment_guide"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-noti">
+                <div class="box-header"><span>🚨 노티 (SBAR)</span></div>
+                <div id="out_noti_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-results">
+                <div class="box-header"><span>📊 계산결과값</span></div>
+                <div id="out_calc_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p></div>
             </div>
         </div>
     </div>
 
-    <!-- [TAB 2] 확장 기능 모듈 (순서: 24시간 I/O -> CrCl -> ABGA) -->
+    <!-- [TAB 2] 확장 기능 모듈 -->
     <div id="tab_extended" class="tab-content">
         <div class="grid-2">
             <div class="ext-card full-width">
@@ -460,6 +456,25 @@
 </div>
 
 <script>
+    // ===== Firebase 클라우드 연동 설정 (회원님의 실제 설정값 적용 완료) =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    // Firebase 초기화
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류 발생:", e);
+    }
+
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -517,20 +532,39 @@
     let savedPatientRecords = [];
     let currentLastAnalysis = null;
     
+    // 데이터 불러오기 (파이어베이스 Firestore 연동)
     function loadSavedRecords() {
-        const stored = localStorage.getItem('nurse_patient_records_v12');
-        if (stored) {
-            try {
-                savedPatientRecords = JSON.parse(stored);
-            } catch(e) {
+        if (db) {
+            db.collection("patients").orderBy("id", "desc").get().then((querySnapshot) => {
                 savedPatientRecords = [];
+                querySnapshot.forEach((doc) => {
+                    savedPatientRecords.push(doc.data());
+                });
+                renderSavedPatientList();
+            }).catch((error) => {
+                console.log("데이터 불러오기 실패:", error);
+            });
+        } else {
+            const stored = localStorage.getItem('nurse_patient_records_v12');
+            if (stored) {
+                try { savedPatientRecords = JSON.parse(stored); } catch(e) { savedPatientRecords = []; }
             }
+            renderSavedPatientList();
         }
-        renderSavedPatientList();
     }
 
-    function saveRecordsToStorage() {
-        localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
+    function saveRecordsToStorage(recordObj) {
+        if (db) {
+            db.collection("patients").doc(String(recordObj.id)).set(recordObj).then(() => {
+                loadSavedRecords();
+                alert("클라우드에 안전하게 저장되었습니다! (모바일에서도 확인 가능)");
+            }).catch((error) => {
+                alert("클라우드 저장 실패: " + error.message);
+            });
+        } else {
+            localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
+            renderSavedPatientList();
+        }
     }
 
     window.addEventListener('DOMContentLoaded', loadSavedRecords);
@@ -788,7 +822,7 @@
 
     function saveCurrentAnalysis() {
         if (!currentLastAnalysis) {
-            alert('먼저 [자동 분석하기]를 실행해주세요.');
+            alert('먼저 [분석] 버튼을 눌러주세요.');
             return;
         }
 
@@ -809,14 +843,13 @@
         };
 
         savedPatientRecords.unshift(recordObj);
-        saveRecordsToStorage();
-        renderSavedPatientList();
+        saveRecordsToStorage(recordObj);
     }
 
     function renderSavedPatientList() {
         const container = document.getElementById('saved_list_container');
         if (savedPatientRecords.length === 0) {
-            container.innerHTML = `<p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:30px 0;">저장된 기록이 없습니다.</p>`;
+            container.innerHTML = `<p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:30px 0;">저장된 기록 없음</p>`;
             return;
         }
 
@@ -871,19 +904,27 @@
 
     function deletePatientRecord(e, id) {
         e.stopPropagation();
-        savedPatientRecords = savedPatientRecords.filter(r => r.id !== id);
-        saveRecordsToStorage();
-        renderSavedPatientList();
+        if (db) {
+            db.collection("patients").doc(String(id)).delete().then(() => {
+                loadSavedRecords();
+            }).catch((error) => {
+                alert("삭제 실패: " + error.message);
+            });
+        } else {
+            savedPatientRecords = savedPatientRecords.filter(r => r.id !== id);
+            localStorage.setItem('nurse_patient_records_v12', JSON.stringify(savedPatientRecords));
+            renderSavedPatientList();
+        }
     }
 
     function resetForm() {
         document.querySelectorAll('.input-section input').forEach(inp => inp.value = '');
         document.getElementById('i_band').value = '0';
         currentLastAnalysis = null;
-        document.getElementById('out_calc_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:30px 0;">상단 입력칸에 값을 입력 후<br><strong>[자동 분석하기]</strong> 버튼을 누르세요.</p>';
-        document.getElementById('out_noti_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">이상 소견 감지 시 <strong>SBAR 노티 템플릿</strong>이 자동 생성됩니다.</p>';
-        document.getElementById('out_patient_check').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">결과에 따라 <strong>임상해석 및 환자 확인/사정 사항</strong>이 생성됩니다.</p>';
-        document.getElementById('out_treatment_guide').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">예상되는 <strong>약물 처방, 홀드, 추가 검사 및 간호 처치 가이드</strong>가 출력됩니다.</p>';
+        document.getElementById('out_calc_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:30px 0;">계산 수치가 표시됩니다.</p>';
+        document.getElementById('out_noti_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p>';
+        document.getElementById('out_patient_check').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p>';
+        document.getElementById('out_treatment_guide').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p>';
     }
 </script>
 
