@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>임상 참고 사진 대장</title>
+    <title>임상 참고 사진</title>
+    <!-- Firebase SDK 로드 (클라우드 저장용)[cite: 8] -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -21,16 +25,35 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
 
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
         h2 {
             color: #0284c7;
-            margin-bottom: 20px;
             font-size: 1.3rem;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* 사진 바둑판 정렬 (그리드) */
+        .btn-primary {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-primary:hover { background-color: #0369a1; }
+
+        /* 사진 바둑판 정렬 (그리드)[cite: 8] */
         .image-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -43,44 +66,61 @@
             overflow: hidden;
             background: #f1f5f9;
             text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-
-        .image-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
         }
 
         .image-card img {
             width: 100%;
-            height: 180px;
-            object-fit: contain; /* 미리보기에서도 사진 전체가 쏙 들어오도록 설정 */
+            height: 160px;
+            object-fit: contain; /*[cite: 8] */
             background-color: #ffffff;
             display: block;
             border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
         }
 
         .image-caption {
-            padding: 10px;
+            padding: 8px;
             font-size: 0.9rem;
             color: #0f172a;
             font-weight: bold;
             background: #ffffff;
+            outline: none;
+            border-bottom: 1px solid #f1f5f9;
         }
+        .image-caption:focus { background-color: #f0f9ff; }
+
+        .card-btn-group {
+            display: flex;
+            background: #f8fafc;
+            border-top: 1px solid #cbd5e1;
+        }
+        .card-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 6px;
+            font-size: 0.78rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .card-btn:hover { background: #e2e8f0; }
+        .btn-del { color: #ef4444; border-left: 1px solid #cbd5e1; }
+        .btn-del:hover { background: #fee2e2; }
 
         /* ----------------------------------- */
-        /* 🖼️ 사진 클릭 시 뜨는 팝업(모달) 스타일 */
+        /* 🖼️ 사진 클릭 시 뜨는 팝업(모달) 스타일[cite: 8] */
         /* ----------------------------------- */
         .modal {
-            display: none; /* 기본적으로 숨김 */
+            display: none; /*[cite: 8] */
             position: fixed;
             z-index: 9999;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.85); /* 어두운 배경 */
+            background-color: rgba(0, 0, 0, 0.85); /*[cite: 8] */
             justify-content: center;
             align-items: center;
             flex-direction: column;
@@ -91,70 +131,51 @@
             max-width: 90%;
             max-height: 80vh;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            object-fit: contain; /* 원본 비율 유지 (절대 안 잘림) */
-            background-color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); /*[cite: 8] */
+            object-fit: contain; /*[cite: 8] */
+            background-color: white; /*[cite: 8] */
         }
 
         .modal-caption {
-            color: #ffffff;
+            color: #ffffff; /*[cite: 8] */
             font-size: 1.1rem;
             font-weight: bold;
             margin-top: 12px;
-            text-align: center;
+            text-align: center; /*[cite: 8] */
         }
 
         .close-btn {
             position: absolute;
             top: 20px;
             right: 30px;
-            color: #ffffff;
+            color: #ffffff; /*[cite: 8] */
             font-size: 40px;
             font-weight: bold;
-            cursor: pointer;
-            user-select: none;
+            cursor: pointer; /*[cite: 8] */
+            user-select: none; /*[cite: 8] */
         }
 
-        .close-btn:hover {
-            color: #ef4444;
-        }
+        .close-btn:hover { color: #ef4444; /*[cite: 8] */ }
     </style>
 </head>
 <body>
 
     <div class="gallery-container">
-        <h2>🖼️ 임상 참고 사진 대장</h2>
+        <div class="header-row">
+            <h2>
+                🖼️ 임상 참고 사진 대장
+                <a href="index.html" style="text-decoration: none; margin-left: 8px;" title="메인으로 가기">🏠</a>
+            </h2>
+            <button class="btn-primary" onclick="addNewPhotoCard()">➕ 사진 추가하기</button>
+        </div>
         
-        <div class="image-grid">
-            
-            <!-- 사진 카드 1 (클릭하면 openModal 함수 실행) -->
-            <div class="image-card" onclick="openModal(this)">
-                <img src="https://postfiles.pstatic.net/MjAyNjAzMTBfMTgg/MDAxNzczMTA4Mzg5ODk3.xzSHYGAYoz9eB5tKSqKsASD05oMdFVYDcT_gRXeqPD8g.bNfAQDUFCawuQsJVzDEuV_CnsHurKWwX7VEMxKv61y0g.JPEG/output%EF%BC%BF29890022.jpg?type=w966" alt="환부 상태 기록 1">
-                <div class="image-caption">😀1</div>
-            </div>
-
-            <!-- 사진 카드 2 -->
-            <div class="image-card" onclick="openModal(this)">
-                <img src="photo2.jpg" alt="제목1">
-                <div class="image-caption">😀2</div>
-            </div>
-
-            <!-- 사진 카드 3 -->
-            <div class="image-card" onclick="openModal(this)">
-                <img src="photo3.jpg" alt="제목1">
-                <div class="image-caption">제목2</div>
-            </div>
-
-            <!-- 사진 카드 4 -->
-            <div class="image-card" onclick="openModal(this)">
-                <img src="photo4.jpg" alt="제목1">
-                <div class="image-caption">제목2</div>
-            </div>
-
+        <!-- 사진 그리드 컨테이너 -->
+        <div class="image-grid" id="photoGridContainer">
+            <!-- 자바스크립트로 동적 로드됨 -->
         </div>
     </div>
 
-    <!-- 팝업창 (모달) 영역 -->
+    <!-- 팝업창 (모달) 영역[cite: 8] -->
     <div id="imageModal" class="modal" onclick="closeModal()">
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <img class="modal-content" id="modalImg">
@@ -162,29 +183,163 @@
     </div>
 
     <script>
-        // 팝업 열기 함수
-        function openModal(cardElement) {
-            const img = cardElement.querySelector('img');
-            const caption = cardElement.querySelector('.image-caption').innerText;
+        // ===== Firebase 클라우드 연동 설정 =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+            authDomain: "tncnaaa.firebaseapp.com",
+            projectId: "tncnaaa",
+            storageBucket: "tncnaaa.firebasestorage.app",
+            messagingSenderId: "822557545187",
+            appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+        };
+
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch(e) {
+            console.log("Firebase 초기화 오류:", e);
+        }
+
+        const defaultPhotos = [
+            {
+                url: "https://postfiles.pstatic.net/MjAyNjAzMTBfMTgg/MDAxNzczMTA4Mzg5ODk3.xzSHYGAYoz9eB5tKSqKsASD05oMdFVYDcT_gRXeqPD8g.bNfAQDUFCawuQsJVzDEuV_CnsHurKWwX7VEMxKv61y0g.JPEG/output%EF%BC%BF29890022.jpg?type=w966",
+                caption: "😀1"
+            }
+        ];
+
+        // 페이지 로드 시 클라우드(또는 로컬)에서 데이터 불러오기
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadPhotosData();
+        });
+
+        async function loadPhotosData() {
+            let photos = null;
+            if (db) {
+                try {
+                    const doc = await db.collection("system_data").doc("photo_gallery").get();
+                    if (doc.exists) {
+                        photos = doc.data().list;
+                    }
+                } catch(e) {
+                    console.log("클라우드 로드 실패:", e);
+                }
+            }
+
+            if (!photos) {
+                const local = localStorage.getItem('clinical_photos_data');
+                photos = local ? JSON.parse(local) : defaultPhotos;
+            }
+
+            renderPhotos(photos);
+        }
+
+        // 화면에 사진 카드들 렌더링
+        function renderPhotos(photos) {
+            const container = document.getElementById('photoGridContainer');
+            container.innerHTML = '';
+
+            photos.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                card.innerHTML = `
+                    <img src="${item.url}" alt="참고사진" onclick="openModalFromImg(this)" onerror="this.src='https://via.placeholder.com/200?text=Invalid+URL'">
+                    <div class="image-caption" contenteditable="true" onblur="saveAllPhotosData()" title="클릭해서 제목 수정">${item.caption}</div>
+                    <div class="card-btn-group">
+                        <button class="card-btn" onclick="changePhotoUrl(this)">🔗 주소변경</button>
+                        <button class="card-btn btn-del" onclick="deletePhotoCard(this)">🗑️ 삭제</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 💾 데이터 저장 함수 (로컬 + 파이어베이스 클라우드 동시 저장)
+        async function saveAllPhotosData() {
+            const cards = document.querySelectorAll('.image-card');
+            let photos = [];
+
+            cards.forEach(card => {
+                const url = card.querySelector('img').src;
+                const caption = card.querySelector('.image-caption').innerText.trim();
+                photos.push({ url, caption });
+            });
+
+            localStorage.setItem('clinical_photos_data', JSON.stringify(photos));
+
+            if (db) {
+                try {
+                    await db.collection("system_data").doc("photo_gallery").set({ list: photos });
+                } catch(e) {
+                    console.log("클라우드 저장 실패:", e);
+                }
+            }
+        }
+
+        // 새 사진 카드 추가
+        function addNewPhotoCard() {
+            const url = prompt("추가할 이미지 주소(URL)를 입력하세요:", "https://picsum.photos/600/400");
+            if (!url) return;
+            const caption = prompt("사진 제목을 입력하세요:", "새로운 참고 사진");
+
+            const container = document.getElementById('photoGridContainer');
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            card.innerHTML = `
+                <img src="${url}" alt="참고사진" onclick="openModalFromImg(this)" onerror="this.src='https://via.placeholder.com/200?text=Invalid+URL'">
+                <div class="image-caption" contenteditable="true" onblur="saveAllPhotosData()" title="클릭해서 제목 수정">${caption || '제목없음'}</div>
+                <div class="card-btn-group">
+                    <button class="card-btn" onclick="changePhotoUrl(this)">🔗 주소변경</button>
+                    <button class="card-btn btn-del" onclick="deletePhotoCard(this)">🗑️ 삭제</button>
+                </div>
+            `;
+            container.appendChild(card);
+            saveAllPhotosData();
+        }
+
+        // 사진 이미지 주소(URL) 변경
+        function changePhotoUrl(btn) {
+            const card = btn.closest('.image-card');
+            const img = card.querySelector('img');
+            const newUrl = prompt("새로운 이미지 주소(URL)를 입력하세요:", img.src);
+            if (newUrl) {
+                img.src = newUrl;
+                saveAllPhotosData();
+            }
+        }
+
+        // 사진 카드 삭제
+        function deletePhotoCard(btn) {
+            if (confirm("이 사진 카드를 삭제하시겠습니까?")) {
+                const card = btn.closest('.image-card');
+                card.remove();
+                saveAllPhotosData();
+            }
+        }
+
+        // 팝업 열기 함수[cite: 8]
+        function openModalFromImg(imgElement) {
+            const card = imgElement.closest('.image-card');
+            const caption = card.querySelector('.image-caption').innerText;
 
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImg');
             const modalCaption = document.getElementById('modalCaption');
 
-            modal.style.display = "flex";
-            modalImg.src = img.src;
-            modalCaption.innerText = caption;
+            modal.style.display = "flex"; //[cite: 8]
+            modalImg.src = imgElement.src; //[cite: 8]
+            modalCaption.innerText = caption; //[cite: 8]
         }
 
-        // 팝업 닫기 함수
+        // 팝업 닫기 함수[cite: 8]
         function closeModal() {
-            document.getElementById('imageModal').style.display = "none";
+            document.getElementById('imageModal').style.display = "none"; //[cite: 8]
         }
 
-        // 키보드 ESC 키를 누르면 팝업 닫기
+        // 키보드 ESC 키를 누르면 팝업 닫기[cite: 8]
         document.addEventListener('keydown', function(e) {
             if (e.key === "Escape") {
-                closeModal();
+                closeModal(); //[cite: 8]
             }
         });
     </script>
