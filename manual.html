@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>임상 기본 매뉴얼 (경고박스 색상 지정 및 사진 모달)</title>
+    <title>임상 기본 매뉴얼 (NS / OS / GS / 검진)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -153,9 +153,9 @@
         .badge { display: inline-block; padding: 2px 6px; font-size: 11px; font-weight: bold; border-radius: 4px; color: white; }
         .badge-ns { background-color: #2563eb; }
         .badge-os { background-color: #059669; }
+        .badge-gs { background-color: #7c3aed; } /* 일반외과(GS) 뱃지 보라색 */
         .badge-check { background-color: #d97706; }
         
-        /* 경고박스 뱃지 기본 스타일 */
         .badge-warn { color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
 
         /* 📷 이미지 팝업 모달창 스타일 */
@@ -169,7 +169,7 @@
 </head>
 <body>
 
-    <!-- ✨ 플로팅 툴바 (경고박스 색상 지정 피커 포함) -->
+    <!-- ✨ 플로팅 툴바 -->
     <div id="floatingToolbar">
         <span style="color:#94a3b8;">색:</span>
         <input type="color" id="dragTextColor" value="#000000" title="글자색" onchange="applyStyle('foreColor', this.value)">
@@ -180,12 +180,9 @@
         <button onclick="applyFontSize('18px')">크게</button>
         <button onclick="applyStyle('bold', null)" style="font-size: 1rem;">B</button>
         
-        <!-- 경고박스 전용 컬러피커 및 버튼 -->
         <span style="color:#94a3b8; margin-left:4px;">박스색:</span>
         <input type="color" id="badgeColorPicker" value="#dc2626" title="경고박스 배경색" style="width:22px; height:22px; vertical-align:middle; cursor:pointer;">
         <button onclick="applyBadge()" style="background:#dc2626; border-radius:4px;">🚨 경고박스</button>
-        
-        <!-- 사진 버튼 -->
         <button onclick="applyGiftLink()" style="background:#0284c7; border-radius:4px;">📷 사진</button>
     </div>
 
@@ -200,12 +197,15 @@
             </h2>
         </div>
 
+        <!-- 🔘 선택 버튼 그리드에 일반외과(GS) 추가 -->
         <div id="selectorView" class="menu-select-grid">
-            <div class="menu-card-btn" onclick="showManual('ns')">🧠 신경외과 (NS) 매뉴얼</div>
-            <div class="menu-card-btn" onclick="showManual('os')">🦴 정형외과 (OS) 매뉴얼</div>
-            <div class="menu-card-btn" onclick="showManual('checkup')">🩺 검진 센터 매뉴얼</div>
+            <div class="menu-card-btn" onclick="showManual('ns')">🧠 신경외과 (NS)</div>
+            <div class="menu-card-btn" onclick="showManual('os')">🦴 정형외과 (OS)</div>
+            <div class="menu-card-btn" onclick="showManual('gs')">🔪 일반외과 (GS)</div>
+            <div class="menu-card-btn" onclick="showManual('checkup')">🩺 검진 센터</div>
         </div>
 
+        <!-- 각 과별 섹션 -->
         <div id="manual_ns" class="manual-section">
             <div id="nsTableContainer"></div>
             <div class="bottom-add-btn-area">
@@ -217,6 +217,13 @@
             <div id="osTableContainer"></div>
             <div class="bottom-add-btn-area">
                 <button class="btn-success-lg" onclick="addNewTableCard('osTableContainer')">➕ 새 표(항목) 추가</button>
+            </div>
+        </div>
+
+        <div id="manual_gs" class="manual-section">
+            <div id="gsTableContainer"></div>
+            <div class="bottom-add-btn-area">
+                <button class="btn-success-lg" onclick="addNewTableCard('gsTableContainer')">➕ 새 표(항목) 추가</button>
             </div>
         </div>
 
@@ -301,6 +308,36 @@
             </div>
         `;
 
+        /* 🔪 일반외과(GS) 기본 템플릿 데이터 추가 */
+        const defaultGsHtml = `
+            <div class="sub-card">
+                <div class="sub-title">
+                    <div class="editable-cell" contenteditable="true"><span class="badge badge-gs">GS</span> 복강경 수술 (담낭/충수) 환자</div>
+                    <div>
+                        <span class="card-status">저장됨!</span>
+                        <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
+                        <button class="btn-small-x" onclick="deleteCard(this)" title="삭제">x</button>
+                    </div>
+                </div>
+                <div class="manual-container-box">
+                    <div class="manual-row-block">
+                        <div class="row-header-bar" style="background-color: #64748b;">
+                            <div class="editable-th" contenteditable="true">입원/OR Prep</div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#64748b" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                        </div>
+                        <div class="editable-cell" contenteditable="true">• NPO 시작 시간 확인\n• 수술 전 혈액검사 및 EKG, CXR 확인</div>
+                    </div>
+                    <div class="manual-row-block">
+                        <div class="row-header-bar" style="background-color: #64748b;">
+                            <div class="editable-th" contenteditable="true">POD#1</div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#64748b" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                        </div>
+                        <div class="editable-cell" contenteditable="true">• 가스 배출(Flatus) 여부 확인 후 식이 진행\n• Wound dressing 및 Pain control 확인</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
         const defaultChkHtml = `
             <div class="sub-card">
                 <div class="sub-title">
@@ -326,10 +363,12 @@
         window.addEventListener('DOMContentLoaded', () => {
             let nsData = localStorage.getItem('manual_block_ns') || defaultNsHtml;
             let osData = localStorage.getItem('manual_block_os') || defaultOsHtml;
+            let gsData = localStorage.getItem('manual_block_gs') || defaultGsHtml; // GS 데이터 로드
             let chkData = localStorage.getItem('manual_block_chk') || defaultChkHtml;
 
             document.getElementById('nsTableContainer').innerHTML = rebuildBlockStructure(nsData);
             document.getElementById('osTableContainer').innerHTML = rebuildBlockStructure(osData);
+            document.getElementById('gsTableContainer').innerHTML = rebuildBlockStructure(gsData); // GS 컨테이너 적용
             document.getElementById('chkTableContainer').innerHTML = rebuildBlockStructure(chkData);
         });
 
@@ -466,7 +505,6 @@
             selection.getRangeAt(0).insertNode(span);
         }
 
-        // 🚨 선택한 색상으로 경고박스 적용
         function applyBadge() {
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
@@ -557,11 +595,14 @@
             setTimeout(() => { statusMsg.style.display = 'none'; }, 1500);
         }
 
+        /* 💾 각 컨테이너별 자동 저장 함수 (GS 포함) */
         function autoSaveContainer(container) {
             if (container.id === 'nsTableContainer') {
                 localStorage.setItem('manual_block_ns', container.innerHTML);
             } else if (container.id === 'osTableContainer') {
                 localStorage.setItem('manual_block_os', container.innerHTML);
+            } else if (container.id === 'gsTableContainer') {
+                localStorage.setItem('manual_block_gs', container.innerHTML);
             } else if (container.id === 'chkTableContainer') {
                 localStorage.setItem('manual_block_chk', container.innerHTML);
             }
