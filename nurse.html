@@ -3,24 +3,960 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상세 간호 기록실</title>
+    <title>간호사 임상 통합 시스템</title>
+    <!-- Firebase SDK 로드 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
     <style>
-        body { font-family: sans-serif; background: #f8fafc; padding: 20px; text-align: center; }
-        .menu-box { background: white; max-width: 500px; margin: 50px auto; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #10b981; margin-bottom: 20px; }
-        .nav-btn { display: block; width: 100%; padding: 12px; margin-bottom: 10px; background: #64748b; color: white; border: none; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; text-decoration: none; }
-        .nav-btn:hover { background: #334155; }
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #334155;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --danger: #ef4444;
+            --pink-btn: #ec4899;
+            --pink-btn-hover: #db2777;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --highlight-bg: #fef08a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: #0f172a;
+            padding: 10px;
+            line-height: 1.35;
+        }
+
+        .container { max-width: 1550px; margin: 0 auto; position: relative; }
+
+        /* 상단 파란색 책갈피(Tab) 스타일 헤더 */
+        .tab-header-wrapper {
+            background: linear-gradient(135deg, #0284c7, #0f172a);
+            padding: 10px 14px 0 14px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-title-area h1 { color: white; font-size: 1.1rem; margin-bottom: 0; }
+
+        .bookmark-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tab-btn {
+            background: #0369a1;
+            color: rgba(255,255,255,0.75);
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { background: #0284c7; color: white; }
+        .tab-btn.active { background: var(--card-bg); color: var(--primary-dark); border-top: 3px solid var(--primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 공지 및 메모 탭 내부 패널 스타일 */
+        .panel-box {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); flex-wrap: wrap; gap: 10px; }
+        .panel-title { font-size: 1.1rem; font-weight: bold; color: var(--primary-dark); }
+        
+        .editor-container { display: flex; flex-direction: column; gap: 10px; }
+        .editor-div { min-height: 450px; padding: 15px; font-size: 0.95rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; line-height: 1.6; background-color: white; white-space: pre-wrap; }
+        
+        .editor-btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .toolbar-group { display: flex; align-items: center; gap: 6px; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; }
+        .toolbar-label { font-size: 0.8rem; font-weight: bold; color: #475569; }
+        .color-picker { width: 26px; height: 26px; border: none; border-radius: 4px; cursor: pointer; background: transparent; }
+        .date-picker { padding: 4px 8px; font-size: 0.85rem; font-weight: bold; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        
+        .btn { padding: 6px 12px; font-size: 0.85rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-apply { padding: 4px 8px; font-size: 0.75rem; background-color: #475569; color: white; border-radius: 4px; }
+        .btn-apply:hover { background-color: #334155; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .status-msg { font-size: 0.85rem; color: #16a34a; font-weight: bold; display: none; }
+
+        /* ✨ 드래그 시 나타나는 플로팅 팝업 메뉴 스타일 */
+        #floatingToolbar {
+            display: none;
+            position: absolute;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 6px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            gap: 6px;
+            align-items: center;
+        }
+        #floatingToolbar button, #floatingToolbar input[type="color"] {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+        #floatingToolbar button:hover { background: rgba(255,255,255,0.2); }
+        #floatingToolbar input[type="color"] { width: 22px; height: 22px; padding: 0; vertical-align: middle; }
+
+        /* 📷 사진 링크 스타일 (밑줄 및 강제 색상 변경 제거) */
+        .gift-link { 
+            cursor: pointer; 
+            font-size: 0.95rem !important; 
+            vertical-align: baseline; 
+            display: inline;
+        }
+
+        /* 📷 이미지 팝업 모달창 스타일 */
+        .modal-overlay {
+            display: none; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); 
+            justify-content: center; align-items: center; 
+            z-index: 9999;
+        }
+        .modal-container {
+            background: white; padding: 10px; border-radius: 8px;
+            max-width: 90%; max-height: 90%; position: relative;
+        }
+        .modal-container img { max-width: 100%; max-height: 80vh; display: block; border-radius: 4px; }
+        .modal-close-btn {
+            position: absolute; top: -35px; right: 0; color: white;
+            font-size: 2rem; cursor: pointer; border: none; background: none;
+        }
+        
+        /* 🚨 경고박스 뱃지 스타일 */
+        .badge-warn { color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+
+        /* 메모장 레이아웃 (좌우 분할) */
+        .memo-layout { display: flex; gap: 15px; }
+        .memo-sidebar { width: 200px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; flex-shrink: 0; max-height: 500px; }
+        .memo-sidebar-header { font-size: 0.85rem; font-weight: bold; color: var(--secondary); padding-bottom: 6px; margin-bottom: 6px; border-bottom: 2px solid #e2e8f0; text-align: center; }
+        .memo-date-list { list-style: none; overflow-y: auto; flex: 1; }
+        .memo-date-item { padding: 8px 10px; font-size: 0.85rem; font-weight: 500; color: #334155; border-radius: 6px; cursor: pointer; margin-bottom: 4px; text-align: center; transition: all 0.2s; }
+        .memo-date-item:hover { background-color: #e0f2fe; color: var(--primary-dark); }
+        .memo-date-item.active { background-color: var(--primary); color: white; font-weight: bold; }
+        .memo-content-area { flex: 1; display: flex; flex-direction: column; }
+
+        /* 레이아웃 */
+        .top-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .input-section {
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .patient-sidebar {
+            background: var(--card-bg);
+            border: 2px solid #94a3b8;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            max-height: 340px;
+        }
+
+        .sidebar-header {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+        }
+
+        .saved-patient-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .patient-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .patient-list-item:hover { background: #e0f2fe; }
+
+        .patient-info-click { cursor: pointer; flex: 1; display: flex; justify-content: space-between; align-items: center; padding-right: 6px; }
+        .patient-name-txt { font-weight: bold; color: var(--primary-dark); }
+        .patient-date-txt { font-size: 0.72rem; color: #64748b; }
+
+        .delete-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9rem; padding: 2px 4px; }
+        .delete-btn:hover { color: var(--danger); background: #fee2e2; }
+
+        .input-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .input-title { font-size: 1rem; font-weight: bold; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
+        .pt-name-group { display: flex; align-items: center; gap: 6px; }
+        .pt-name-group input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; width: 140px; }
+
+        .btn-group-top { display: flex; gap: 6px; }
+        .btn-pink { background: var(--pink-btn); color: white; border: none; padding: 6px 12px; font-size: 0.85rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-pink:hover { background: var(--pink-btn-hover); }
+        .btn-save { background: #10b981; color: white; border: none; padding: 6px 12px; font-size: 0.85rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-save:hover { background: #059669; }
+        .btn-red { background: var(--danger); color: white; border: none; padding: 6px 10px; font-size: 0.85rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+
+        .group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px;
+        }
+
+        .input-card-group {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 8px 10px;
+            border-top: 3px solid var(--primary);
+        }
+
+        .input-card-group h3 { font-size: 0.82rem; color: var(--secondary); margin-bottom: 6px; }
+        .input-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        
+        .input-group { 
+            flex: 1; 
+            min-width: 85px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .input-group label { font-size: 0.68rem; font-weight: 600; color: var(--secondary); margin-bottom: 2px; white-space: nowrap; }
+        .input-group input { 
+            padding: 3px 4px; 
+            border: 1px solid var(--border); 
+            border-radius: 3px; 
+            font-size: 0.78rem; 
+            color: #334155;
+            background: #ffffff; 
+            height: 26px; 
+            width: 100%; 
+        }
+        .input-group input::placeholder {
+            color: #94a3b8;
+            font-size: 0.72rem;
+        }
+
+        .main-result-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        @media (min-width: 900px) {
+            .main-result-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+        }
+
+        .result-box-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .box-results { border-color: var(--secondary); }
+        .box-noti { background: #fff5f5; border-color: var(--danger); }
+        .box-patient-check { border-color: var(--warning); background: #fffbeb; }
+        .box-treatment { border-color: var(--success); background: #f0fdf4; }
+
+        .box-header {
+            font-size: 0.95rem;
+            font-weight: bold;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-item { background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 5px; margin-bottom: 6px; }
+        .result-item-title { font-size: 0.78rem; color: #64748b; font-weight: 600; }
+        .result-item-val { font-size: 1.02rem; font-weight: bold; color: #0f172a; margin: 2px 0; }
+
+        .badge { display: inline-block; font-size: 0.68rem; padding: 1px 5px; border-radius: 3px; font-weight: bold; color: white; }
+        .badge-normal { background-color: var(--success); }
+        .badge-warning { background-color: var(--warning); color: #0f172a; }
+        .badge-danger { background-color: var(--danger); }
+
+        .sbar-card { background: white; border: 1px solid #fecaca; border-radius: 5px; padding: 8px 10px; margin-bottom: 6px; }
+        .sbar-card h4 { font-size: 0.85rem; color: var(--danger); margin-bottom: 4px; }
+        .sbar-line { font-size: 0.8rem; margin-bottom: 3px; line-height: 1.35; }
+        .sbar-lbl { font-weight: bold; color: #991b1b; display: inline-block; width: 18px; }
+
+        .work-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); min-height: 400px; }
+        .work-card h2 { font-size: 1.2rem; color: var(--primary-dark); margin-bottom: 12px; border-bottom: 2px solid #e0f2fe; padding-bottom: 6px; }
+        .work-card p { font-size: 0.9rem; color: var(--secondary); margin-bottom: 10px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .ext-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .ext-card h3 { font-size: 1rem; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 2px solid #e0f2fe; padding-bottom: 5px; }
+        .ext-group { margin-bottom: 10px; }
+        .ext-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--secondary); margin-bottom: 3px; }
+        .ext-group input, .ext-group select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
+        .ext-btn { background: var(--primary); color: white; border: none; padding: 8px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
+        .ext-btn:hover { background: var(--primary-dark); }
+        .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; white-space: pre-line; }
+
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+            .ext-card.full-width { grid-column: span 2; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="menu-box">
-        <h1>💊 상세 간호 기록실</h1>
-        <p style="color: #64748b; margin-bottom: 20px;">이곳은 추가 확장 기능을 넣는 공간입니다.</p>
-        
-        <!-- 다시 메인으로 돌아가는 버튼 -->
-        <a href="index.html" class="nav-btn">🏠 메인으로 돌아가기</a>
+<!-- ✨ 마우스 드래그 시 나타나는 플로팅 팝업 메뉴 바 -->
+<div id="floatingToolbar">
+    <span style="color:#94a3b8; font-size:0.7rem;">색:</span>
+    <input type="color" id="dragTextColor" value="#000000" title="글자색" onchange="applyStyle('foreColor', this.value)">
+    <span style="color:#94a3b8; font-size:0.7rem;">펜:</span>
+    <input type="color" id="dragHiliteColor" value="#fef08a" title="형광펜" onchange="applyStyle('hiliteColor', this.value)">
+    <button onclick="applyStyle('bold', null)" style="font-weight:bold;">B</button>
+    <span style="color:#94a3b8; font-size:0.7rem; margin-left:4px;">박스색:</span>
+    <input type="color" id="badgeColorPicker" value="#dc2626" title="경고박스 배경색" style="width:22px; height:22px; border:none; background:transparent; vertical-align:middle; cursor:pointer;">
+    <button onclick="applyBadge()" style="background:#dc2626; color:white; border-radius:4px; padding:2px 6px;">🚨</button>
+    <button onclick="applyGiftLink()" title="사진(이미지 팝업) 추가">📷</button>
+</div>
+
+<div class="container">
+    <!-- 상단 파란색 책갈피 헤더 -->
+    <div class="tab-header-wrapper">
+        <div class="tab-title-area">
+            <h1>
+                🩺 임상 업무 통합 시스템 
+                <a href="index.html" style="text-decoration: none; margin-left: 5px;" title="메인으로 가기">🏠</a>
+            </h1>
+        </div>
+        <div class="bookmark-tabs">
+            <button class="tab-btn active" onclick="switchTab('basic')">기본</button>
+            <button class="tab-btn" onclick="switchTab('extended')">확장</button>
+            <button class="tab-btn" onclick="switchTab('work_d')">D근무</button>
+            <button class="tab-btn" onclick="switchTab('work_e')">E근무</button>
+            <button class="tab-btn" onclick="switchTab('work_n')">N근무</button>
+            <button class="tab-btn" onclick="switchTab('memo')">📝 메모</button>
+            <button class="tab-btn" onclick="switchTab('notice')">📢 공지</button>
+        </div>
     </div>
+
+    <!-- [TAB 1] 기본 분석기 -->
+    <div id="tab_basic" class="tab-content active">
+        <div class="top-wrapper">
+            <!-- 좌측 입력칸 -->
+            <div class="input-section">
+                <div class="input-header-row">
+                    <div class="input-title">
+                        <div class="pt-name-group">
+                            <input type="text" id="i_pt_name" placeholder="이름">
+                        </div>
+                    </div>
+                    <div class="btn-group-top">
+                        <button class="btn-pink" onclick="runAnalysis()">⚡분석</button>
+                        <button class="btn-save" onclick="saveCurrentAnalysis()">💾저장</button>
+                        <button class="btn-red" onclick="resetForm()">🔄초기화</button>
+                    </div>
+                </div>
+                
+                <div class="group-grid">
+                    <div class="input-card-group">
+                        <h3>1. 간손상 & 응고계</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_ast">AST</label><input type="number" id="i_ast" placeholder="7~38"></div>
+                            <div class="input-group"><label for="i_alt">ALT</label><input type="number" id="i_alt" placeholder="4~44"></div>
+                            <div class="input-group"><label for="i_ggt">γ-GTP 🔺</label><input type="number" id="i_ggt" placeholder="12~73"></div>
+                        </div>
+                        <div class="input-row" style="margin-top:4px;">
+                            <div class="input-group"><label for="i_pt_sec">PT(sec) 🔺</label><input type="number" id="i_pt_sec" placeholder="11~15" step="0.1"></div>
+                            <div class="input-group"><label for="i_pt_inr">PT(INR) 🔺</label><input type="number" id="i_pt_inr" placeholder="0.8~1.2" step="0.01"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>2. 신장기능 & 전해질</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_bun">BUN</label><input type="number" id="i_bun" placeholder="6~23"></div>
+                            <div class="input-group"><label for="i_cr">Cr</label><input type="number" id="i_cr" placeholder="0.6~1.2" step="0.01"></div>
+                        </div>
+                        <div class="input-row" style="margin-top:4px;">
+                            <div class="input-group"><label for="i_na">Na 🔺</label><input type="number" id="i_na" placeholder="136~145"></div>
+                            <div class="input-group"><label for="i_k">K 🔺</label><input type="number" id="i_k" placeholder="3.5~5.5" step="0.1"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>3. 백혈구 (ANC)</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_wbc">WBC</label><input type="number" id="i_wbc" placeholder="4~10"></div>
+                            <div class="input-group"><label for="i_seg">Seg (%)</label><input type="number" id="i_seg" placeholder="50~70"></div>
+                            <div class="input-group"><label for="i_band">Band (%)</label><input type="number" id="i_band" value="0"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>4. 인슐린 저항성</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_tg">TG</label><input type="number" id="i_tg" placeholder="<200"></div>
+                            <div class="input-group"><label for="i_hdl">HDL</label><input type="number" id="i_hdl" placeholder=">40"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>5. 심혈관</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_ldl">LDL</label><input type="number" id="i_ldl" placeholder="0~130"></div>
+                            <div class="input-group"><label for="i_hdl_2">HDL</label><input type="number" id="i_hdl_2" placeholder=">40"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>6. 신장나이</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_egfr">eGFR</label><input type="number" id="i_egfr" placeholder="≥60"></div>
+                            <div class="input-group"><label for="i_age">만 나이</label><input type="number" id="i_age" placeholder="나이"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측 환자 목록 -->
+            <div class="patient-sidebar">
+                <div class="sidebar-header"><span>📁 저장된 환자 목록</span></div>
+                <div class="saved-patient-list" id="saved_list_container">
+                    <p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:20px 0;">저장된 기록 없음</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 결과 레이아웃 -->
+        <div class="main-result-grid">
+            <div class="result-box-card box-patient-check">
+                <div class="box-header"><span>🔍 환자사정 & 임상해석</span></div>
+                <div id="out_patient_check"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-treatment">
+                <div class="box-header"><span>💊 치료 및 중재</span></div>
+                <div id="out_treatment_guide"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-noti">
+                <div class="box-header"><span>🚨 노티 (SBAR)</span></div>
+                <div id="out_noti_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-results">
+                <div class="box-header"><span>📊 계산결과값</span></div>
+                <div id="out_calc_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 2] 확장 기능 모듈 -->
+    <div id="tab_extended" class="tab-content">
+        <div class="grid-2">
+            <div class="ext-card full-width">
+                <h3>⚖️ 24시간 I/O </h3>
+                <div class="ext-group"><label>총 섭취량 (Intake, mL)</label><input type="number" id="ext_io_in" placeholder="예: 2500"></div>
+                <div class="ext-group"><label>총 배설량 (Output, mL)</label><input type="number" id="ext_io_out" placeholder="예: 1100"></div>
+                <div class="ext-group"><label>체중 변화 (전일 대비, kg)</label><input type="number" id="ext_wt" placeholder="예: +0.3" step="0.1"></div>
+                <button class="ext-btn" onclick="calcIOBalance()">I/O 계산</button>
+                <div id="ext_io_res" class="ext-result" style="display:none;"></div>
+            </div>
+
+            <div class="ext-card full-width">
+                <h3>💊 신장약물 용량조절용 CrCl</h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <div class="ext-group"><label>성별</label><select id="ext_gender"><option value="male">남성</option><option value="female">여성 (×0.85)</option></select></div>
+                    <div class="ext-group"><label>만 나이 (세)</label><input type="number" id="ext_age" placeholder="예: 65"></div>
+                    <div class="ext-group"><label>체중 (kg)</label><input type="number" id="ext_wt_val" placeholder="예: 60"></div>
+                    <div class="ext-group"><label>크레아티닌 (Cr, mg/dL)</label><input type="number" id="ext_cr" placeholder="예: 1.4" step="0.1"></div>
+                </div>
+                <button class="ext-btn" style="margin-top:10px;" onclick="calcCrCl()">신장 청소율(CrCl) 계산</button>
+                <div id="ext_crcl_res" class="ext-result" style="display:none;"></div>
+            </div>
+
+            <div class="ext-card full-width">
+                <h3>🧪 ABGA</h3>
+                <div class="ext-group"><label>pH (7.35 ~ 7.45)</label><input type="number" id="ext_ph" placeholder="예: 7.31" step="0.01"></div>
+                <div class="ext-group"><label>PaCO2 (35 ~ 45 mmHg)</label><input type="number" id="ext_paco2" placeholder="예: 52"></div>
+                <div class="ext-group"><label>HCO3- (22 ~ 26 mEq/L)</label><input type="number" id="ext_hco3" placeholder="예: 24"></div>
+                <button class="ext-btn" onclick="analyzeABGA()">ABGA 판독 실행</button>
+                <div id="ext_abga_res" class="ext-result" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 3] D근무 -->
+    <div id="tab_work_d" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">☀️ D 근무 (Day Duty) 업무 체크리스트</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 글자색</span>
+                        <input type="color" id="workDForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('workDInput', 'foreColor', 'workDForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 형광펜</span>
+                        <input type="color" id="workDHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('workDInput', 'hiliteColor', 'workDHiliteColor')">적용</button>
+                    </div>
+                    <span id="workDStatus" class="status-msg">✓ 저장되었습니다!</span>
+                    <button class="btn btn-primary" onclick="saveWork('d')">저장하기</button>
+                </div>
+            </div>
+            <div class="editor-container">
+                <div id="workDInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 4] E근무 -->
+    <div id="tab_work_e" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">🌆 E 근무 (Evening Duty) 업무 체크리스트</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 글자색</span>
+                        <input type="color" id="workEForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('workEInput', 'foreColor', 'workEForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 형광펜</span>
+                        <input type="color" id="workEHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('workEInput', 'hiliteColor', 'workEHiliteColor')">적용</button>
+                    </div>
+                    <span id="workEStatus" class="status-msg">✓ 저장되었습니다!</span>
+                    <button class="btn btn-primary" onclick="saveWork('e')">저장하기</button>
+                </div>
+            </div>
+            <div class="editor-container">
+                <div id="workEInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 5] N근무 -->
+    <div id="tab_work_n" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">🌙 N 근무 (Night Duty) 업무 체크리스트</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 글자색</span>
+                        <input type="color" id="workNForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('workNInput', 'foreColor', 'workNForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 형광펜</span>
+                        <input type="color" id="workNHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('workNInput', 'hiliteColor', 'workNHiliteColor')">적용</button>
+                    </div>
+                    <span id="workNStatus" class="status-msg">✓ 저장되었습니다!</span>
+                    <button class="btn btn-primary" onclick="saveWork('n')">저장하기</button>
+                </div>
+            </div>
+            <div class="editor-container">
+                <div id="workNInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 6] 📝 메모장 -->
+    <div id="tab_memo" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">📝 실시간 메모장 (날짜별 자동 저장)</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">📅 날짜</span>
+                        <input type="date" id="memoDate" class="date-picker" onchange="loadMemoByDate(this.value)">
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 글자색</span>
+                        <input type="color" id="memoForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('memoInput', 'foreColor', 'memoForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 형광펜</span>
+                        <input type="color" id="memoHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('memoInput', 'hiliteColor', 'memoHiliteColor')">적용</button>
+                    </div>
+                    <span id="memoStatus" class="status-msg">✓ 저장되었습니다!</span>
+                    <button class="btn btn-primary" onclick="saveMemo()">저장하기</button>
+                    <button class="btn btn-danger" onclick="clearMemo()">초기화</button>
+                </div>
+            </div>
+            <div class="memo-layout">
+                <div class="memo-sidebar">
+                    <div class="memo-sidebar-header">📅 저장된 날짜 목록</div>
+                    <ul id="memoDateList" class="memo-date-list"></ul>
+                </div>
+                <div class="memo-content-area">
+                    <div class="editor-container">
+                        <div id="memoInput" class="editor-div" contenteditable="true"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 7] 📢 공지사항 -->
+    <div id="tab_notice" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">📢 공지사항 (수정 및 저장 가능)</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 글자색</span>
+                        <input type="color" id="noticeForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('noticeInput', 'foreColor', 'noticeForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 형광펜</span>
+                        <input type="color" id="noticeHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('noticeInput', 'hiliteColor', 'noticeHiliteColor')">적용</button>
+                    </div>
+                    <span id="noticeStatus" class="status-msg">✓ 저장되었습니다!</span>
+                    <button class="btn btn-primary" onclick="saveNotice()">저장하기</button>
+                </div>
+            </div>
+            <div class="editor-container">
+                <div id="noticeInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📷 이미지 팝업 모달창 -->
+<div id="imageModal" class="modal-overlay" onclick="closeImagePopup()">
+    <div class="modal-container" onclick="event.stopPropagation()">
+        <button class="modal-close-btn" onclick="closeImagePopup()">&times;</button>
+        <img id="popupImage" src="" alt="팝업 이미지">
+    </div>
+</div>
+
+<script>
+    // ===== Firebase 클라우드 연동 설정 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류 발생:", e);
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const targetTab = document.getElementById('tab_' + tabName);
+        if (targetTab) targetTab.classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // 에디터 글자색 및 형광펜 적용 함수
+    function applyColor(editorId, command, pickerId) {
+        const colorValue = document.getElementById(pickerId).value;
+        const editor = document.getElementById(editorId);
+        editor.focus();
+        document.execCommand(command, false, colorValue);
+    }
+
+    // Ctrl + B 단축키로 글씨 굵게 만들기 기능
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+            const activeEl = document.activeElement;
+            if (activeEl && activeEl.getAttribute('contenteditable') === 'true') {
+                e.preventDefault();
+                document.execCommand('bold', false, null);
+            }
+        }
+    });
+
+    // 마우스 드래그 시 나타나는 플로팅 팝업 메뉴 표시
+    document.addEventListener('mouseup', function(e) {
+        const toolbar = document.getElementById('floatingToolbar');
+        const selection = window.getSelection();
+        
+        if (!selection.isCollapsed && selection.toString().trim().length > 0) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            
+            toolbar.style.display = 'flex';
+            toolbar.style.top = (rect.top + window.scrollY - 45) + 'px';
+            toolbar.style.left = (rect.left + window.scrollX + (rect.width / 2) - 100) + 'px';
+        } else {
+            if (!toolbar.contains(e.target)) {
+                toolbar.style.display = 'none';
+            }
+        }
+    });
+
+    function applyStyle(command, value) {
+        if (command === 'bold') {
+            document.execCommand('bold', false, null);
+        } else {
+            document.execCommand(command, false, value);
+        }
+    }
+
+    // 선택한 색상으로 둥근 모서리 경고박스(뱃지) 드래그 적용
+    function applyBadge() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        const selectedText = selection.toString();
+        if (!selectedText) return;
+
+        const customColor = document.getElementById('badgeColorPicker').value;
+
+        const span = document.createElement('span');
+        span.className = 'badge-warn';
+        span.style.backgroundColor = customColor;
+        span.innerText = selectedText;
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(span);
+    }
+
+    // 📷 드래그한 텍스트에 이미지 주소 입력 후 모달 팝업 연결 (파란색/밑줄 제거됨)
+    function applyGiftLink() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        const selectedText = selection.toString();
+        if (!selectedText) return;
+
+        const imgUrl = prompt("연결할 이미지 주소(URL)를 입력하세요:", "https://picsum.photos/600/400");
+        if (!imgUrl) return;
+
+        const span = document.createElement('span');
+        span.className = 'gift-link';
+        // 파란색과 밑줄을 제거하고 일반 텍스트 형태로 뒤에 아이콘만 붙도록 수정
+        span.innerHTML = `${selectedText} 📷`;
+        span.onclick = function() {
+            openImagePopup(imgUrl);
+        };
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(span);
+    }
+
+    function openImagePopup(imgUrl) {
+        const modal = document.getElementById('imageModal');
+        const popupImg = document.getElementById('popupImage');
+        popupImg.src = imgUrl;
+        modal.style.display = 'flex';
+    }
+
+    function closeImagePopup() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // 공지사항 로드 및 저장
+    const noticeInput = document.getElementById('noticeInput');
+    const noticeStatus = document.getElementById('noticeStatus');
+
+    function loadNotice() {
+        const savedNotice = localStorage.getItem('hospital_user_notice_html');
+        if (savedNotice) {
+            noticeInput.innerHTML = savedNotice;
+        } else {
+            noticeInput.innerText = "공지사항 내용을 입력하세요.";
+        }
+    }
+
+    function saveNotice() {
+        localStorage.setItem('hospital_user_notice_html', noticeInput.innerHTML);
+        noticeStatus.style.display = 'inline';
+        setTimeout(() => { noticeStatus.style.display = 'none'; }, 2000);
+    }
+
+    // D, E, N 근무 탭 로드 및 저장
+    function loadWork(type) {
+        const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
+        const saved = localStorage.getItem('hospital_user_work_' + type + '_html');
+        if (saved) {
+            inputEl.innerHTML = saved;
+        } else {
+            if (type === 'd') {
+                inputEl.innerHTML = "• 오전 바이탈 및 인계 준비\n• 정규 투약 및 주치의 회진 보조\n• 각종 검사(Lab, X-ray 등) 확인 및 결과 보고";
+            } else if (type === 'e') {
+                inputEl.innerHTML = "• 오후 활력징후 측정 및 상태 관찰\n• 저녁 투약 및 처치 수행\n• 신규 환자 입원 맞이 및 오더 확인";
+            } else if (type === 'n') {
+                inputEl.innerHTML = "• 야간 바이탈 및 수면 상태 확인\n• 익일 아침 검사 오더 최종 확인 및 라운딩\n• 새벽 응급 Lab 및 주치의 노티 기록 정리";
+            }
+        }
+    }
+
+    function saveWork(type) {
+        const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
+        const statusEl = document.getElementById('work' + type.toUpperCase() + 'Status');
+        localStorage.setItem('hospital_user_work_' + type + '_html', inputEl.innerHTML);
+        statusEl.style.display = 'inline';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+    }
+
+    // 메모장 날짜별 로드 및 저장
+    const memoInput = document.getElementById('memoInput');
+    const memoStatus = document.getElementById('memoStatus');
+    const memoDate = document.getElementById('memoDate');
+    const memoDateList = document.getElementById('memoDateList');
+
+    function loadMemoByDate(targetDate) {
+        if (!targetDate) return;
+        memoDate.value = targetDate;
+        
+        const savedMemo = localStorage.getItem('hospital_user_memo_html_' + targetDate);
+        if (savedMemo) {
+            memoInput.innerHTML = savedMemo;
+        } else {
+            memoInput.innerHTML = '';
+        }
+
+        const dateItems = document.querySelectorAll('.memo-date-item');
+        dateItems.forEach(item => {
+            if (item.innerText === targetDate) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+    function saveMemo() {
+        const selectedDate = memoDate.value;
+        if (!selectedDate) {
+            alert('날짜를 먼저 선택해 주세요.');
+            return;
+        }
+        localStorage.setItem('hospital_user_memo_html_' + selectedDate, memoInput.innerHTML);
+        updateMemoDateList();
+        memoStatus.style.display = 'inline';
+        setTimeout(() => { memoStatus.style.display = 'none'; }, 2000);
+    }
+
+    function clearMemo() {
+        const selectedDate = memoDate.value;
+        if (confirm(selectedDate + ' 메모 내용을 삭제하시겠습니까?')) {
+            memoInput.innerHTML = '';
+            localStorage.removeItem('hospital_user_memo_html_' + selectedDate);
+            updateMemoDateList();
+        }
+    }
+
+    function updateMemoDateList() {
+        memoDateList.innerHTML = '';
+        let dates = [];
+
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith('hospital_user_memo_html_')) {
+                let dateStr = key.replace('hospital_user_memo_html_', '');
+                if (dateStr) dates.push(dateStr);
+            }
+        }
+
+        dates.sort((a, b) => b.localeCompare(a));
+
+        if (dates.length === 0) {
+            const today = memoDate.value || new Date().toISOString().split('T')[0];
+            dates.push(today);
+        }
+
+        dates.forEach(date => {
+            let li = document.createElement('li');
+            li.className = 'memo-date-item';
+            if (date === memoDate.value) li.classList.add('active');
+            li.innerText = date;
+            li.onclick = function() { loadMemoByDate(date); };
+            memoDateList.appendChild(li);
+        });
+    }
+
+    // 초기 실행 설정
+    window.addEventListener('DOMContentLoaded', () => {
+        loadNotice();
+        loadWork('d');
+        loadWork('e');
+        loadWork('n');
+
+        const today = new Date().toISOString().split('T')[0];
+        memoDate.value = today;
+        updateMemoDateList();
+        loadMemoByDate(today);
+    });
+
+    function analyzeABGA() {}
+    function calcIOBalance() {}
+    function calcCrCl() {}
+    function runAnalysis() {}
+    function saveCurrentAnalysis() {}
+    function resetForm() {}
+</script>
 
 </body>
 </html>
