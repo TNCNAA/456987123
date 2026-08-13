@@ -1,3 +1,6 @@
+---
+filename: manual.html
+---
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -7,6 +10,7 @@
     <!-- Firebase SDK 로드 (클라우드 저장용) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -156,9 +160,8 @@
         .badge { display: inline-block; padding: 2px 6px; font-size: 11px; font-weight: bold; border-radius: 4px; color: white; }
         .badge-ns { background-color: #2563eb; }
         .badge-os { background-color: #059669; }
-        .badge-gs { background-color: #7c3aed; } /* 일반외과(GS) 뱃지 보라색 */
+        .badge-gs { background-color: #7c3aed; }
         .badge-check { background-color: #d97706; }
-        
         .badge-warn { color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
 
         /* 📷 이미지 팝업 모달창 스타일 */
@@ -200,7 +203,7 @@
             </h2>
         </div>
 
-        <!-- 🔘 선택 버튼 그리드에 일반외과(GS) 추가 -->
+        <!-- 🔘 선택 버튼 그리드 -->
         <div id="selectorView" class="menu-select-grid">
             <div class="menu-card-btn" onclick="showManual('ns')">🧠 신경외과 (NS)</div>
             <div class="menu-card-btn" onclick="showManual('os')">🦴 정형외과 (OS)</div>
@@ -247,6 +250,24 @@
     </div>
 
     <script>
+        // ===== Firebase 클라우드 연동 설정 =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+            authDomain: "tncnaaa.firebaseapp.com",
+            projectId: "tncnaaa",
+            storageBucket: "tncnaaa.firebasestorage.app",
+            messagingSenderId: "822557545187",
+            appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+        };
+
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch(e) {
+            console.log("Firebase 초기화 오류 발생:", e);
+        }
+
         const defaultNsHtml = `
             <div class="sub-card" style="border-color: #fca5a5;">
                 <div class="sub-title" style="background-color: #fef2f2; color: #991b1b;">
@@ -311,7 +332,6 @@
             </div>
         `;
 
-        /* 🔪 일반외과(GS) 기본 템플릿 데이터 추가 */
         const defaultGsHtml = `
             <div class="sub-card">
                 <div class="sub-title">
@@ -329,13 +349,6 @@
                             <div class="row-action-group"><input type="color" class="row-bg-picker" value="#64748b" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
                         </div>
                         <div class="editable-cell" contenteditable="true">• NPO 시작 시간 확인\n• 수술 전 혈액검사 및 EKG, CXR 확인</div>
-                    </div>
-                    <div class="manual-row-block">
-                        <div class="row-header-bar" style="background-color: #64748b;">
-                            <div class="editable-th" contenteditable="true">POD#1</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#64748b" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
-                        </div>
-                        <div class="editable-cell" contenteditable="true">• 가스 배출(Flatus) 여부 확인 후 식이 진행\n• Wound dressing 및 Pain control 확인</div>
                     </div>
                 </div>
             </div>
@@ -363,17 +376,58 @@
             </div>
         `;
 
-        window.addEventListener('DOMContentLoaded', () => {
-            let nsData = localStorage.getItem('manual_block_ns') || defaultNsHtml;
-            let osData = localStorage.getItem('manual_block_os') || defaultOsHtml;
-            let gsData = localStorage.getItem('manual_block_gs') || defaultGsHtml; // GS 데이터 로드
-            let chkData = localStorage.getItem('manual_block_chk') || defaultChkHtml;
-
-            document.getElementById('nsTableContainer').innerHTML = rebuildBlockStructure(nsData);
-            document.getElementById('osTableContainer').innerHTML = rebuildBlockStructure(osData);
-            document.getElementById('gsTableContainer').innerHTML = rebuildBlockStructure(gsData); // GS 컨테이너 적용
-            document.getElementById('chkTableContainer').innerHTML = rebuildBlockStructure(chkData);
+        // ☁️ 데이터 로드 (클라우드 파이어베이스 우선 연동, 실패시 로컬스토리지 사용)
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadDataFromCloudOrLocal('ns', 'nsTableContainer', defaultNsHtml);
+            await loadDataFromCloudOrLocal('os', 'osTableContainer', defaultOsHtml);
+            await loadDataFromCloudOrLocal('gs', 'gsTableContainer', defaultGsHtml);
+            await loadDataFromCloudOrLocal('chk', 'chkTableContainer', defaultChkHtml);
         });
+
+        async function loadDataFromCloudOrLocal(type, containerId, defaultHtml) {
+            const container = document.getElementById(containerId);
+            let rawHtml = null;
+
+            if (db) {
+                try {
+                    const docRef = db.collection("manuals").doc(type);
+                    const doc = await docRef.get();
+                    if (doc.exists) {
+                        rawHtml = doc.data().content;
+                    }
+                } catch(e) {
+                    console.log("클라우드 로드 실패, 로컬 데이터 사용:", e);
+                }
+            }
+
+            if (!rawHtml) {
+                rawHtml = localStorage.getItem('manual_block_' + type) || defaultHtml;
+            }
+
+            container.innerHTML = rebuildBlockStructure(rawHtml);
+        }
+
+        // 💾 저장 함수 (로컬 + 클라우드 동시 저장)
+        async function autoSaveContainer(container) {
+            let type = '';
+            if (container.id === 'nsTableContainer') type = 'ns';
+            else if (container.id === 'osTableContainer') type = 'os';
+            else if (container.id === 'gsTableContainer') type = 'gs';
+            else if (container.id === 'chkTableContainer') type = 'chk';
+
+            if (!type) return;
+
+            const contentHtml = container.innerHTML;
+            localStorage.setItem('manual_block_' + type, contentHtml);
+
+            if (db) {
+                try {
+                    await db.collection("manuals").doc(type).set({ content: contentHtml });
+                } catch(e) {
+                    console.log("클라우드 저장 실패:", e);
+                }
+            }
+        }
 
         function rebuildBlockStructure(htmlString) {
             const parser = new DOMParser();
@@ -529,15 +583,15 @@
         function applyGiftLink() {
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
-            const selectedText = selection.toString();
-            if (!selectedText) return;
+            const selectionText = selection.toString();
+            if (!selectionText) return;
 
             const imgUrl = prompt("연결할 이미지 주소(URL)를 입력하세요:", "https://picsum.photos/600/400");
             if (!imgUrl) return;
 
             const span = document.createElement('span');
             span.className = 'gift-link';
-            span.innerHTML = `${selectedText} 📷`;
+            span.innerHTML = `${selectionText} 📷`;
             span.onclick = function() {
                 openImagePopup(imgUrl);
             };
@@ -596,19 +650,6 @@
 
             statusMsg.style.display = 'inline';
             setTimeout(() => { statusMsg.style.display = 'none'; }, 1500);
-        }
-
-        /* 💾 각 컨테이너별 자동 저장 함수 (GS 포함) */
-        function autoSaveContainer(container) {
-            if (container.id === 'nsTableContainer') {
-                localStorage.setItem('manual_block_ns', container.innerHTML);
-            } else if (container.id === 'osTableContainer') {
-                localStorage.setItem('manual_block_os', container.innerHTML);
-            } else if (container.id === 'gsTableContainer') {
-                localStorage.setItem('manual_block_gs', container.innerHTML);
-            } else if (container.id === 'chkTableContainer') {
-                localStorage.setItem('manual_block_chk', container.innerHTML);
-            }
         }
 
         function deleteCard(button) {
