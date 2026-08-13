@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>임상 수액 계산기 (cc / gtt / 초당 방울)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 20px;
+            color: #334155;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            position: relative;
+        }
+
+        /* 📱 모바일 화면 최적화 */
+        @media screen and (max-width: 768px) {
+            body { padding: 4px !important; }
+            .container {
+                padding: 15px !important;
+                border-radius: 6px;
+                box-shadow: none;
+            }
+        }
+
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        h2 {
+            color: #0284c7;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-group {
+            margin-bottom: 15px;
+        }
+
+        .calc-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .calc-group input, .calc-group select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+            background: #fff;
+        }
+
+        .calc-group input:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+        }
+
+        .calc-btn {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
+            transition: background-color 0.2s;
+        }
+
+        .calc-btn:hover {
+            background-color: #0369a1;
+        }
+
+        /* 결과 카드 영역 */
+        .result-box {
+            margin-top: 25px;
+            background: #f0f9ff;
+            border: 2px solid #bae6fd;
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #0369a1;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #bae6fd;
+            padding-bottom: 6px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .result-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .highlight-val {
+            color: #0284c7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-area">
+            <h2>
+                💧 스마트 수액 계산기 
+                <span style="font-size: 1rem;">
+                    <a href="index.html" style="text-decoration: none;" title="메인으로 가기">🏠</a>
+                </span>
+            </h2>
+        </div>
+
+        <div class="calc-group">
+            <label for="ivVolume">1. 남은 수액 양 (mL 또는 cc)</label>
+            <input type="number" id="ivVolume" placeholder="예: 500" inputmode="numeric">
+        </div>
+
+        <div class="calc-group">
+            <label for="ivHours">2. 남은 시간 (시간)</label>
+            <input type="number" id="ivHours" placeholder="예: 8" step="0.1" inputmode="decimal">
+        </div>
+
+        <div class="calc-group">
+            <label for="ivDropFactor">3. 수액 세트 종류 (방울수 계수)</label>
+            <select id="ivDropFactor">
+                <option value="20">성인 일반 수액세트 (20 gtt/cc)</option>
+                <option value="10">수혈 세트 또는 일부 (10 gtt/cc)</option>
+                <option value="60">소아용 미세 수액세트 (60 gtt/cc)</option>
+            </select>
+        </div>
+
+        <button class="calc-btn" onclick="calculateIV()">계산하기</button>
+
+        <!-- 결과 표시 박스 -->
+        <div id="resultBox" class="result-box">
+            <div class="result-title">📊 수액 주입 속도 계산 결과</div>
+            
+            <div class="result-row">
+                <span class="result-label">⏱️ 시간당 주입 속도:</span>
+                <span class="result-value"><span id="resCcHr" class="highlight-val">0</span> cc/hr (mL/h)</span>
+            </div>
+
+            <div class="result-row">
+                <span class="result-label">💧 분당 방울수:</span>
+                <span class="result-value"><span id="resGttMin" class="highlight-val">0</span> gtt/min</span>
+            </div>
+
+            <div class="result-row" style="margin-bottom:0;">
+                <span class="result-label">⏳ 방울 간격 (몇 초에 한 방울):</span>
+                <span class="result-value"><span id="resSecDrop" class="highlight-val">0</span> 초 / 방울</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateIV() {
+            const volume = parseFloat(document.getElementById('ivVolume').value);
+            const hours = parseFloat(document.getElementById('ivHours').value);
+            const dropFactor = parseFloat(document.getElementById('ivDropFactor').value);
+
+            if (isNaN(volume) || isNaN(hours) || volume <= 0 || hours <= 0) {
+                alert('남은 수액 양과 시간을 정확하게 입력해 주세요.');
+                return;
+            }
+
+            // 1. 시간당 cc/hr = 총 남은 용량(mL) / 남은 시간(시간)
+            const ccHr = volume / hours;
+
+            // 2. 분당 방울수 (gtt/min) = (총 용량(mL) × 방울계수) / (남은 시간(시간) × 60분)
+            // 또는 (cc/hr × 방울계수) / 60
+            const gttMin = (ccHr * dropFactor) / 60;
+
+            // 3. 몇 초에 한 방울 = 60초 / 분당 방울수
+            const secPerDrop = 60 / gttMin;
+
+            // 결과 화면에 반영
+            document.getElementById('resCcHr').textContent = ccHr.toFixed(1);
+            document.getElementById('resGttMin').textContent = gttMin.toFixed(1);
+            document.getElementById('resSecDrop').textContent = secPerDrop.toFixed(1);
+
+            document.getElementById('resultBox').style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>
