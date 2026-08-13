@@ -50,12 +50,12 @@
 
         .tab-title-area h1 { 
             color: white; 
-            font-size: 0.95rem; /* 모바일에서 찌그러지지 않게 크기 조절 */
+            font-size: 0.95rem; 
             margin-bottom: 0; 
             display: flex; 
             align-items: center; 
             gap: 6px; 
-            white-space: nowrap; /* 줄바꿈 방지 */
+            white-space: nowrap; 
         }
 
         /* 🍔 햄버거 메뉴 버튼 스타일 */
@@ -115,7 +115,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
         
-        /* ✨ 근무표 상단 제목 및 버튼 영역 정렬 최적화 */
         .panel-header { 
             display: flex; 
             justify-content: space-between; 
@@ -126,7 +125,7 @@
             gap: 8px; 
         }
         .panel-title { 
-            font-size: 0.95rem; /* 글씨 크기를 줄여서 버튼과 겹침 방지 */
+            font-size: 0.95rem; 
             font-weight: bold; 
             color: var(--primary-dark); 
         }
@@ -710,6 +709,24 @@
 </div>
 
 <script>
+    // ===== Firebase 클라우드 연동 설정 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류 발생:", e);
+    }
+
     function toggleMenu() {
         const tabs = document.getElementById('bookmarkTabs');
         tabs.classList.toggle('show');
@@ -815,27 +832,50 @@
         document.getElementById('imageModal').style.display = 'none';
     }
 
+    // 📢 공지사항 클라우드 연동 로드/저장
     const noticeInput = document.getElementById('noticeInput');
     const noticeStatus = document.getElementById('noticeStatus');
 
-    function loadNotice() {
-        const savedNotice = localStorage.getItem('hospital_user_notice_html');
-        if (savedNotice) {
-            noticeInput.innerHTML = savedNotice;
-        } else {
-            noticeInput.innerText = "공지사항 내용을 입력하세요.";
+    async function loadNotice() {
+        let savedNotice = null;
+        if (db) {
+            try {
+                const doc = await db.collection("system_data").doc("notice").get();
+                if (doc.exists) savedNotice = doc.data().content;
+            } catch(e) { console.log(e); }
         }
+        if (!savedNotice) {
+            savedNotice = localStorage.getItem('hospital_user_notice_html') || "공지사항 내용을 입력하세요.";
+        }
+        noticeInput.innerHTML = savedNotice;
     }
 
-    function saveNotice() {
-        localStorage.setItem('hospital_user_notice_html', noticeInput.innerHTML);
+    async function saveNotice() {
+        const content = noticeInput.innerHTML;
+        localStorage.setItem('hospital_user_notice_html', content);
+        if (db) {
+            try {
+                await db.collection("system_data").doc("notice").set({ content: content });
+            } catch(e) { console.log(e); }
+        }
         noticeStatus.style.display = 'inline';
         setTimeout(() => { noticeStatus.style.display = 'none'; }, 2000);
     }
 
-    function loadWork(type) {
+    // ☀️ D/E/N 근무표 클라우드 연동 로드/저장
+    async function loadWork(type) {
         const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
-        const saved = localStorage.getItem('hospital_user_work_' + type + '_html');
+        let saved = null;
+        if (db) {
+            try {
+                const doc = await db.collection("system_data").doc("work_" + type).get();
+                if (doc.exists) saved = doc.data().content;
+            } catch(e) { console.log(e); }
+        }
+        if (!saved) {
+            saved = localStorage.getItem('hospital_user_work_' + type + '_html');
+        }
+
         if (saved) {
             inputEl.innerHTML = saved;
         } else {
@@ -849,29 +889,44 @@
         }
     }
 
-    function saveWork(type) {
+    async function saveWork(type) {
         const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
         const statusEl = document.getElementById('work' + type.toUpperCase() + 'Status');
-        localStorage.setItem('hospital_user_work_' + type + '_html', inputEl.innerHTML);
+        const content = inputEl.innerHTML;
+        
+        localStorage.setItem('hospital_user_work_' + type + '_html', content);
+        if (db) {
+            try {
+                await db.collection("system_data").doc("work_" + type).set({ content: content });
+            } catch(e) { console.log(e); }
+        }
+
         statusEl.style.display = 'inline';
         setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
     }
 
+    // 📝 메모장 클라우드 연동 로드/저장
     const memoInput = document.getElementById('memoInput');
     const memoStatus = document.getElementById('memoStatus');
     const memoDate = document.getElementById('memoDate');
     const memoDateList = document.getElementById('memoDateList');
 
-    function loadMemoByDate(targetDate) {
+    async function loadMemoByDate(targetDate) {
         if (!targetDate) return;
         memoDate.value = targetDate;
         
-        const savedMemo = localStorage.getItem('hospital_user_memo_html_' + targetDate);
-        if (savedMemo) {
-            memoInput.innerHTML = savedMemo;
-        } else {
-            memoInput.innerHTML = '';
+        let savedMemo = null;
+        if (db) {
+            try {
+                const doc = await db.collection("system_data").doc("memo_" + targetDate).get();
+                if (doc.exists) savedMemo = doc.data().content;
+            } catch(e) { console.log(e); }
         }
+        if (!savedMemo) {
+            savedMemo = localStorage.getItem('hospital_user_memo_html_' + targetDate) || '';
+        }
+
+        memoInput.innerHTML = savedMemo;
 
         const dateItems = document.querySelectorAll('.memo-date-item');
         dateItems.forEach(item => {
@@ -883,13 +938,21 @@
         });
     }
 
-    function saveMemo() {
+    async function saveMemo() {
         const selectedDate = memoDate.value;
         if (!selectedDate) {
             alert('날짜를 먼저 선택해 주세요.');
             return;
         }
-        localStorage.setItem('hospital_user_memo_html_' + selectedDate, memoInput.innerHTML);
+        const content = memoInput.innerHTML;
+        localStorage.setItem('hospital_user_memo_html_' + selectedDate, content);
+        
+        if (db) {
+            try {
+                await db.collection("system_data").doc("memo_" + selectedDate).set({ content: content });
+            } catch(e) { console.log(e); }
+        }
+
         updateMemoDateList();
         memoStatus.style.display = 'inline';
         setTimeout(() => { memoStatus.style.display = 'none'; }, 2000);
