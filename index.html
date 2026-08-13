@@ -3,26 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>간호사 통합 시스템 - 메인</title>
+    <title>✨ 업무 포털 ✨</title>
+    <link href="https://hangeul.pstatic.net/hangeul_font/css/nanum-square-round.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f8fafc; padding: 20px; text-align: center; }
-        .menu-box { background: white; max-width: 500px; margin: 50px auto; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h1 { color: #0284c7; margin-bottom: 20px; }
-        .nav-btn { display: block; width: 100%; padding: 12px; margin-bottom: 10px; background: #0284c7; color: white; border: none; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; text-decoration: none; }
-        .nav-btn:hover { background: #0369a1; }
+        :root {
+            --bg-color: #fff9f5;
+            --card-bg: #ffffff;
+            --primary-color: #ffb7b2;
+            --secondary-color: #ffdac1;
+            --text-color: #555555;
+            --title-color: #ff9aa2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { 
+            font-family: 'NanumSquareRound', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+            margin: 0; 
+            min-height: 100vh; 
+            display: flex;         
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px;
+        }
+
+        /* 🔒 로그인 잠금 화면 */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 249, 245, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            padding: 35px 25px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(255, 183, 178, 0.25);
+            border: 3px solid var(--secondary-color);
+        }
+
+        .login-box h3 { color: var(--title-color); margin-bottom: 10px; font-size: 1.5rem; }
+        .login-box input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 1.1rem;
+            font-family: 'NanumSquareRound', sans-serif;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            outline: none;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .login-box button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            font-size: 1.05rem;
+            font-family: 'NanumSquareRound', sans-serif;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 183, 178, 0.4);
+        }
+        .login-error { color: #ff6b6b; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold; }
+
+        /* 메인 포털 화면 */
+        .menu-box { 
+            background: var(--card-bg); 
+            width: 100%;             
+            max-width: 450px;        
+            padding: 35px 30px; 
+            border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            text-align: center;      
+            border: 3px solid var(--secondary-color);
+        }
+
+        h1 { color: var(--title-color); margin-bottom: 25px; font-size: 1.6rem; }
+        
+        .nav-btn { 
+            display: block; 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 12px; 
+            background: var(--primary-color); 
+            color: white; 
+            border: none; 
+            border-radius: 15px; 
+            font-size: 1.05rem; 
+            font-family: 'NanumSquareRound', sans-serif;
+            font-weight: bold; 
+            cursor: pointer; 
+            text-decoration: none; 
+            box-sizing: border-box; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .nav-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .settings-area { margin-top: 25px; border-top: 2px dashed #eee; padding-top: 15px; text-align: center; }
+        .pwd-change-btn { background: none; border: none; color: #888; font-family: 'NanumSquareRound', sans-serif; font-size: 0.85rem; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <div class="menu-box">
-        <h1>🩺 간호사 업무 포털</h1>
-        <p style="color: #64748b; margin-bottom: 20px;">이동할 메뉴를 선택해 주세요.</p>
-        
-        <!-- 다른 파일로 이동하는 버튼들 -->
-        <a href="index.html" class="nav-btn">📊  현재 페이지</a>
-        <a href="nurse.html" class="nav-btn" style="background: #10b981;">💊 혈액검사 분석기</a>
-<a href="photo.html" class="nav-btn" style="background: #10b981;">📷 사진 </a>
+    <!-- 🔒 잠금 화면 -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h3>🧸 </h3>
+            <input type="password" id="pwInput" placeholder="🐾" onkeypress="checkEnter(event)">
+            <button onclick="tryLogin()">(❁´◡`❁)</button>
+            <div id="loginError" class="login-error">앗, 비밀번호가 틀렸어요! 🥺</div>
+        </div>
     </div>
+
+    <!-- 메인 포털 화면 -->
+    <div class="menu-box">
+        <h1>🌸 업무 포털 🌸</h1>
+                
+        <!-- 각 기능별 파일 링크 버튼들 -->
+        <a href="manual.html" class="nav-btn" style="background: #ffdac1; color: #333;">📖 메뉴얼</a>
+        <a href="nurse.html" class="nav-btn" style="background: #ffb7b2;">💊 혈액검사</a>
+        <a href="photo.html" class="nav-btn" style="background: #b5ead7; color: #333;">📷 사진</a>
+        <a href="iv_calc.html" class="nav-btn" style="background: #c7ceea; color: #333;">💧 수액 계산기</a>
+
+        <!-- 비밀번호 변경 버튼 -->
+        <div class="settings-area">
+            <button class="pwd-change-btn" onclick="changePassword()">비밀번호 변경하기 🔒</button>
+        </div>
+    </div>
+
+    <script>
+        // 초기 비밀번호 설정 (저장된 게 없으면 기본 '1234')
+        if (!localStorage.getItem('portal_main_password')) {
+            localStorage.setItem('portal_main_password', '1234');
+        }
+
+        // 👈 핵심: 페이지가 로드될 때 이미 로그인한 적이 있는지 확인
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('loginOverlay').style.display = 'none';
+            }
+        });
+
+        function checkEnter(e) {
+            if (e.key === 'Enter') tryLogin();
+        }
+
+        function tryLogin() {
+            const inputVal = document.getElementById('pwInput').value;
+            const savedPw = localStorage.getItem('portal_main_password');
+            const errorMsg = document.getElementById('loginError');
+
+            if (inputVal === savedPw) {
+                // 👈 핵심: 로그인 성공 시 세션 스토리지에 기록 남기기
+                sessionStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('loginOverlay').style.display = 'none';
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('pwInput').value = '';
+            }
+        }
+
+        function changePassword() {
+            const currentPw = prompt("기존 비밀번호를 입력해주세요 🔑");
+            const savedPw = localStorage.getItem('portal_main_password');
+
+            if (currentPw === savedPw) {
+                const newPw = prompt("새로운 비밀번호를 입력해주세요 ✨");
+                if (newPw && newPw.trim() !== "") {
+                    localStorage.setItem('portal_main_password', newPw.trim());
+                    alert("비밀번호가 예쁘게 변경되었습니다! 💖");
+                } else {
+                    alert("비밀번호 변경이 취소되었어요.");
+                }
+            } else if (currentPw !== null) {
+                alert("기존 비밀번호가 올바르지 않아요! 🥲");
+            }
+        }
+    </script>
 
 </body>
 </html>
