@@ -38,33 +38,63 @@
         /* 상단 파란색 책갈피(Tab) 스타일 헤더 */
         .tab-header-wrapper {
             background: linear-gradient(135deg, #0284c7, #0f172a);
-            padding: 10px 14px 0 14px;
-            border-radius: 8px 8px 0 0;
+            padding: 10px 14px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
             margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
-            gap: 10px;
+            position: relative;
         }
 
-        .tab-title-area h1 { color: white; font-size: 1.1rem; margin-bottom: 0; }
+        .tab-title-area h1 { color: white; font-size: 1.1rem; margin-bottom: 0; display: flex; align-items: center; gap: 10px; }
 
-        .bookmark-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
-        .tab-btn {
-            background: #0369a1;
-            color: rgba(255,255,255,0.75);
+        /* 🍔 햄버거 메뉴 버튼 스타일 */
+        .hamburger-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
             border: none;
             padding: 6px 12px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            border-radius: 6px 6px 0 0;
+            font-size: 1.1rem;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+        .hamburger-btn:hover { background: rgba(255,255,255,0.3); }
+
+        /* 둥둥 떠서 나타나는 메뉴 박스 */
+        .bookmark-tabs { 
+            display: none;
+            position: absolute;
+            top: 55px;
+            right: 14px;
+            background: #0f172a;
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            z-index: 9999;
+            gap: 6px; 
+            flex-direction: column;
+            min-width: 160px;
+        }
+        .bookmark-tabs.show { display: flex; }
+
+        .tab-btn {
+            background: #0369a1;
+            color: rgba(255,255,255,0.85);
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
             transition: all 0.2s;
         }
         .tab-btn:hover { background: #0284c7; color: white; }
-        .tab-btn.active { background: var(--card-bg); color: var(--primary-dark); border-top: 3px solid var(--primary); }
+        .tab-btn.active { background: var(--card-bg); color: var(--primary-dark); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -123,15 +153,8 @@
         #floatingToolbar button:hover { background: rgba(255,255,255,0.2); }
         #floatingToolbar input[type="color"] { width: 22px; height: 22px; padding: 0; vertical-align: middle; }
 
-        /* 📷 사진 링크 스타일 (밑줄 및 강제 색상 변경 제거) */
-        .gift-link { 
-            cursor: pointer; 
-            font-size: 0.95rem !important; 
-            vertical-align: baseline; 
-            display: inline;
-        }
+        .gift-link { cursor: pointer; font-size: 0.95rem !important; vertical-align: baseline; display: inline; }
 
-        /* 📷 이미지 팝업 모달창 스타일 */
         .modal-overlay {
             display: none; 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -149,10 +172,8 @@
             font-size: 2rem; cursor: pointer; border: none; background: none;
         }
         
-        /* 🚨 경고박스 뱃지 스타일 */
         .badge-warn { color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
 
-        /* 메모장 레이아웃 (좌우 분할) */
         .memo-layout { display: flex; gap: 15px; }
         .memo-sidebar { width: 200px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; flex-shrink: 0; max-height: 500px; }
         .memo-sidebar-header { font-size: 0.85rem; font-weight: bold; color: var(--secondary); padding-bottom: 6px; margin-bottom: 6px; border-bottom: 2px solid #e2e8f0; text-align: center; }
@@ -162,7 +183,6 @@
         .memo-date-item.active { background-color: var(--primary); color: white; font-weight: bold; }
         .memo-content-area { flex: 1; display: flex; flex-direction: column; }
 
-        /* 레이아웃 */
         .top-wrapper {
             display: grid;
             grid-template-columns: 1fr 280px;
@@ -339,29 +359,31 @@
         .sbar-line { font-size: 0.8rem; margin-bottom: 3px; line-height: 1.35; }
         .sbar-lbl { font-weight: bold; color: #991b1b; display: inline-block; width: 18px; }
 
-        .work-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); min-height: 400px; }
-        .work-card h2 { font-size: 1.2rem; color: var(--primary-dark); margin-bottom: 12px; border-bottom: 2px solid #e0f2fe; padding-bottom: 6px; }
-        .work-card p { font-size: 0.9rem; color: var(--secondary); margin-bottom: 10px; }
-
-        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .ext-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        /* ✨ 확장 탭 레이아웃 깨짐 방지 및 정돈된 스타일 */
+        .grid-2 { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+        }
+        .ext-card { 
+            background: white; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            padding: 15px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03); 
+            width: 100%;
+        }
         .ext-card h3 { font-size: 1rem; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 2px solid #e0f2fe; padding-bottom: 5px; }
         .ext-group { margin-bottom: 10px; }
         .ext-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--secondary); margin-bottom: 3px; }
-        .ext-group input, .ext-group select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
-        .ext-btn { background: var(--primary); color: white; border: none; padding: 8px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
+        .ext-group input, .ext-group select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; background: #fff; }
+        .ext-btn { background: var(--primary); color: white; border: none; padding: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 0.9rem; }
         .ext-btn:hover { background: var(--primary-dark); }
         .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 10px; border-radius: 4px; font-size: 0.85rem; margin-top: 10px; white-space: pre-line; }
-
-        @media (min-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr 1fr; }
-            .ext-card.full-width { grid-column: span 2; }
-        }
     </style>
 </head>
 <body>
 
-<!-- ✨ 마우스 드래그 시 나타나는 플로팅 팝업 메뉴 바 -->
 <div id="floatingToolbar">
     <span style="color:#94a3b8; font-size:0.7rem;">색:</span>
     <input type="color" id="dragTextColor" value="#000000" title="글자색" onchange="applyStyle('foreColor', this.value)">
@@ -375,7 +397,7 @@
 </div>
 
 <div class="container">
-    <!-- 상단 파란색 책갈피 헤더 -->
+    <!-- 상단 헤더 -->
     <div class="tab-header-wrapper">
         <div class="tab-title-area">
             <h1>
@@ -383,7 +405,9 @@
                 <a href="index.html" style="text-decoration: none; margin-left: 5px;" title="메인으로 가기">🏠</a>
             </h1>
         </div>
-        <div class="bookmark-tabs">
+        <button class="hamburger-btn" onclick="toggleMenu()" title="메뉴 열기/닫기">☰ 메뉴</button>
+        
+        <div id="bookmarkTabs" class="bookmark-tabs">
             <button class="tab-btn active" onclick="switchTab('basic')">기본</button>
             <button class="tab-btn" onclick="switchTab('extended')">확장</button>
             <button class="tab-btn" onclick="switchTab('work_d')">D근무</button>
@@ -397,7 +421,6 @@
     <!-- [TAB 1] 기본 분석기 -->
     <div id="tab_basic" class="tab-content active">
         <div class="top-wrapper">
-            <!-- 좌측 입력칸 -->
             <div class="input-section">
                 <div class="input-header-row">
                     <div class="input-title">
@@ -473,7 +496,6 @@
                 </div>
             </div>
 
-            <!-- 우측 환자 목록 -->
             <div class="patient-sidebar">
                 <div class="sidebar-header"><span>📁 저장된 환자 목록</span></div>
                 <div class="saved-patient-list" id="saved_list_container">
@@ -482,7 +504,6 @@
             </div>
         </div>
 
-        <!-- 메인 결과 레이아웃 -->
         <div class="main-result-grid">
             <div class="result-box-card box-patient-check">
                 <div class="box-header"><span>🔍 환자사정 & 임상해석</span></div>
@@ -503,10 +524,10 @@
         </div>
     </div>
 
-    <!-- [TAB 2] 확장 기능 모듈 -->
+    <!-- [TAB 2] 확장 기능 모듈 (수직 정렬로 수정됨) -->
     <div id="tab_extended" class="tab-content">
         <div class="grid-2">
-            <div class="ext-card full-width">
+            <div class="ext-card">
                 <h3>⚖️ 24시간 I/O </h3>
                 <div class="ext-group"><label>총 섭취량 (Intake, mL)</label><input type="number" id="ext_io_in" placeholder="예: 2500"></div>
                 <div class="ext-group"><label>총 배설량 (Output, mL)</label><input type="number" id="ext_io_out" placeholder="예: 1100"></div>
@@ -515,19 +536,17 @@
                 <div id="ext_io_res" class="ext-result" style="display:none;"></div>
             </div>
 
-            <div class="ext-card full-width">
+            <div class="ext-card">
                 <h3>💊 신장약물 용량조절용 CrCl</h3>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-                    <div class="ext-group"><label>성별</label><select id="ext_gender"><option value="male">남성</option><option value="female">여성 (×0.85)</option></select></div>
-                    <div class="ext-group"><label>만 나이 (세)</label><input type="number" id="ext_age" placeholder="예: 65"></div>
-                    <div class="ext-group"><label>체중 (kg)</label><input type="number" id="ext_wt_val" placeholder="예: 60"></div>
-                    <div class="ext-group"><label>크레아티닌 (Cr, mg/dL)</label><input type="number" id="ext_cr" placeholder="예: 1.4" step="0.1"></div>
-                </div>
+                <div class="ext-group"><label>성별</label><select id="ext_gender"><option value="male">남성</option><option value="female">여성 (×0.85)</option></select></div>
+                <div class="ext-group"><label>만 나이 (세)</label><input type="number" id="ext_age" placeholder="예: 65"></div>
+                <div class="ext-group"><label>체중 (kg)</label><input type="number" id="ext_wt_val" placeholder="예: 60"></div>
+                <div class="ext-group"><label>크레아티닌 (Cr, mg/dL)</label><input type="number" id="ext_cr" placeholder="예: 1.4" step="0.1"></div>
                 <button class="ext-btn" style="margin-top:10px;" onclick="calcCrCl()">신장 청소율(CrCl) 계산</button>
                 <div id="ext_crcl_res" class="ext-result" style="display:none;"></div>
             </div>
 
-            <div class="ext-card full-width">
+            <div class="ext-card">
                 <h3>🧪 ABGA</h3>
                 <div class="ext-group"><label>pH (7.35 ~ 7.45)</label><input type="number" id="ext_ph" placeholder="예: 7.31" step="0.01"></div>
                 <div class="ext-group"><label>PaCO2 (35 ~ 45 mmHg)</label><input type="number" id="ext_paco2" placeholder="예: 52"></div>
@@ -691,7 +710,19 @@
 </div>
 
 <script>
-    // ===== Firebase 클라우드 연동 설정 =====
+    function toggleMenu() {
+        const tabs = document.getElementById('bookmarkTabs');
+        tabs.classList.toggle('show');
+    }
+
+    window.addEventListener('click', function(e) {
+        const tabs = document.getElementById('bookmarkTabs');
+        const btn = document.querySelector('.hamburger-btn');
+        if (!tabs.contains(e.target) && !btn.contains(e.target)) {
+            tabs.classList.remove('show');
+        }
+    });
+
     const firebaseConfig = {
         apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
         authDomain: "tncnaaa.firebaseapp.com",
@@ -715,9 +746,9 @@
         const targetTab = document.getElementById('tab_' + tabName);
         if (targetTab) targetTab.classList.add('active');
         event.currentTarget.classList.add('active');
+        document.getElementById('bookmarkTabs').classList.remove('show');
     }
 
-    // 에디터 글자색 및 형광펜 적용 함수
     function applyColor(editorId, command, pickerId) {
         const colorValue = document.getElementById(pickerId).value;
         const editor = document.getElementById(editorId);
@@ -725,7 +756,6 @@
         document.execCommand(command, false, colorValue);
     }
 
-    // Ctrl + B 단축키로 글씨 굵게 만들기 기능
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
             const activeEl = document.activeElement;
@@ -736,7 +766,6 @@
         }
     });
 
-    // 마우스 드래그 시 나타나는 플로팅 팝업 메뉴 표시
     document.addEventListener('mouseup', function(e) {
         const toolbar = document.getElementById('floatingToolbar');
         const selection = window.getSelection();
@@ -763,7 +792,6 @@
         }
     }
 
-    // 선택한 색상으로 둥근 모서리 경고박스(뱃지) 드래그 적용
     function applyBadge() {
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
@@ -782,7 +810,6 @@
         range.insertNode(span);
     }
 
-    // 📷 드래그한 텍스트에 이미지 주소 입력 후 모달 팝업 연결 (파란색/밑줄 제거됨)
     function applyGiftLink() {
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
@@ -794,7 +821,6 @@
 
         const span = document.createElement('span');
         span.className = 'gift-link';
-        // 파란색과 밑줄을 제거하고 일반 텍스트 형태로 뒤에 아이콘만 붙도록 수정
         span.innerHTML = `${selectedText} 📷`;
         span.onclick = function() {
             openImagePopup(imgUrl);
@@ -816,7 +842,6 @@
         document.getElementById('imageModal').style.display = 'none';
     }
 
-    // 공지사항 로드 및 저장
     const noticeInput = document.getElementById('noticeInput');
     const noticeStatus = document.getElementById('noticeStatus');
 
@@ -835,7 +860,6 @@
         setTimeout(() => { noticeStatus.style.display = 'none'; }, 2000);
     }
 
-    // D, E, N 근무 탭 로드 및 저장
     function loadWork(type) {
         const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
         const saved = localStorage.getItem('hospital_user_work_' + type + '_html');
@@ -860,7 +884,6 @@
         setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
     }
 
-    // 메모장 날짜별 로드 및 저장
     const memoInput = document.getElementById('memoInput');
     const memoStatus = document.getElementById('memoStatus');
     const memoDate = document.getElementById('memoDate');
@@ -937,8 +960,197 @@
         });
     }
 
-    // 초기 실행 설정
+    function runAnalysis() {
+        const ast = parseFloat(document.getElementById('i_ast').value) || 0;
+        const alt = parseFloat(document.getElementById('i_alt').value) || 0;
+        const ggt = parseFloat(document.getElementById('i_ggt').value) || 0;
+        const pt_inr = parseFloat(document.getElementById('i_pt_inr').value) || 1.0;
+        const bun = parseFloat(document.getElementById('i_bun').value) || 0;
+        const cr = parseFloat(document.getElementById('i_cr').value) || 0;
+        const na = parseFloat(document.getElementById('i_na').value) || 140;
+        const k = parseFloat(document.getElementById('i_k').value) || 4.0;
+        const wbc = parseFloat(document.getElementById('i_wbc').value) || 6;
+        const seg = parseFloat(document.getElementById('i_seg').value) || 60;
+        const band = parseFloat(document.getElementById('i_band').value) || 0;
+
+        const anc = wbc * 1000 * ((seg + band) / 100);
+
+        let checkHtml = "";
+        let treatHtml = "";
+        let notiHtml = "";
+        let calcHtml = "";
+
+        if (ast > 38 || alt > 44) {
+            checkHtml += `<div class="result-item"><div class="result-item-title">간 기능 이상</div><div class="result-item-val" style="color:var(--danger)">AST/ALT 상승 소견이 관찰됩니다.</div></div>`;
+            treatHtml += `<div class="result-item"><div class="result-item-title">간 보호 조치</div><div class="result-item-val">간독성 약물 투여를 확인하고 필요시 주치의 오더 확인 요망.</div></div>`;
+        } else {
+            checkHtml += `<div class="result-item"><div class="result-item-title">간 기능</div><div class="result-item-val">정상 범위 내에 있습니다.</div></div>`;
+        }
+
+        if (cr > 1.2 || bun > 23) {
+            checkHtml += `<div class="result-item"><div class="result-item-title">신장 기능 저하</div><div class="result-item-val" style="color:var(--danger)">BUN/Cr 수치 상승 확인. 수분 섭취 및 I/O 모니터링 필요.</div></div>`;
+        }
+
+        if (anc < 1500) {
+            checkHtml += `<div class="result-item"><div class="result-item-title">면역력 저하 (ANC)</div><div class="result-item-val" style="color:var(--danger)">ANC 수치가 ${anc.toFixed(0)}으로 호중구 감소증 위험이 있습니다. 역격리 및 감염 주의.</div></div>`;
+        }
+
+        if (checkHtml === "") {
+            checkHtml = `<p style="font-size:0.85rem; color:#16a34a; font-weight:bold;">특이 소견이 발견되지 않았습니다. 모든 수치가 안정적입니다.</p>`;
+        }
+
+        if (treatHtml === "") {
+            treatHtml = `<p style="font-size:0.85rem; color:#64748b;">현재 특별한 추가 중재 가이드가 필요하지 않습니다.</p>`;
+        }
+
+        notiHtml = `
+            <div class="sbar-card">
+                <h4>[SBAR 노티 템플릿]</h4>
+                <div class="sbar-line"><span class="sbar-lbl">S:</span> 환자 상태 보고 (수치 변동 확인)</div>
+                <div class="sbar-line"><span class="sbar-lbl">B:</span> 주요 Lab 결과: AST/ALT (${ast}/${alt}), Cr (${cr}), Na/K (${na}/${k})</div>
+                <div class="sbar-line"><span class="sbar-lbl">A:</span> 현재 임상적 모니터링 및 추가 처치 필요성 제기</div>
+                <div class="sbar-line"><span class="sbar-lbl">R:</span> 추가 오더(재검 혹은 투약 조절) 확인 요청 드립니다.</div>
+            </div>
+        `;
+
+        calcHtml = `
+            <div class="result-item"><div class="result-item-title">계산된 ANC 수치</div><div class="result-item-val">${anc.toFixed(0)} /µL</div></div>
+            <div class="result-item"><div class="result-item-title">전해질 균형</div><div class="result-item-val">Na: ${na}, K: ${k}</div></div>
+        `;
+
+        document.getElementById('out_patient_check').innerHTML = checkHtml;
+        document.getElementById('out_treatment_guide').innerHTML = treatHtml;
+        document.getElementById('out_noti_list').innerHTML = notiHtml;
+        document.getElementById('out_calc_list').innerHTML = calcHtml;
+    }
+
+    function saveCurrentAnalysis() {
+        const name = document.getElementById('i_pt_name').value.trim() || "무명 환자";
+        const date = new Date().toLocaleDateString();
+        const recordId = 'pt_' + Date.now();
+        
+        const dataObj = {
+            name: name,
+            date: date,
+            ast: document.getElementById('i_ast').value,
+            alt: document.getElementById('i_alt').value
+        };
+
+        localStorage.setItem(recordId, JSON.stringify(dataObj));
+        loadSavedRecords();
+        alert(name + " 환자 기록이 저장되었습니다.");
+    }
+
+    function loadSavedRecords() {
+        const container = document.getElementById('saved_list_container');
+        container.innerHTML = '';
+        let keys = [];
+
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith('pt_')) keys.push(key);
+        }
+
+        if (keys.length === 0) {
+            container.innerHTML = '<p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:20px 0;">저장된 기록 없음</p>';
+            return;
+        }
+
+        keys.sort((a, b) => b.localeCompare(a));
+
+        keys.forEach(key => {
+            try {
+                let obj = JSON.parse(localStorage.getItem(key));
+                let div = document.createElement('div');
+                div.className = 'patient-list-item';
+                div.innerHTML = `
+                    <div class="patient-info-click" onclick="loadPatient('${key}')">
+                        <span class="patient-name-txt">${obj.name}</span>
+                        <span class="patient-date-txt">${obj.date}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deletePatient(event, '${key}')">&times;</button>
+                `;
+                container.appendChild(div);
+            } catch(e) {}
+        });
+    }
+
+    function loadPatient(key) {
+        let obj = JSON.parse(localStorage.getItem(key));
+        if (obj) {
+            document.getElementById('i_pt_name').value = obj.name;
+            document.getElementById('i_ast').value = obj.ast || '';
+            document.getElementById('i_alt').value = obj.alt || '';
+            runAnalysis();
+        }
+    }
+
+    function deletePatient(e, key) {
+        e.stopPropagation();
+        if (confirm("저장된 환자 기록을 삭제하시겠습니까?")) {
+            localStorage.removeItem(key);
+            loadSavedRecords();
+        }
+    }
+
+    function resetForm() {
+        document.querySelectorAll('.input-section input').forEach(input => input.value = '');
+        document.getElementById('out_patient_check').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p>';
+        document.getElementById('out_treatment_guide').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p>';
+        document.getElementById('out_noti_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p>';
+        document.getElementById('out_calc_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p>';
+    }
+
+    // 확장 탭 기능 스크립트
+    function calcIOBalance() {
+        const inVal = parseFloat(document.getElementById('ext_io_in').value) || 0;
+        const outVal = parseFloat(document.getElementById('ext_io_out').value) || 0;
+        const wtVal = parseFloat(document.getElementById('ext_wt').value) || 0;
+        const balance = inVal - outVal;
+        
+        const resDiv = document.getElementById('ext_io_res');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `[I/O 결과]\n• 총 섭취: ${inVal} mL / 총 배설: ${outVal} mL\n• 밸런스(Balance): ${balance >= 0 ? '+' : ''}${balance} mL\n• 체중 변화: ${wtVal} kg`;
+    }
+
+    function calcCrCl() {
+        const gender = document.getElementById('ext_gender').value;
+        const age = parseFloat(document.getElementById('ext_age').value) || 0;
+        const wt = parseFloat(document.getElementById('ext_wt_val').value) || 0;
+        const cr = parseFloat(document.getElementById('ext_cr').value) || 0;
+
+        if (age <= 0 || wt <= 0 || cr <= 0) {
+            alert('나이, 체중, 크레아티닌 값을 올바르게 입력해주세요.');
+            return;
+        }
+
+        let crcl = ((140 - age) * wt) / (72 * cr);
+        if (gender === 'female') crcl *= 0.85;
+
+        const resDiv = document.getElementById('ext_crcl_res');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `[Cockcroft-Gault CrCl 결과]\n• 청소율(CrCl): ${crcl.toFixed(1)} mL/min`;
+    }
+
+    function analyzeABGA() {
+        const ph = parseFloat(document.getElementById('ext_ph').value) || 7.40;
+        const paco2 = parseFloat(document.getElementById('ext_paco2').value) || 40;
+        const hco3 = parseFloat(document.getElementById('ext_hco3').value) || 24;
+
+        let status = "정상 범위";
+        if (ph < 7.35) {
+            status = paco2 > 45 ? "호흡성 산증 (Respiratory Acidosis)" : "대사성 산증 (Metabolic Acidosis)";
+        } else if (ph > 7.45) {
+            status = paco2 < 35 ? "호흡성 알칼리증 (Respiratory Alkalosis)" : "대사성 알칼리증 (Metabolic Alkalosis)";
+        }
+
+        const resDiv = document.getElementById('ext_abga_res');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `[ABGA 판독 결과]\n• pH: ${ph}, PaCO2: ${paco2}, HCO3: ${hco3}\n• 예상 판독: ${status}`;
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+        loadSavedRecords();
         loadNotice();
         loadWork('d');
         loadWork('e');
@@ -949,13 +1161,6 @@
         updateMemoDateList();
         loadMemoByDate(today);
     });
-
-    function analyzeABGA() {}
-    function calcIOBalance() {}
-    function calcCrCl() {}
-    function runAnalysis() {}
-    function saveCurrentAnalysis() {}
-    function resetForm() {}
 </script>
 
 </body>
