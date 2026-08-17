@@ -35,7 +35,7 @@
 
         .container { max-width: 1550px; margin: 0 auto; position: relative; }
 
-        /* ✨ 상단 파란색 헤더 (제목 찌그러짐 방지 최적화) */
+        /* 상단 파란색 헤더 */
         .tab-header-wrapper {
             background: linear-gradient(135deg, #0284c7, #0f172a);
             padding: 10px 12px;
@@ -58,7 +58,6 @@
             white-space: nowrap; 
         }
 
-        /* 🍔 햄버거 메뉴 버튼 스타일 */
         .hamburger-btn {
             background: rgba(255,255,255,0.2);
             color: white;
@@ -71,7 +70,6 @@
         }
         .hamburger-btn:hover { background: rgba(255,255,255,0.3); }
 
-        /* 둥둥 떠서 나타나는 메뉴 박스 */
         .bookmark-tabs { 
             display: none;
             position: absolute;
@@ -106,20 +104,18 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* 공지 및 메모 탭 내부 패널 스타일 */
         .panel-box {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-shadow: none;
         }
         
         .panel-header { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 12px; 
+            margin-bottom: 10px; 
             padding-bottom: 8px; 
             border-bottom: 2px solid var(--primary); 
             gap: 8px; 
@@ -131,7 +127,7 @@
         }
         
         .editor-container { display: flex; flex-direction: column; gap: 8px; }
-        .editor-div { min-height: 400px; padding: 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; line-height: 1.6; background-color: white; white-space: pre-wrap; }
+        .editor-div { min-height: 450px; padding: 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; line-height: 1.6; background-color: white; white-space: pre-wrap; }
         
         .editor-btn-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
         .toolbar-group { display: flex; align-items: center; gap: 4px; background: #e2e8f0; padding: 3px 6px; border-radius: 6px; }
@@ -143,10 +139,61 @@
         .btn-apply { padding: 3px 6px; font-size: 0.7rem; background-color: #475569; color: white; border-radius: 4px; }
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-primary:hover { background-color: var(--primary-dark); }
-        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-magic { background-color: #8b5cf6; color: white; }
+        .btn-magic:hover { background-color: #7c3aed; }
         .status-msg { font-size: 0.75rem; color: #16a34a; font-weight: bold; display: none; }
 
-        /* ✨ 드래그 시 나타나는 플로팅 팝업 메뉴 스타일 */
+        /* 🏷️ 부서별 뱃지 클래스 정의 */
+        .tag-ns1  { background: #ff9800; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-ns3  { background: #1c52ed; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-ns5  { background: #7b1fa2; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-os1  { background: #ffeb3b; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-os2  { background: #e65100; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-nr   { background: #1b5e20; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-fm   { background: #ffffff; color: #0f172a; border: 1px solid #94a3b8; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-lab  { background: #f43f5e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-chk  { background: #42a5f5; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-pt   { background: #6d4c41; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-vid  { background: #000000; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .tag-ward { background: #ec4899; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+
+        /* 🏷️ 상단 필터 바 스타일 */
+        .notice-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+        .tag-filter-btn {
+            padding: 5px 11px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        .tag-filter-btn:hover { opacity: 0.9; }
+        .tag-filter-btn.active { opacity: 1; border: 2px solid #000; padding: 3px 9px; }
+
+        .bg-all  { background: #64748b; color: white; opacity: 1; }
+        .bg-ns1  { background: #ff9800; color: white; }
+        .bg-ns3  { background: #1c52ed; color: white; }
+        .bg-ns5  { background: #7b1fa2; color: white; }
+        .bg-os1  { background: #ffeb3b; color: #1e293b; }
+        .bg-os2  { background: #e65100; color: white; }
+        .bg-nr   { background: #1b5e20; color: white; }
+        .bg-fm   { background: #ffffff; color: #0f172a; border: 1px solid #94a3b8; }
+        .bg-lab  { background: #f43f5e; color: white; }
+        .bg-chk  { background: #42a5f5; color: white; }
+        .bg-pt   { background: #6d4c41; color: white; }
+        .bg-vid  { background: #000000; color: white; }
+        .bg-ward { background: #ec4899; color: white; }
+
         #floatingToolbar {
             display: none;
             position: absolute;
@@ -392,7 +439,7 @@
         .ext-group input, .ext-group select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; background: #fff; }
         .ext-btn { background: var(--primary); color: white; border: none; padding: 8px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 0.85rem; }
         .ext-btn:hover { background: var(--primary-dark); }
-        .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 8px; border-radius: 4px; font-size: 0.8rem; margin-top: 8px; white-space: pre-line; }
+        .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 8px; border-radius: 4px; font-size: 0.80rem; margin-top: 8px; white-space: pre-line; }
 
         @media (min-width: 768px) {
             .grid-2 { grid-template-columns: 1fr 1fr; }
@@ -439,7 +486,6 @@
     <!-- [TAB 1] 기본 분석기 -->
     <div id="tab_basic" class="tab-content active">
         <div class="top-wrapper">
-            <!-- 좌측 입력칸 -->
             <div class="input-section">
                 <div class="input-header-row">
                     <div class="input-title">
@@ -515,7 +561,6 @@
                 </div>
             </div>
 
-            <!-- 우측 환자 목록 -->
             <div class="patient-sidebar">
                 <div class="sidebar-header"><span>📁 저장된 환자 목록</span></div>
                 <div class="saved-patient-list" id="saved_list_container">
@@ -524,7 +569,6 @@
             </div>
         </div>
 
-        <!-- 메인 결과 레이아웃 -->
         <div class="main-result-grid">
             <div class="result-box-card box-patient-check">
                 <div class="box-header"><span>🔍 환자사정 & 임상해석</span></div>
@@ -689,9 +733,28 @@
             <div class="panel-header">
                 <div class="panel-title">📢 공지사항</div>
                 <div class="editor-btn-group">
+                    <button class="btn btn-magic" onclick="convertHashToBadges()" title="입력한 단어를 예쁜 뱃지로 변환">🪄 뱃지 변환</button>
                     <button class="btn btn-primary" onclick="saveNotice()">저장</button>
                 </div>
             </div>
+
+            <!-- 🏷️ 필터 바 (맨 위 배치) -->
+            <div class="notice-filter-bar">
+                <button class="tag-filter-btn bg-all active" onclick="filterNoticeByTag('all', this)">전체</button>
+                <button class="tag-filter-btn bg-ns1" onclick="filterNoticeByTag('NS1', this)">NS1</button>
+                <button class="tag-filter-btn bg-ns3" onclick="filterNoticeByTag('NS3', this)">NS3</button>
+                <button class="tag-filter-btn bg-ns5" onclick="filterNoticeByTag('NS5', this)">NS5</button>
+                <button class="tag-filter-btn bg-os1" onclick="filterNoticeByTag('OS1', this)">OS1</button>
+                <button class="tag-filter-btn bg-os2" onclick="filterNoticeByTag('OS2', this)">OS2</button>
+                <button class="tag-filter-btn bg-nr" onclick="filterNoticeByTag('NR', this)">NR</button>
+                <button class="tag-filter-btn bg-fm" onclick="filterNoticeByTag('FM', this)">FM</button>
+                <button class="tag-filter-btn bg-lab" onclick="filterNoticeByTag('임병', this)">임병</button>
+                <button class="tag-filter-btn bg-chk" onclick="filterNoticeByTag('검진', this)">검진</button>
+                <button class="tag-filter-btn bg-pt" onclick="filterNoticeByTag('물치', this)">물치</button>
+                <button class="tag-filter-btn bg-vid" onclick="filterNoticeByTag('영상', this)">영상</button>
+                <button class="tag-filter-btn bg-ward" onclick="filterNoticeByTag('병동', this)">병동</button>
+            </div>
+            
             <span id="noticeStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
             <div class="editor-container">
                 <div id="noticeInput" class="editor-div" contenteditable="true"></div>
@@ -709,7 +772,6 @@
 </div>
 
 <script>
-    // ===== Firebase 클라우드 연동 설정 =====
     const firebaseConfig = {
         apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
         authDomain: "tncnaaa.firebaseapp.com",
@@ -832,7 +894,63 @@
         document.getElementById('imageModal').style.display = 'none';
     }
 
-    // 📢 공지사항 클라우드 연동 로드/저장
+    // 🪄 대소문자 및 # 기호 유무와 상관없이 부서 이름을 인식해 뱃지로 자동 변환하는 함수
+    function convertHashToBadges() {
+        const noticeDiv = document.getElementById('noticeInput');
+        let html = noticeDiv.innerHTML;
+
+        // 정규식을 이용해 대소문자 및 # 기호 무관하게 인식 (예: #os1, os1, OS1 모두 매칭)
+        html = html.replace(/#?(NS1|ns1)\b/g, '<span class="tag-ns1" data-tag="NS1">NS1</span>');
+        html = html.replace(/#?(NS3|ns3)\b/g, '<span class="tag-ns3" data-tag="NS3">NS3</span>');
+        html = html.replace(/#?(NS5|ns5)\b/g, '<span class="tag-ns5" data-tag="NS5">NS5</span>');
+        html = html.replace(/#?(OS1|os1)\b/g, '<span class="tag-os1" data-tag="OS1">OS1</span>');
+        html = html.replace(/#?(OS2|os2)\b/g, '<span class="tag-os2" data-tag="OS2">OS2</span>');
+        html = html.replace(/#?(NR|nr)\b/g, '<span class="tag-nr" data-tag="NR">NR</span>');
+        html = html.replace(/#?(FM|fm)\b/g, '<span class="tag-fm" data-tag="FM">FM</span>');
+        html = html.replace(/#?임병\b/g, '<span class="tag-lab" data-tag="임병">임병</span>');
+        html = html.replace(/#?검진\b/g, '<span class="tag-chk" data-tag="검진">검진</span>');
+        html = html.replace(/#?물치\b/g, '<span class="tag-pt" data-tag="물치">물치</span>');
+        html = html.replace(/#?영상\b/g, '<span class="tag-vid" data-tag="영상">영상</span>');
+        html = html.replace(/#?병동\b/g, '<span class="tag-ward" data-tag="병동">병동</span>');
+
+        noticeDiv.innerHTML = html;
+        alert("태그가 예쁜 뱃지로 변환되었습니다! 🪄");
+    }
+
+    // 🏷️ 태그 기반 공지사항 필터링 함수 (대소문자 무관 검색)
+    let originalNoticeHtml = '';
+
+    function filterNoticeByTag(tagName, btnElement) {
+        document.querySelectorAll('.tag-filter-btn').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+
+        const noticeDiv = document.getElementById('noticeInput');
+        
+        if (!originalNoticeHtml || originalNoticeHtml.length < noticeDiv.innerHTML.length) {
+            originalNoticeHtml = noticeDiv.innerHTML;
+        }
+
+        if (tagName === 'all') {
+            noticeDiv.innerHTML = originalNoticeHtml;
+            return;
+        }
+
+        const lines = originalNoticeHtml.split(/<br\s*[\/]?>|<\/p>|<div/gi);
+        let filteredLines = lines.filter(line => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = line;
+            const textContent = tempDiv.textContent.toUpperCase();
+            const searchTag = tagName.toUpperCase();
+            return textContent.includes(searchTag) || tempDiv.innerHTML.toUpperCase().includes(`DATA-TAG="${searchTag}"`);
+        });
+
+        if (filteredLines.length > 0) {
+            noticeDiv.innerHTML = filteredLines.join('<br>');
+        } else {
+            noticeDiv.innerHTML = `<span style="color:#94a3b8;">${tagName} 관련 공지가 없습니다. (전체 보기를 누르면 원본이 복구됩니다)</span>`;
+        }
+    }
+
     const noticeInput = document.getElementById('noticeInput');
     const noticeStatus = document.getElementById('noticeStatus');
 
@@ -848,11 +966,13 @@
             savedNotice = localStorage.getItem('hospital_user_notice_html') || "공지사항 내용을 입력하세요.";
         }
         noticeInput.innerHTML = savedNotice;
+        originalNoticeHtml = savedNotice;
     }
 
     async function saveNotice() {
         const content = noticeInput.innerHTML;
         localStorage.setItem('hospital_user_notice_html', content);
+        originalNoticeHtml = content;
         if (db) {
             try {
                 await db.collection("system_data").doc("notice").set({ content: content });
@@ -862,7 +982,6 @@
         setTimeout(() => { noticeStatus.style.display = 'none'; }, 2000);
     }
 
-    // ☀️ D/E/N 근무표 클라우드 연동 로드/저장
     async function loadWork(type) {
         const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
         let saved = null;
@@ -880,11 +999,11 @@
             inputEl.innerHTML = saved;
         } else {
             if (type === 'd') {
-                inputEl.innerHTML = "• 오전 바이탈 및 인계 준비\n• 정규 투약 및 주치의 회진 보조\n• 각종 검사(Lab, X-ray 등) 확인 및 결과 보고";
+                inputEl.innerHTML = "• 오전 바이탈 및 인계 준비\n• 정규 투약 및 주치의 회진 보조";
             } else if (type === 'e') {
-                inputEl.innerHTML = "• 오후 활력징후 측정 및 상태 관찰\n• 저녁 투약 및 처치 수행\n• 신규 환자 입원 맞이 및 오더 확인";
+                inputEl.innerHTML = "• 오후 활력징후 측정 및 상태 관찰";
             } else if (type === 'n') {
-                inputEl.innerHTML = "• 야간 바이탈 및 수면 상태 확인\n• 익일 아침 검사 오더 최종 확인 및 라운딩\n• 새벽 응급 Lab 및 주치의 노티 기록 정리";
+                inputEl.innerHTML = "• 야간 바이탈 및 수면 상태 확인";
             }
         }
     }
@@ -905,7 +1024,6 @@
         setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
     }
 
-    // 📝 메모장 클라우드 연동 로드/저장
     const memoInput = document.getElementById('memoInput');
     const memoStatus = document.getElementById('memoStatus');
     const memoDate = document.getElementById('memoDate');
