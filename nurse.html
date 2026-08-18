@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간호사 임상 통합 시스템</title>
+    <!-- Firebase SDK 로드 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #334155;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --danger: #ef4444;
+            --pink-btn: #ec4899;
+            --pink-btn-hover: #db2777;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: #0f172a;
+            padding: 8px;
+            line-height: 1.35;
+        }
+
+        .container { max-width: 1550px; margin: 0 auto; position: relative; }
+
+        /* 상단 파란색 헤더 */
+        .tab-header-wrapper {
+            background: linear-gradient(135deg, #0284c7, #0f172a);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .tab-title-area h1 { 
+            color: white; 
+            font-size: 0.95rem; 
+            margin-bottom: 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            white-space: nowrap; 
+        }
+
+        .hamburger-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            font-size: 0.95rem;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .hamburger-btn:hover { background: rgba(255,255,255,0.3); }
+
+        .bookmark-tabs { 
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: #0f172a;
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            z-index: 9999;
+            gap: 6px; 
+            flex-direction: column;
+            min-width: 150px;
+        }
+        .bookmark-tabs.show { display: flex; }
+
+        .tab-btn {
+            background: #0369a1;
+            color: rgba(255,255,255,0.85);
+            border: none;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .tab-btn:hover { background: #0284c7; color: white; }
+        .tab-btn.active { background: var(--card-bg); color: var(--primary-dark); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .panel-box {
+            background: transparent;
+            border: none;
+            padding: 0;
+            box-shadow: none;
+        }
+        
+        .panel-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px; 
+            padding-bottom: 8px; 
+            border-bottom: 2px solid var(--primary); 
+            gap: 8px; 
+        }
+        .panel-title { 
+            font-size: 0.95rem; 
+            font-weight: bold; 
+            color: var(--primary-dark); 
+        }
+        
+        .editor-container { display: flex; flex-direction: column; gap: 8px; }
+        .editor-div { min-height: 450px; padding: 12px; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; line-height: 1.6; background-color: white; white-space: pre-wrap; }
+        
+        .editor-btn-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .toolbar-group { display: flex; align-items: center; gap: 4px; background: #e2e8f0; padding: 3px 6px; border-radius: 6px; }
+        .toolbar-label { font-size: 0.72rem; font-weight: bold; color: #475569; }
+        .color-picker { width: 22px; height: 22px; border: none; border-radius: 4px; cursor: pointer; background: transparent; }
+        .date-picker { padding: 4px 6px; font-size: 0.8rem; font-weight: bold; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        
+        .btn { padding: 5px 10px; font-size: 0.78rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-apply { padding: 3px 6px; font-size: 0.7rem; background-color: #475569; color: white; border-radius: 4px; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-magic { background-color: #8b5cf6; color: white; }
+        .btn-magic:hover { background-color: #7c3aed; }
+        .status-msg { font-size: 0.75rem; color: #16a34a; font-weight: bold; display: none; }
+
+        /* -------------------------------------------------- */
+        /* 📝 we.memo 스타일 카드형 메모장 CSS (2열 배치 & 제목만 표기) */
+        /* -------------------------------------------------- */
+        .memo-app-container {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            padding: 15px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .memo-top-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .memo-add-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0f172a;
+            color: white;
+            border: none;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .memo-add-btn:hover { background: #1e293b; }
+
+        .memo-search-input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+            background: #f8fafc;
+            outline: none;
+        }
+        .memo-search-input:focus { background: #fff; border-color: var(--primary); }
+
+        .memo-main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        @media (min-width: 900px) {
+            .memo-main-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+        }
+
+        .memo-list-pane {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+            align-content: start;
+        }
+
+        .memo-card-item {
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.1s, box-shadow 0.1s;
+            border: 1px solid rgba(0,0,0,0.05);
+            height: 55px;
+            display: flex;
+            align-items: center;
+        }
+        .memo-card-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        .memo-card-item.active { border: 2px solid #0f172a; }
+
+        .memo-card-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .memo-editor-pane {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 450px;
+        }
+
+        .memo-edit-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            background: transparent;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 6px;
+            outline: none;
+            color: #0f172a;
+        }
+        .memo-edit-title:focus { border-color: var(--primary); }
+
+        .memo-color-picker-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .color-dot.selected { border-color: #0f172a; transform: scale(1.1); }
+
+        .memo-edit-content {
+            flex: 1;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9rem;
+            outline: none;
+            line-height: 1.6;
+            overflow-y: auto;
+            min-height: 300px;
+            white-space: pre-wrap;
+        }
+
+        .memo-pane-btns {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* -------------------------------------------------- */
+
+        /* 🏷️ 부서별 뱃지 클래스 정의 */
+        .tag-ns1  { background: #ff9800; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-ns3  { background: #1c52ed; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-ns5  { background: #7b1fa2; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-os1  { background: #ffeb3b; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-os2  { background: #e65100; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-gs   { background: #00e676; color: #0f172a; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-nr   { background: #1b5e20; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-fm   { background: #ffffff; color: #0f172a; border: 1px solid #94a3b8; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-lab  { background: #f43f5e; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-chk  { background: #42a5f5; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-pt   { background: #6d4c41; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-vid  { background: #000000; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tag-ward { background: #ec4899; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+
+        /* 🏷️ 상단 필터 바 스타일 */
+        .notice-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+        .tag-filter-btn {
+            padding: 5px 11px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        .tag-filter-btn:hover { opacity: 0.9; }
+        .tag-filter-btn.active { opacity: 1; border: 2px solid #000; padding: 3px 9px; }
+
+        .bg-all  { background: #64748b; color: white; opacity: 1; }
+        .bg-ns1  { background: #ff9800; color: white; }
+        .bg-ns3  { background: #1c52ed; color: white; }
+        .bg-ns5  { background: #7b1fa2; color: white; }
+        .bg-os1  { background: #ffeb3b; color: #1e293b; }
+        .bg-os2  { background: #e65100; color: white; }
+        .bg-gs   { background: #00e676; color: #0f172a; }
+        .bg-nr   { background: #1b5e20; color: white; }
+        .bg-fm   { background: #ffffff; color: #0f172a; border: 1px solid #94a3b8; }
+        .bg-lab  { background: #f43f5e; color: white; }
+        .bg-chk  { background: #42a5f5; color: white; }
+        .bg-pt   { background: #6d4c41; color: white; }
+        .bg-vid  { background: #000000; color: white; }
+        .bg-ward { background: #ec4899; color: white; }
+
+        #floatingToolbar {
+            display: none;
+            position: absolute;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 6px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            gap: 6px;
+            align-items: center;
+        }
+        #floatingToolbar button, #floatingToolbar input[type="color"] {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+        #floatingToolbar input[type="color"] { width: 22px; height: 22px; padding: 0; vertical-align: middle; }
+
+        .gift-link { cursor: pointer; font-size: 0.95rem !important; vertical-align: baseline; display: inline; }
+
+        .modal-overlay {
+            display: none; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); 
+            justify-content: center; align-items: center; 
+            z-index: 9999;
+        }
+        .modal-container {
+            background: white; padding: 10px; border-radius: 8px;
+            max-width: 90%; max-height: 90%; position: relative;
+        }
+        .modal-container img { max-width: 100%; max-height: 80vh; display: block; border-radius: 4px; }
+        .modal-close-btn {
+            position: absolute; top: -35px; right: 0; color: white;
+            font-size: 2rem; cursor: pointer; border: none; background: none;
+        }
+        
+        .badge-warn { color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+
+        .top-wrapper {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        @media (min-width: 900px) {
+            .top-wrapper {
+                display: grid;
+                grid-template-columns: 1fr 280px;
+                flex-direction: row;
+            }
+        }
+
+        .input-section {
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .patient-sidebar {
+            background: var(--card-bg);
+            border: 2px solid #94a3b8;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            max-height: 220px;
+        }
+
+        @media (min-width: 900px) {
+            .patient-sidebar { max-height: 340px; }
+        }
+
+        .sidebar-header {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+
+        .saved-patient-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .patient-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 8px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.78rem;
+        }
+        .patient-list-item:hover { background: #e0f2fe; }
+
+        .patient-info-click { cursor: pointer; flex: 1; display: flex; justify-content: space-between; align-items: center; padding-right: 6px; }
+        .patient-name-txt { font-weight: bold; color: var(--primary-dark); }
+        .patient-date-txt { font-size: 0.7rem; color: #64748b; }
+
+        .delete-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; padding: 2px 4px; }
+        .delete-btn:hover { color: var(--danger); background: #fee2e2; }
+
+        .input-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .input-title { font-size: 0.95rem; font-weight: bold; color: var(--primary-dark); display: flex; align-items: center; gap: 8px; }
+        .pt-name-group { display: flex; align-items: center; gap: 6px; }
+        .pt-name-group input { padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem; width: 120px; }
+
+        .btn-group-top { display: flex; gap: 4px; }
+        .btn-pink { background: var(--pink-btn); color: white; border: none; padding: 5px 10px; font-size: 0.8rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-pink:hover { background: var(--pink-btn-hover); }
+        .btn-save { background: #10b981; color: white; border: none; padding: 5px 10px; font-size: 0.8rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-save:hover { background: #059669; }
+        .btn-red { background: var(--danger); color: white; border: none; padding: 5px 8px; font-size: 0.8rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+
+        .group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 8px;
+        }
+
+        .input-card-group {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 6px 8px;
+            border-top: 3px solid var(--primary);
+        }
+
+        .input-card-group h3 { font-size: 0.78rem; color: var(--secondary); margin-bottom: 4px; }
+        .input-row { display: flex; gap: 4px; flex-wrap: wrap; }
+        
+        .input-group { 
+            flex: 1; 
+            min-width: 75px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .input-group label { font-size: 0.65rem; font-weight: 600; color: var(--secondary); margin-bottom: 2px; white-space: nowrap; }
+        .input-group input { 
+            padding: 2px 4px; 
+            border: 1px solid var(--border); 
+            border-radius: 3px; 
+            font-size: 0.75rem; 
+            color: #334155;
+            background: #ffffff; 
+            height: 24px; 
+            width: 100%; 
+        }
+
+        .main-result-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        @media (min-width: 900px) {
+            .main-result-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+        }
+
+        .result-box-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .box-results { border-color: var(--secondary); }
+        .box-noti { background: #fff5f5; border-color: var(--danger); }
+        .box-patient-check { border-color: var(--warning); background: #fffbeb; }
+        .box-treatment { border-color: var(--success); background: #f0fdf4; }
+
+        .box-header {
+            font-size: 0.9rem;
+            font-weight: bold;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-item { background: #f8fafc; border: 1px solid var(--border); padding: 6px 8px; border-radius: 5px; margin-bottom: 5px; }
+        .result-item-title { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+        .result-item-val { font-size: 0.95rem; font-weight: bold; color: #0f172a; margin: 2px 0; }
+
+        .badge { display: inline-block; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; font-weight: bold; color: white; }
+        .badge-normal { background-color: var(--success); }
+        .badge-warning { background-color: var(--warning); color: #0f172a; }
+        .badge-danger { background-color: var(--danger); }
+
+        .sbar-card { background: white; border: 1px solid #fecaca; border-radius: 5px; padding: 6px 8px; margin-bottom: 5px; }
+        .sbar-card h4 { font-size: 0.8rem; color: var(--danger); margin-bottom: 3px; }
+        .sbar-line { font-size: 0.75rem; margin-bottom: 2px; line-height: 1.3; }
+        .sbar-lbl { font-weight: bold; color: #991b1b; display: inline-block; width: 16px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .ext-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .ext-card h3 { font-size: 0.95rem; color: var(--primary-dark); margin-bottom: 8px; border-bottom: 2px solid #e0f2fe; padding-bottom: 4px; }
+        .ext-group { margin-bottom: 8px; }
+        .ext-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--secondary); margin-bottom: 2px; }
+        .ext-group input, .ext-group select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; background: #fff; }
+        .ext-btn { background: var(--primary); color: white; border: none; padding: 8px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; font-size: 0.85rem; }
+        .ext-btn:hover { background: var(--primary-dark); }
+        .ext-result { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 8px; border-radius: 4px; font-size: 0.80rem; margin-top: 8px; white-space: pre-line; }
+
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+            .ext-card.full-width { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="floatingToolbar">
+    <span style="color:#94a3b8; font-size:0.7rem;">색:</span>
+    <input type="color" id="dragTextColor" value="#000000" title="글자색" onchange="applyStyle('foreColor', this.value)">
+    <span style="color:#94a3b8; font-size:0.7rem;">펜:</span>
+    <input type="color" id="dragHiliteColor" value="#fef08a" title="형광펜" onchange="applyStyle('hiliteColor', this.value)">
+    <button onclick="applyStyle('bold', null)" style="font-weight:bold;">B</button>
+    <span style="color:#94a3b8; font-size:0.7rem; margin-left:4px;">박스색:</span>
+    <input type="color" id="badgeColorPicker" value="#dc2626" title="경고박스 배경색" style="width:22px; height:22px; border:none; background:transparent; vertical-align:middle; cursor:pointer;">
+    <button onclick="applyBadge()" style="background:#dc2626; color:white; border-radius:4px; padding:2px 6px;">🚨</button>
+    <button onclick="applyGiftLink()" title="사진(이미지 팝업) 추가">📷</button>
+    <button onclick="convertSelectedTextToBadge()" title="선택한 텍스트를 뱃지로 변환" style="background:#8b5cf6; border-radius:4px; padding:2px 6px;">🪄</button>
+</div>
+
+<div class="container">
+    <!-- 상단 헤더 -->
+    <div class="tab-header-wrapper">
+        <div class="tab-title-area">
+            <h1>
+                🩺 임상 업무 통합 시스템 
+                <a href="index.html" style="text-decoration: none; margin-left: 3px;" title="메인으로 가기">🏠</a>
+            </h1>
+        </div>
+        <button class="hamburger-btn" onclick="toggleMenu()" title="메뉴 열기/닫기">☰ 메뉴</button>
+        
+        <div id="bookmarkTabs" class="bookmark-tabs">
+            <button class="tab-btn active" onclick="switchTab('basic')">기본</button>
+            <button class="tab-btn" onclick="switchTab('extended')">확장</button>
+            <button class="tab-btn" onclick="switchTab('work_d')">D근무</button>
+            <button class="tab-btn" onclick="switchTab('work_e')">E근무</button>
+            <button class="tab-btn" onclick="switchTab('work_n')">N근무</button>
+            <button class="tab-btn" onclick="switchTab('memo')">📝 메모</button>
+            <button class="tab-btn" onclick="switchTab('notice')">📢 공지</button>
+        </div>
+    </div>
+
+    <!-- [TAB 1] 기본 분석기 -->
+    <div id="tab_basic" class="tab-content active">
+        <div class="top-wrapper">
+            <div class="input-section">
+                <div class="input-header-row">
+                    <div class="input-title">
+                        <div class="pt-name-group">
+                            <input type="text" id="i_pt_name" placeholder="이름">
+                        </div>
+                    </div>
+                    <div class="btn-group-top">
+                        <button class="btn-pink" onclick="runAnalysis()">⚡분석</button>
+                        <button class="btn-save" onclick="saveCurrentAnalysis()">💾저장</button>
+                        <button class="btn-red" onclick="resetForm()">🔄초기화</button>
+                    </div>
+                </div>
+                
+                <div class="group-grid">
+                    <div class="input-card-group">
+                        <h3>1. 간손상 & 응고계</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_ast">AST</label><input type="number" id="i_ast" placeholder="7~38"></div>
+                            <div class="input-group"><label for="i_alt">ALT</label><input type="number" id="i_alt" placeholder="4~44"></div>
+                            <div class="input-group"><label for="i_ggt">γ-GTP 🔺</label><input type="number" id="i_ggt" placeholder="12~73"></div>
+                        </div>
+                        <div class="input-row" style="margin-top:4px;">
+                            <div class="input-group"><label for="i_pt_sec">PT(sec) 🔺</label><input type="number" id="i_pt_sec" placeholder="11~15" step="0.1"></div>
+                            <div class="input-group"><label for="i_pt_inr">PT(INR) 🔺</label><input type="number" id="i_pt_inr" placeholder="0.8~1.2" step="0.01"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>2. 신장기능 & 전해질</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_bun">BUN</label><input type="number" id="i_bun" placeholder="6~23"></div>
+                            <div class="input-group"><label for="i_cr">Cr</label><input type="number" id="i_cr" placeholder="0.6~1.2" step="0.01"></div>
+                        </div>
+                        <div class="input-row" style="margin-top:4px;">
+                            <div class="input-group"><label for="i_na">Na 🔺</label><input type="number" id="i_na" placeholder="136~145"></div>
+                            <div class="input-group"><label for="i_k">K 🔺</label><input type="number" id="i_k" placeholder="3.5~5.5" step="0.1"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>3. 백혈구 (ANC)</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_wbc">WBC</label><input type="number" id="i_wbc" placeholder="4~10"></div>
+                            <div class="input-group"><label for="i_seg">Seg (%)</label><input type="number" id="i_seg" placeholder="50~70"></div>
+                            <div class="input-group"><label for="i_band">Band (%)</label><input type="number" id="i_band" value="0"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>4. 인슐린 저항성</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_tg">TG</label><input type="number" id="i_tg" placeholder="<200"></div>
+                            <div class="input-group"><label for="i_hdl">HDL</label><input type="number" id="i_hdl" placeholder=">40"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>5. 심혈관</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_ldl">LDL</label><input type="number" id="i_ldl" placeholder="0~130"></div>
+                            <div class="input-group"><label for="i_hdl_2">HDL</label><input type="number" id="i_hdl_2" placeholder=">40"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-card-group">
+                        <h3>6. 신장나이</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label for="i_egfr">eGFR</label><input type="number" id="i_egfr" placeholder="≥60"></div>
+                            <div class="input-group"><label for="i_age">만 나이</label><input type="number" id="i_age" placeholder="나이"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="patient-sidebar">
+                <div class="sidebar-header"><span>📁 저장된 환자 목록</span></div>
+                <div class="saved-patient-list" id="saved_list_container">
+                    <p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:15px 0;">저장된 기록 없음</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-result-grid">
+            <div class="result-box-card box-patient-check">
+                <div class="box-header"><span>🔍 환자사정 & 임상해석</span></div>
+                <div id="out_patient_check"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-treatment">
+                <div class="box-header"><span>💊 치료 및 중재</span></div>
+                <div id="out_treatment_guide"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-noti">
+                <div class="box-header"><span>🚨 노티 (SBAR)</span></div>
+                <div id="out_noti_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p></div>
+            </div>
+            <div class="result-box-card box-results">
+                <div class="box-header"><span>📊 계산결과값</span></div>
+                <div id="out_calc_list"><p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 2] 확장 기능 모듈 -->
+    <div id="tab_extended" class="tab-content">
+        <div class="grid-2">
+            <div class="ext-card full-width">
+                <h3>⚖️ 24시간 I/O </h3>
+                <div class="ext-group"><label>총 섭취량 (Intake, mL)</label><input type="number" id="ext_io_in" placeholder="예: 2500"></div>
+                <div class="ext-group"><label>총 배설량 (Output, mL)</label><input type="number" id="ext_io_out" placeholder="예: 1100"></div>
+                <div class="ext-group"><label>체중 변화 (전일 대비, kg)</label><input type="number" id="ext_wt" placeholder="예: +0.3" step="0.1"></div>
+                <button class="ext-btn" onclick="calcIOBalance()">I/O 계산</button>
+                <div id="ext_io_res" class="ext-result" style="display:none;"></div>
+            </div>
+
+            <div class="ext-card full-width">
+                <h3>💊 신장약물 용량조절용 CrCl</h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px;">
+                    <div class="ext-group"><label>성별</label><select id="ext_gender"><option value="male">남성</option><option value="female">여성 (×0.85)</option></select></div>
+                    <div class="ext-group"><label>만 나이 (세)</label><input type="number" id="ext_age" placeholder="예: 65"></div>
+                    <div class="ext-group"><label>체중 (kg)</label><input type="number" id="ext_wt_val" placeholder="예: 60"></div>
+                    <div class="ext-group"><label>크레아티닌 (Cr, mg/dL)</label><input type="number" id="ext_cr" placeholder="예: 1.4" step="0.1"></div>
+                </div>
+                <button class="ext-btn" style="margin-top:8px;" onclick="calcCrCl()">신장 청소율(CrCl) 계산</button>
+                <div id="ext_crcl_res" class="ext-result" style="display:none;"></div>
+            </div>
+
+            <div class="ext-card full-width">
+                <h3>🧪 ABGA</h3>
+                <div class="ext-group"><label>pH (7.35 ~ 7.45)</label><input type="number" id="ext_ph" placeholder="예: 7.31" step="0.01"></div>
+                <div class="ext-group"><label>PaCO2 (35 ~ 45 mmHg)</label><input type="number" id="ext_paco2" placeholder="예: 52"></div>
+                <div class="ext-group"><label>HCO3- (22 ~ 26 mEq/L)</label><input type="number" id="ext_hco3" placeholder="예: 24"></div>
+                <button class="ext-btn" onclick="analyzeABGA()">ABGA 판독 실행</button>
+                <div id="ext_abga_res" class="ext-result" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 3] D근무 -->
+    <div id="tab_work_d" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">☀️ D 근무 체크리스트</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 색</span>
+                        <input type="color" id="workDForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('workDInput', 'foreColor', 'workDForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 펜</span>
+                        <input type="color" id="workDHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('workDInput', 'hiliteColor', 'workDHiliteColor')">적용</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveWork('d')">저장</button>
+                </div>
+            </div>
+            <span id="workDStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
+            <div class="editor-container">
+                <div id="workDInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 4] E근무 -->
+    <div id="tab_work_e" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">🌆 E 근무 체크리스트</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 색</span>
+                        <input type="color" id="workEForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('workEInput', 'foreColor', 'workEForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 펜</span>
+                        <input type="color" id="workEHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('workEInput', 'hiliteColor', 'workEHiliteColor')">적용</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveWork('e')">저장</button>
+                </div>
+            </div>
+            <span id="workEStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
+            <div class="editor-container">
+                <div id="workEInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 5] N근무 -->
+    <div id="tab_work_n" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">🌙 N 근무 체크리스트</div>
+                <div class="editor-btn-group">
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🎨 색</span>
+                        <input type="color" id="workNForeColor" class="color-picker" value="#000000">
+                        <button class="btn btn-apply" onclick="applyColor('workNInput', 'foreColor', 'workNForeColor')">적용</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <span class="toolbar-label">🖍️ 펜</span>
+                        <input type="color" id="workNHiliteColor" class="color-picker" value="#fef08a">
+                        <button class="btn btn-apply" onclick="applyColor('workNInput', 'hiliteColor', 'workNHiliteColor')">적용</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveWork('n')">저장</button>
+                </div>
+            </div>
+            <span id="workNStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
+            <div class="editor-container">
+                <div id="workNInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 6] 📝 메모장 (2열, 시간 삭제, 제목만 표기, 빈 내용 시작) -->
+    <div id="tab_memo" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">📝 메모장</div>
+            </div>
+            
+            <div class="memo-app-container">
+                <div class="memo-top-bar">
+                    <button class="memo-add-btn" onclick="createNewMemo()" title="새 메모 추가">+</button>
+                    <input type="text" id="memoSearchInput" class="memo-search-input" placeholder="Search 메모 검색..." oninput="filterMemoCards(this.value)">
+                </div>
+
+                <div class="memo-main-layout">
+                    <!-- 좌측: 메모 카드 리스트 (2열 배치, 제목만 표기) -->
+                    <div class="memo-list-pane" id="memoListPane">
+                        <!-- 동적 생성 -->
+                    </div>
+
+                    <!-- 우측: 선택한 메모 상세 편집창 -->
+                    <div class="memo-editor-pane" id="memoEditorPane" style="display: none;">
+                        <input type="text" id="memoEditTitle" class="memo-edit-title" placeholder="메모 제목" oninput="updateCurrentMemoField()">
+                        
+                        <div class="memo-color-picker-row">
+                            <span style="font-size: 0.75rem; font-weight: bold; color: #64748b;">카드 색상:</span>
+                            <div class="color-dot" style="background: #fed7aa;" onclick="changeMemoColor('#fed7aa', this)"></div>
+                            <div class="color-dot" style="background: #bfdbfe;" onclick="changeMemoColor('#bfdbfe', this)"></div>
+                            <div class="color-dot" style="background: #bbf7d0;" onclick="changeMemoColor('#bbf7d0', this)"></div>
+                            <div class="color-dot" style="background: #fef08a;" onclick="changeMemoColor('#fef08a', this)"></div>
+                            <div class="color-dot" style="background: #fbcfe8;" onclick="changeMemoColor('#fbcfe8', this)"></div>
+                        </div>
+
+                        <div id="memoEditContent" class="memo-edit-content" contenteditable="true" oninput="updateCurrentMemoField()"></div>
+
+                        <div class="memo-pane-btns">
+                            <button class="btn btn-primary" onclick="saveMemoAppToCloud()">💾 저장하기</button>
+                            <button class="btn" style="background:#fee2e2; color:#ef4444;" onclick="deleteCurrentMemo()">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [TAB 7] 📢 공지사항 -->
+    <div id="tab_notice" class="tab-content">
+        <div class="panel-box">
+            <div class="panel-header">
+                <div class="panel-title">📢 공지사항</div>
+                <div class="editor-btn-group">
+                    <button class="btn btn-magic" onclick="convertHashToBadges()" title="단어를 예쁜 뱃지로 변환">🪄 뱃지 변환</button>
+                    <button class="btn btn-primary" onclick="saveNotice()">저장</button>
+                </div>
+            </div>
+
+            <!-- 🏷️ 필터 바 -->
+            <div class="notice-filter-bar">
+                <button class="tag-filter-btn bg-all active" onclick="filterNoticeByTag('all', this)">전체</button>
+                <button class="tag-filter-btn bg-ns1" onclick="filterNoticeByTag('NS1', this)">NS1</button>
+                <button class="tag-filter-btn bg-ns3" onclick="filterNoticeByTag('NS3', this)">NS3</button>
+                <button class="tag-filter-btn bg-ns5" onclick="filterNoticeByTag('NS5', this)">NS5</button>
+                <button class="tag-filter-btn bg-os1" onclick="filterNoticeByTag('OS1', this)">OS1</button>
+                <button class="tag-filter-btn bg-os2" onclick="filterNoticeByTag('OS2', this)">OS2</button>
+                <button class="tag-filter-btn bg-gs" onclick="filterNoticeByTag('GS', this)">GS</button>
+                <button class="tag-filter-btn bg-nr" onclick="filterNoticeByTag('NR', this)">NR</button>
+                <button class="tag-filter-btn bg-fm" onclick="filterNoticeByTag('FM', this)">FM</button>
+                <button class="tag-filter-btn bg-lab" onclick="filterNoticeByTag('임병', this)">임병</button>
+                <button class="tag-filter-btn bg-chk" onclick="filterNoticeByTag('검진', this)">검진</button>
+                <button class="tag-filter-btn bg-pt" onclick="filterNoticeByTag('물치', this)">물치</button>
+                <button class="tag-filter-btn bg-vid" onclick="filterNoticeByTag('영상', this)">영상</button>
+                <button class="tag-filter-btn bg-ward" onclick="filterNoticeByTag('병동', this)">병동</button>
+            </div>
+            
+            <span id="noticeStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
+            <div class="editor-container">
+                <div id="noticeInput" class="editor-div" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📷 이미지 팝업 모달창 -->
+<div id="imageModal" class="modal-overlay" onclick="closeImagePopup()">
+    <div class="modal-container" onclick="event.stopPropagation()">
+        <button class="modal-close-btn" onclick="closeImagePopup()">&times;</button>
+        <img id="popupImage" src="" alt="팝업 이미지">
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류 발생:", e);
+    }
+
+    function toggleMenu() {
+        const tabs = document.getElementById('bookmarkTabs');
+        tabs.classList.toggle('show');
+    }
+
+    window.addEventListener('click', function(e) {
+        const tabs = document.getElementById('bookmarkTabs');
+        const btn = document.querySelector('.hamburger-btn');
+        if (!tabs.contains(e.target) && !btn.contains(e.target)) {
+            tabs.classList.remove('show');
+        }
+    });
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const targetTab = document.getElementById('tab_' + tabName);
+        if (targetTab) targetTab.classList.add('active');
+        event.currentTarget.classList.add('active');
+        document.getElementById('bookmarkTabs').classList.remove('show');
+    }
+
+    // 🎨 DEN 근무 및 툴바 표준 컬러 피커 적용 함수
+    function applyColor(editorId, command, pickerId) {
+        const colorValue = document.getElementById(pickerId).value;
+        const editor = document.getElementById(editorId);
+        editor.focus();
+        document.execCommand(command, false, colorValue);
+    }
+
+    document.addEventListener('mouseup', function(e) {
+        const toolbar = document.getElementById('floatingToolbar');
+        const selection = window.getSelection();
+        
+        if (!selection.isCollapsed && selection.toString().trim().length > 0) {
+            const range = selection.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            
+            toolbar.style.display = 'flex';
+            toolbar.style.top = (rect.top + window.scrollY - 45) + 'px';
+            toolbar.style.left = (rect.left + window.scrollX + (rect.width / 2) - 100) + 'px';
+        } else {
+            if (!toolbar.contains(e.target)) {
+                toolbar.style.display = 'none';
+            }
+        }
+    });
+
+    function applyStyle(command, value) {
+        if (command === 'bold') {
+            document.execCommand('bold', false, null);
+        } else {
+            document.execCommand(command, false, value);
+        }
+    }
+
+    function applyBadge() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        const selectedText = selection.toString();
+        if (!selectedText) return;
+
+        const customColor = document.getElementById('badgeColorPicker').value;
+
+        const span = document.createElement('span');
+        span.className = 'badge-warn';
+        span.style.backgroundColor = customColor;
+        span.innerText = selectedText;
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(span);
+    }
+
+    function applyGiftLink() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        const selectedText = selection.toString();
+        if (!selectedText) return;
+
+        const imgUrl = prompt("연결할 이미지 주소(URL)를 입력하세요:", "https://picsum.photos/600/400");
+        if (!imgUrl) return;
+
+        const span = document.createElement('span');
+        span.className = 'gift-link';
+        span.innerHTML = `${selectedText} 📷`;
+        span.onclick = function() {
+            openImagePopup(imgUrl);
+        };
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(span);
+    }
+
+    function openImagePopup(imgUrl) {
+        const modal = document.getElementById('imageModal');
+        const popupImg = document.getElementById('popupImage');
+        popupImg.src = imgUrl;
+        modal.style.display = 'flex';
+    }
+
+    function closeImagePopup() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // --------------------------------------------------
+    // 📝 카드형 메모장 로직 (빈 내용 시작, 시간 삭제, 2열, 제목만 표기)
+    // --------------------------------------------------
+    let memoList = [];
+    let currentMemoId = null;
+
+    async function loadMemoAppData() {
+        let saved = null;
+        if (db) {
+            try {
+                const doc = await db.collection("system_data").doc("memo_app_v5").get();
+                if (doc.exists) saved = doc.data().list;
+            } catch(e) { console.log(e); }
+        }
+        if (!saved) {
+            const local = localStorage.getItem('hospital_memo_app_v5');
+            saved = local ? JSON.parse(local) : [];
+        }
+        memoList = saved;
+        renderMemoList(memoList);
+        if (memoList.length > 0) {
+            selectMemoCard(memoList[0].id);
+        } else {
+            document.getElementById('memoEditorPane').style.display = 'none';
+        }
+    }
+
+    async function saveMemoAppToCloud() {
+        if (currentMemoId) {
+            const memo = memoList.find(m => m.id === currentMemoId);
+            if (memo) {
+                memo.title = document.getElementById('memoEditTitle').value;
+                memo.content = document.getElementById('memoEditContent').innerText;
+            }
+        }
+        localStorage.setItem('hospital_memo_app_v5', JSON.stringify(memoList));
+        if (db) {
+            try {
+                await db.collection("system_data").doc("memo_app_v5").set({ list: memoList });
+            } catch(e) { console.log(e); }
+        }
+        renderMemoList(memoList);
+        alert("메모가 저장되었습니다!");
+    }
+
+    function renderMemoList(list) {
+        const pane = document.getElementById('memoListPane');
+        pane.innerHTML = '';
+        if (list.length === 0) {
+            pane.innerHTML = '<p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:20px; grid-column: span 2;">등록된 메모가 없습니다.</p>';
+            return;
+        }
+
+        list.forEach(m => {
+            const card = document.createElement('div');
+            card.className = `memo-card-item ${m.id === currentMemoId ? 'active' : ''}`;
+            card.style.backgroundColor = m.color || '#fef08a';
+            card.innerHTML = `
+                <div class="memo-card-title">${m.title || '제목 없음'}</div>
+            `;
+            card.onclick = () => selectMemoCard(m.id);
+            pane.appendChild(card);
+        });
+    }
+
+    function selectMemoCard(id) {
+        currentMemoId = id;
+        const memo = memoList.find(m => m.id === id);
+        const editorPane = document.getElementById('memoEditorPane');
+        
+        if (!memo) {
+            editorPane.style.display = 'none';
+            return;
+        }
+
+        editorPane.style.display = 'flex';
+        document.getElementById('memoEditTitle').value = memo.title;
+        document.getElementById('memoEditContent').innerText = memo.content;
+
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            if (dot.style.backgroundColor === memo.color) {
+                dot.classList.add('selected');
+            } else {
+                dot.classList.remove('selected');
+            }
+        });
+
+        renderMemoList(memoList);
+    }
+
+    function createNewMemo() {
+        const newMemo = {
+            id: 'memo_' + Date.now(),
+            title: '',
+            content: '',
+            color: '#fef08a'
+        };
+        memoList.unshift(newMemo);
+        selectMemoCard(newMemo.id);
+        saveMemoAppToCloud();
+    }
+
+    function deleteCurrentMemo() {
+        if (!currentMemoId) return;
+        if (confirm("이 메모를 삭제하시겠습니까?")) {
+            memoList = memoList.filter(m => m.id !== currentMemoId);
+            currentMemoId = memoList.length > 0 ? memoList[0].id : null;
+            saveMemoAppToCloud();
+            if (currentMemoId) {
+                selectMemoCard(currentMemoId);
+            } else {
+                document.getElementById('memoEditorPane').style.display = 'none';
+            }
+        }
+    }
+
+    function changeMemoColor(hex, dotEl) {
+        if (!currentMemoId) return;
+        const memo = memoList.find(m => m.id === currentMemoId);
+        if (memo) {
+            memo.color = hex;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            dotEl.classList.add('selected');
+            renderMemoList(memoList);
+            saveMemoAppToCloud();
+        }
+    }
+
+    function updateCurrentMemoField() {
+        if (!currentMemoId) return;
+        const memo = memoList.find(m => m.id === currentMemoId);
+        if (memo) {
+            memo.title = document.getElementById('memoEditTitle').value;
+            memo.content = document.getElementById('memoEditContent').innerText;
+            renderMemoList(memoList);
+        }
+    }
+
+    function filterMemoCards(keyword) {
+        const filtered = memoList.filter(m => 
+            m.title.toLowerCase().includes(keyword.toLowerCase()) || 
+            m.content.toLowerCase().includes(keyword.toLowerCase())
+        );
+        renderMemoList(filtered);
+    }
+    // --------------------------------------------------
+
+    // 🪄 드래그한 텍스트를 뱃지로 변환
+    function convertSelectedTextToBadge() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        const selectedText = selection.toString().trim();
+        if (!selectedText) return;
+
+        const tagMap = {
+            'NS1': 'tag-ns1', 'ns1': 'tag-ns1',
+            'NS3': 'tag-ns3', 'ns3': 'tag-ns3',
+            'NS5': 'tag-ns5', 'ns5': 'tag-ns5',
+            'OS1': 'tag-os1', 'os1': 'tag-os1',
+            'OS2': 'tag-os2', 'os2': 'tag-os2',
+            'GS': 'tag-gs', 'gs': 'tag-gs',
+            'NR': 'tag-nr', 'nr': 'tag-nr',
+            'FM': 'tag-fm', 'fm': 'tag-fm',
+            '임병': 'tag-lab', '검진': 'tag-chk',
+            '물치': 'tag-pt', '영상': 'tag-vid', '병동': 'tag-ward'
+        };
+
+        const cleanKey = selectedText.replace('#', '').toUpperCase();
+        const cls = tagMap[cleanKey] || tagMap[selectedText];
+
+        if (cls) {
+            const span = document.createElement('span');
+            span.className = cls;
+            span.setAttribute('data-tag', cleanKey);
+            span.innerText = cleanKey;
+
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(span);
+            document.getElementById('floatingToolbar').style.display = 'none';
+        } else {
+            alert("등록되지 않은 태그 이름입니다.");
+        }
+    }
+
+    // 🪄 공지사항 뱃지 자동 변환
+    function convertHashToBadges() {
+        const noticeDiv = document.getElementById('noticeInput');
+        
+        const badges = noticeDiv.querySelectorAll('span[data-tag]');
+        badges.forEach(b => {
+            const tagText = b.getAttribute('data-tag');
+            b.replaceWith(document.createTextNode(tagText));
+        });
+
+        let html = noticeDiv.innerHTML;
+
+        const tags = [
+            { key: 'NS1', cls: 'tag-ns1' },
+            { key: 'NS3', cls: 'tag-ns3' },
+            { key: 'NS5', cls: 'tag-ns5' },
+            { key: 'OS1', cls: 'tag-os1' },
+            { key: 'OS2', cls: 'tag-os2' },
+            { key: 'GS',  cls: 'tag-gs' },
+            { key: 'NR',  cls: 'tag-nr' },
+            { key: 'FM',  cls: 'tag-fm' },
+            { key: '임병', cls: 'tag-lab' },
+            { key: '검진', cls: 'tag-chk' },
+            { key: '물치', cls: 'tag-pt' },
+            { key: '영상', cls: 'tag-vid' },
+            { key: '병동', cls: 'tag-ward' }
+        ];
+
+        tags.forEach(t => {
+            const regex = new RegExp(`(?![^<]*>)(^|[^\\w가-힣])#?(${t.key})(?![\\w가-힣])`, 'gi');
+            html = html.replace(regex, `$1<span class="${t.cls}" data-tag="${t.key}">${t.key}</span>`);
+        });
+
+        noticeDiv.innerHTML = html;
+        alert("태그가 예쁜 뱃지로 변환되었습니다! 🪄");
+    }
+
+    // 🖱️ 뱃지 클릭 시 원복
+    document.addEventListener('click', function(e) {
+        if (e.target.hasAttribute('data-tag') && e.target.closest('#noticeInput')) {
+            const tagText = e.target.getAttribute('data-tag');
+            const textNode = document.createTextNode(tagText);
+            e.target.replaceWith(textNode);
+        }
+    });
+
+    // 🏷️ 공지 필터링
+    let originalNoticeHtml = '';
+
+    function filterNoticeByTag(tagName, btnElement) {
+        document.querySelectorAll('.tag-filter-btn').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+
+        const noticeDiv = document.getElementById('noticeInput');
+        
+        if (!originalNoticeHtml || originalNoticeHtml.length < noticeDiv.innerHTML.length) {
+            originalNoticeHtml = noticeDiv.innerHTML;
+        }
+
+        if (tagName === 'all') {
+            noticeDiv.innerHTML = originalNoticeHtml;
+            return;
+        }
+
+        const lines = originalNoticeHtml.split(/<br\s*[\/]?>|<\/p>|<div/gi);
+        let filteredLines = lines.filter(line => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = line;
+            const textContent = tempDiv.textContent.toUpperCase();
+            const searchTag = tagName.toUpperCase();
+            return textContent.includes(searchTag) || tempDiv.innerHTML.toUpperCase().includes(`DATA-TAG="${searchTag}"`);
+        });
+
+        if (filteredLines.length > 0) {
+            noticeDiv.innerHTML = filteredLines.join('<br>');
+        } else {
+            noticeDiv.innerHTML = `<span style="color:#94a3b8;">${tagName} 관련 공지가 없습니다. (전체 보기를 누르면 원본이 복구됩니다)</span>`;
+        }
+    }
+
+    const noticeInput = document.getElementById('noticeInput');
+    const noticeStatus = document.getElementById('noticeStatus');
+
+    async function loadNotice() {
+        let savedNotice = null;
+        if (db) {
+            try {
+                const doc = await db.collection("system_data").doc("notice").get();
+                if (doc.exists) savedNotice = doc.data().content;
+            } catch(e) { console.log(e); }
+        }
+        if (!savedNotice) {
+            savedNotice = localStorage.getItem('hospital_user_notice_html') || "공지사항 내용을 입력하세요.";
+        }
+        noticeInput.innerHTML = savedNotice;
+        originalNoticeHtml = savedNotice;
+    }
+
+    async function saveNotice() {
+        const content = noticeInput.innerHTML;
+        localStorage.setItem('hospital_user_notice_html', content);
+        originalNoticeHtml = content;
+        if (db) {
+            try {
+                await db.collection("system_data").doc("notice").set({ content: content });
+            } catch(e) { console.log(e); }
+        }
+        noticeStatus.style.display = 'inline';
+        setTimeout(() => { noticeStatus.style.display = 'none'; }, 2000);
+    }
+
+    async function loadWork(type) {
+        const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
+        let saved = null;
+        if (db) {
+            try {
+                const doc = await db.collection("system_data").doc("work_" + type).get();
+                if (doc.exists) saved = doc.data().content;
+            } catch(e) { console.log(e); }
+        }
+        if (!saved) {
+            saved = localStorage.getItem('hospital_user_work_' + type + '_html');
+        }
+
+        if (saved) {
+            inputEl.innerHTML = saved;
+        } else {
+            if (type === 'd') {
+                inputEl.innerHTML = "• 오전 바이탈 및 인계 준비\n• 정규 투약 및 주치의 회진 보조";
+            } else if (type === 'e') {
+                inputEl.innerHTML = "• 오후 활력징후 측정 및 상태 관찰";
+            } else if (type === 'n') {
+                inputEl.innerHTML = "• 야간 바이탈 및 수면 상태 확인";
+            }
+        }
+    }
+
+    async function saveWork(type) {
+        const inputEl = document.getElementById('work' + type.toUpperCase() + 'Input');
+        const statusEl = document.getElementById('work' + type.toUpperCase() + 'Status');
+        const content = inputEl.innerHTML;
+        
+        localStorage.setItem('hospital_user_work_' + type + '_html', content);
+        if (db) {
+            try {
+                await db.collection("system_data").doc("work_" + type).set({ content: content });
+            } catch(e) { console.log(e); }
+        }
+
+        statusEl.style.display = 'inline';
+        setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+    }
+
+    function runAnalysis() {
+        const ast = parseFloat(document.getElementById('i_ast').value) || 0;
+        const alt = parseFloat(document.getElementById('i_alt').value) || 0;
+        const ggt = parseFloat(document.getElementById('i_ggt').value) || 0;
+        const pt_inr = parseFloat(document.getElementById('i_pt_inr').value) || 1.0;
+        const bun = parseFloat(document.getElementById('i_bun').value) || 0;
+        const cr = parseFloat(document.getElementById('i_cr').value) || 0;
+        const na = parseFloat(document.getElementById('i_na').value) || 140;
+        const k = parseFloat(document.getElementById('i_k').value) || 4.0;
+        const wbc = parseFloat(document.getElementById('i_wbc').value) || 6;
+        const seg = parseFloat(document.getElementById('i_seg').value) || 60;
+        const band = parseFloat(document.getElementById('i_band').value) || 0;
+
+        const anc = wbc * 1000 * ((seg + band) / 100);
+
+        let checkHtml = "";
+        let treatHtml = "";
+        let notiHtml = "";
+        let calcHtml = "";
+
+        if (ast > 38 || alt > 44) {
+            checkHtml += `<div class="result-item"><div class="result-item-title">간 기능 이상</div><div class="result-item-val" style="color:var(--danger)">AST/ALT 상승 소견이 관찰됩니다.</div></div>`;
+            treatHtml += `<div class="result-item"><div class="result-item-title">간 보호 조치</div><div class="result-item-val">간독성 약물 투여를 확인하고 필요시 주치의 오더 확인 요망.</div></div>`;
+        } else {
+            checkHtml += `<div class="result-item"><div class="result-item-title">간 기능</div><div class="result-item-val">정상 범위 내에 있습니다.</div></div>`;
+        }
+
+        if (cr > 1.2 || bun > 23) {
+            checkHtml += `<div class="result-item"><div class="result-item-title">신장 기능 저하</div><div class="result-item-val" style="color:var(--danger)">BUN/Cr 수치 상승 확인. 수분 섭취 및 I/O 모니터링 필요.</div></div>`;
+        }
+
+        if (anc < 1500) {
+            checkHtml += `<div class="result-item"><div class="result-item-title">면역력 저하 (ANC)</div><div class="result-item-val" style="color:var(--danger)">ANC 수치가 ${anc.toFixed(0)}으로 호중구 감소증 위험이 있습니다. 역격리 및 감염 주의.</div></div>`;
+        }
+
+        if (checkHtml === "") {
+            checkHtml = `<p style="font-size:0.85rem; color:#16a34a; font-weight:bold;">특이 소견이 발견되지 않았습니다. 모든 수치가 안정적입니다.</p>`;
+        }
+
+        if (treatHtml === "") {
+            treatHtml = `<p style="font-size:0.85rem; color:#64748b;">현재 특별한 추가 중재 가이드가 필요하지 않습니다.</p>`;
+        }
+
+        notiHtml = `
+            <div class="sbar-card">
+                <h4>[SBAR 노티 템플릿]</h4>
+                <div class="sbar-line"><span class="sbar-lbl">S:</span> 환자 상태 보고 (수치 변동 확인)</div>
+                <div class="sbar-line"><span class="sbar-lbl">B:</span> 주요 Lab 결과: AST/ALT (${ast}/${alt}), Cr (${cr}), Na/K (${na}/${k})</div>
+                <div class="sbar-line"><span class="sbar-lbl">A:</span> 현재 임상적 모니터링 및 추가 처치 필요성 제기</div>
+                <div class="sbar-line"><span class="sbar-lbl">R:</span> 추가 오더(재검 혹은 투약 조절) 확인 요청 드립니다.</div>
+            </div>
+        `;
+
+        calcHtml = `
+            <div class="result-item"><div class="result-item-title">계산된 ANC 수치</div><div class="result-item-val">${anc.toFixed(0)} /µL</div></div>
+            <div class="result-item"><div class="result-item-title">전해질 균형</div><div class="result-item-val">Na: ${na}, K: ${k}</div></div>
+        `;
+
+        document.getElementById('out_patient_check').innerHTML = checkHtml;
+        document.getElementById('out_treatment_guide').innerHTML = treatHtml;
+        document.getElementById('out_noti_list').innerHTML = notiHtml;
+        document.getElementById('out_calc_list').innerHTML = calcHtml;
+    }
+
+    function saveCurrentAnalysis() {
+        const name = document.getElementById('i_pt_name').value.trim() || "무명 환자";
+        const date = new Date().toLocaleDateString();
+        const recordId = 'pt_' + Date.now();
+        
+        const dataObj = {
+            name: name,
+            date: date,
+            ast: document.getElementById('i_ast').value,
+            alt: document.getElementById('i_alt').value
+        };
+
+        localStorage.setItem(recordId, JSON.stringify(dataObj));
+        loadSavedRecords();
+        alert(name + " 환자 기록이 저장되었습니다.");
+    }
+
+    function loadSavedRecords() {
+        const container = document.getElementById('saved_list_container');
+        container.innerHTML = '';
+        let keys = [];
+
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key.startsWith('pt_')) keys.push(key);
+        }
+
+        if (keys.length === 0) {
+            container.innerHTML = '<p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:15px 0;">저장된 기록 없음</p>';
+            return;
+        }
+
+        keys.sort((a, b) => b.localeCompare(a));
+
+        keys.forEach(key => {
+            try {
+                let obj = JSON.parse(localStorage.getItem(key));
+                let div = document.createElement('div');
+                div.className = 'patient-list-item';
+                div.innerHTML = `
+                    <div class="patient-info-click" onclick="loadPatient('${key}')">
+                        <span class="patient-name-txt">${obj.name}</span>
+                        <span class="patient-date-txt">${obj.date}</span>
+                    </div>
+                    <button class="delete-btn" onclick="deletePatient(event, '${key}')">&times;</button>
+                `;
+                container.appendChild(div);
+            } catch(e) {}
+        });
+    }
+
+    function loadPatient(key) {
+        let obj = JSON.parse(localStorage.getItem(key));
+        if (obj) {
+            document.getElementById('i_pt_name').value = obj.name;
+            document.getElementById('i_ast').value = obj.ast || '';
+            document.getElementById('i_alt').value = obj.alt || '';
+            runAnalysis();
+        }
+    }
+
+    function deletePatient(e, key) {
+        e.stopPropagation();
+        if (confirm("저장된 환자 기록을 삭제하시겠습니까?")) {
+            localStorage.removeItem(key);
+            loadSavedRecords();
+        }
+    }
+
+    function resetForm() {
+        document.querySelectorAll('.input-section input').forEach(input => input.value = '');
+        document.getElementById('out_patient_check').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">분석 결과가 여기에 표시됩니다.</p>';
+        document.getElementById('out_treatment_guide').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">중재 가이드가 표시됩니다.</p>';
+        document.getElementById('out_noti_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">SBAR 노티 템플릿이 자동 생성됩니다.</p>';
+        document.getElementById('out_calc_list').innerHTML = '<p style="color:#94a3b8; font-size:0.82rem; text-align:center; padding:15px 0;">계산 수치가 표시됩니다.</p>';
+    }
+
+    function calcIOBalance() {
+        const inVal = parseFloat(document.getElementById('ext_io_in').value) || 0;
+        const outVal = parseFloat(document.getElementById('ext_io_out').value) || 0;
+        const wtVal = parseFloat(document.getElementById('ext_wt').value) || 0;
+        const balance = inVal - outVal;
+        
+        const resDiv = document.getElementById('ext_io_res');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `[I/O 결과]\n• 총 섭취: ${inVal} mL / 총 배설: ${outVal} mL\n• 밸런스(Balance): ${balance >= 0 ? '+' : ''}${balance} mL\n• 체중 변화: ${wtVal} kg`;
+    }
+
+    function calcCrCl() {
+        const gender = document.getElementById('ext_gender').value;
+        const age = parseFloat(document.getElementById('ext_age').value) || 0;
+        const wt = parseFloat(document.getElementById('ext_wt_val').value) || 0;
+        const cr = parseFloat(document.getElementById('ext_cr').value) || 0;
+
+        if (age <= 0 || wt <= 0 || cr <= 0) {
+            alert('나이, 체중, 크레아티닌 값을 올바르게 입력해주세요.');
+            return;
+        }
+
+        let crcl = ((140 - age) * wt) / (72 * cr);
+        if (gender === 'female') crcl *= 0.85;
+
+        const resDiv = document.getElementById('ext_crcl_res');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `[Cockcroft-Gault CrCl 결과]\n• 청소율(CrCl): ${crcl.toFixed(1)} mL/min`;
+    }
+
+    function analyzeABGA() {
+        const ph = parseFloat(document.getElementById('ext_ph').value) || 7.40;
+        const paco2 = parseFloat(document.getElementById('ext_paco2').value) || 40;
+        const hco3 = parseFloat(document.getElementById('ext_hco3').value) || 24;
+
+        let status = "정상 범위";
+        if (ph < 7.35) {
+            status = paco2 > 45 ? "호흡성 산증 (Respiratory Acidosis)" : "대사성 산증 (Metabolic Acidosis)";
+        } else if (ph > 7.45) {
+            status = paco2 < 35 ? "호흡성 알칼리증 (Respiratory Alkalosis)" : "대사성 알칼리증 (Metabolic Alkalosis)";
+        }
+
+        const resDiv = document.getElementById('ext_abga_res');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `[ABGA 판독 결과]\n• pH: ${ph}, PaCO2: ${paco2}, HCO3: ${hco3}\n• 예상 판독: ${status}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadSavedRecords();
+        loadNotice();
+        loadWork('d');
+        loadWork('e');
+        loadWork('n');
+        loadMemoAppData();
+    });
+</script>
+
+</body>
+</html>
