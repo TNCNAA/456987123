@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>임상 참고 사진</title>
-    <!-- Firebase SDK 로드 (클라우드 저장용)[cite: 8] -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
@@ -13,67 +12,70 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #f8fafc;
-            padding: 20px;
+            padding: 8px;
         }
 
+        /* ❌ 겉 테두리 박스 제거 및 최대 너비 확장 */
         .gallery-container {
-            max-width: 1100px;
+            max-width: 1550px;
             margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            background: transparent;
+            padding: 0;
+            box-shadow: none;
         }
 
         .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #0284c7;
             flex-wrap: wrap;
             gap: 10px;
         }
 
         h2 {
-            color: #0284c7;
-            font-size: 1.3rem;
+            color: #0369a1;
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn-primary {
             background-color: #0284c7;
             color: white;
             border: none;
-            padding: 8px 14px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
         }
         .btn-primary:hover { background-color: #0369a1; }
 
-        /* 사진 바둑판 정렬 (그리드)[cite: 8] */
+        /* ✨ 사진 바둑판 정렬: 무조건 한 줄에 2개씩 배치 (2열 그리드) */
         .image-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
         }
 
         .image-card {
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             overflow: hidden;
-            background: #f1f5f9;
+            background: #ffffff;
             text-align: center;
             position: relative;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
 
         .image-card img {
             width: 100%;
-            height: 160px;
-            object-fit: contain; /*[cite: 8] */
+            height: 140px;
+            object-fit: contain;
             background-color: #ffffff;
             display: block;
             border-bottom: 1px solid #e2e8f0;
@@ -81,8 +83,8 @@
         }
 
         .image-caption {
-            padding: 8px;
-            font-size: 0.9rem;
+            padding: 6px;
+            font-size: 0.82rem;
             color: #0f172a;
             font-weight: bold;
             background: #ffffff;
@@ -100,8 +102,8 @@
             flex: 1;
             background: transparent;
             border: none;
-            padding: 6px;
-            font-size: 0.78rem;
+            padding: 5px;
+            font-size: 0.72rem;
             font-weight: bold;
             cursor: pointer;
         }
@@ -110,17 +112,17 @@
         .btn-del:hover { background: #fee2e2; }
 
         /* ----------------------------------- */
-        /* 🖼️ 사진 클릭 시 뜨는 팝업(모달) 스타일[cite: 8] */
+        /* 🖼️ 사진 클릭 시 뜨는 팝업(모달) 스타일 */
         /* ----------------------------------- */
         .modal {
-            display: none; /*[cite: 8] */
+            display: none;
             position: fixed;
             z-index: 9999;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.85); /*[cite: 8] */
+            background-color: rgba(0, 0, 0, 0.85);
             justify-content: center;
             align-items: center;
             flex-direction: column;
@@ -131,31 +133,31 @@
             max-width: 90%;
             max-height: 80vh;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5); /*[cite: 8] */
-            object-fit: contain; /*[cite: 8] */
-            background-color: white; /*[cite: 8] */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            object-fit: contain;
+            background-color: white;
         }
 
         .modal-caption {
-            color: #ffffff; /*[cite: 8] */
+            color: #ffffff;
             font-size: 1.1rem;
             font-weight: bold;
             margin-top: 12px;
-            text-align: center; /*[cite: 8] */
+            text-align: center;
         }
 
         .close-btn {
             position: absolute;
             top: 20px;
             right: 30px;
-            color: #ffffff; /*[cite: 8] */
+            color: #ffffff;
             font-size: 40px;
             font-weight: bold;
-            cursor: pointer; /*[cite: 8] */
-            user-select: none; /*[cite: 8] */
+            cursor: pointer;
+            user-select: none;
         }
 
-        .close-btn:hover { color: #ef4444; /*[cite: 8] */ }
+        .close-btn:hover { color: #ef4444; }
     </style>
 </head>
 <body>
@@ -164,18 +166,15 @@
         <div class="header-row">
             <h2>
                 🖼️ 임상 참고 사진 대장
-                <a href="index.html" style="text-decoration: none; margin-left: 8px;" title="메인으로 가기">🏠</a>
+                <a href="index.html" style="text-decoration: none; margin-left: 6px;" title="메인으로 가기">🏠</a>
             </h2>
             <button class="btn-primary" onclick="addNewPhotoCard()">➕ 사진 추가하기</button>
         </div>
         
-        <!-- 사진 그리드 컨테이너 -->
         <div class="image-grid" id="photoGridContainer">
-            <!-- 자바스크립트로 동적 로드됨 -->
-        </div>
+            </div>
     </div>
 
-    <!-- 팝업창 (모달) 영역[cite: 8] -->
     <div id="imageModal" class="modal" onclick="closeModal()">
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <img class="modal-content" id="modalImg">
@@ -254,7 +253,7 @@
             });
         }
 
-        // 💾 데이터 저장 함수 (로컬 + 파이어베이스 클라우드 동시 저장)
+        // 💾 데이터 저장 함수
         async function saveAllPhotosData() {
             const cards = document.querySelectorAll('.image-card');
             let photos = [];
@@ -317,7 +316,7 @@
             }
         }
 
-        // 팝업 열기 함수[cite: 8]
+        // 팝업 열기 함수
         function openModalFromImg(imgElement) {
             const card = imgElement.closest('.image-card');
             const caption = card.querySelector('.image-caption').innerText;
@@ -326,20 +325,19 @@
             const modalImg = document.getElementById('modalImg');
             const modalCaption = document.getElementById('modalCaption');
 
-            modal.style.display = "flex"; //[cite: 8]
-            modalImg.src = imgElement.src; //[cite: 8]
-            modalCaption.innerText = caption; //[cite: 8]
+            modal.style.display = "flex";
+            modalImg.src = imgElement.src;
+            modalCaption.innerText = caption;
         }
 
-        // 팝업 닫기 함수[cite: 8]
+        // 팝업 닫기 함수
         function closeModal() {
-            document.getElementById('imageModal').style.display = "none"; //[cite: 8]
+            document.getElementById('imageModal').style.display = "none";
         }
 
-        // 키보드 ESC 키를 누르면 팝업 닫기[cite: 8]
         document.addEventListener('keydown', function(e) {
             if (e.key === "Escape") {
-                closeModal(); //[cite: 8]
+                closeModal();
             }
         });
     </script>
