@@ -21,7 +21,6 @@
             --pink-btn-hover: #db2777;
             --warning: #f59e0b;
             --success: #10b981;
-            --highlight-bg: #fef08a;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -136,13 +135,169 @@
         .date-picker { padding: 4px 6px; font-size: 0.8rem; font-weight: bold; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
         
         .btn { padding: 5px 10px; font-size: 0.78rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-apply { padding: 3px 6px; font-size: 0.7rem; background-color: #475569; color: white; border-radius: 4px; }
         .btn-primary { background-color: var(--primary); color: white; }
         .btn-primary:hover { background-color: var(--primary-dark); }
         .btn-magic { background-color: #8b5cf6; color: white; }
         .btn-magic:hover { background-color: #7c3aed; }
         .status-msg { font-size: 0.75rem; color: #16a34a; font-weight: bold; display: none; }
 
-        /* 🏷️ 부서별 뱃지 클래스 정의 (클릭 시 원복) */
+        /* -------------------------------------------------- */
+        /* 📝 we.memo 스타일 카드형 메모장 CSS (2열 배치 & 제목만 표기) */
+        /* -------------------------------------------------- */
+        .memo-app-container {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            padding: 15px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .memo-top-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .memo-add-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0f172a;
+            color: white;
+            border: none;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .memo-add-btn:hover { background: #1e293b; }
+
+        .memo-search-input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+            background: #f8fafc;
+            outline: none;
+        }
+        .memo-search-input:focus { background: #fff; border-color: var(--primary); }
+
+        .memo-main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        @media (min-width: 900px) {
+            .memo-main-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+        }
+
+        .memo-list-pane {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+            align-content: start;
+        }
+
+        .memo-card-item {
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.1s, box-shadow 0.1s;
+            border: 1px solid rgba(0,0,0,0.05);
+            height: 55px;
+            display: flex;
+            align-items: center;
+        }
+        .memo-card-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        .memo-card-item.active { border: 2px solid #0f172a; }
+
+        .memo-card-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .memo-editor-pane {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 450px;
+        }
+
+        .memo-edit-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            background: transparent;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 6px;
+            outline: none;
+            color: #0f172a;
+        }
+        .memo-edit-title:focus { border-color: var(--primary); }
+
+        .memo-color-picker-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .color-dot.selected { border-color: #0f172a; transform: scale(1.1); }
+
+        .memo-edit-content {
+            flex: 1;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9rem;
+            outline: none;
+            line-height: 1.6;
+            overflow-y: auto;
+            min-height: 300px;
+            white-space: pre-wrap;
+        }
+
+        .memo-pane-btns {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* -------------------------------------------------- */
+
+        /* 🏷️ 부서별 뱃지 클래스 정의 */
         .tag-ns1  { background: #ff9800; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
         .tag-ns3  { background: #1c52ed; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
         .tag-ns5  { background: #7b1fa2; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; display: inline-block; }
@@ -238,15 +393,6 @@
         }
         
         .badge-warn { color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
-
-        .memo-layout { display: flex; gap: 15px; }
-        .memo-sidebar { width: 180px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; flex-shrink: 0; max-height: 450px; }
-        .memo-sidebar-header { font-size: 0.8rem; font-weight: bold; color: var(--secondary); padding-bottom: 4px; margin-bottom: 4px; border-bottom: 2px solid #e2e8f0; text-align: center; }
-        .memo-date-list { list-style: none; overflow-y: auto; flex: 1; }
-        .memo-date-item { padding: 6px 8px; font-size: 0.8rem; font-weight: 500; color: #334155; border-radius: 6px; cursor: pointer; margin-bottom: 3px; text-align: center; }
-        .memo-date-item:hover { background-color: #e0f2fe; color: var(--primary-dark); }
-        .memo-date-item.active { background-color: var(--primary); color: white; font-weight: bold; }
-        .memo-content-area { flex: 1; display: flex; flex-direction: column; }
 
         .top-wrapper {
             display: flex;
@@ -460,6 +606,7 @@
     <input type="color" id="badgeColorPicker" value="#dc2626" title="경고박스 배경색" style="width:22px; height:22px; border:none; background:transparent; vertical-align:middle; cursor:pointer;">
     <button onclick="applyBadge()" style="background:#dc2626; color:white; border-radius:4px; padding:2px 6px;">🚨</button>
     <button onclick="applyGiftLink()" title="사진(이미지 팝업) 추가">📷</button>
+    <button onclick="convertSelectedTextToBadge()" title="선택한 텍스트를 뱃지로 변환" style="background:#8b5cf6; border-radius:4px; padding:2px 6px;">🪄</button>
 </div>
 
 <div class="container">
@@ -703,25 +850,44 @@
         </div>
     </div>
 
-    <!-- [TAB 6] 📝 메모장 -->
+    <!-- [TAB 6] 📝 메모장 (2열, 시간 삭제, 제목만 표기, 빈 내용 시작) -->
     <div id="tab_memo" class="tab-content">
         <div class="panel-box">
             <div class="panel-header">
-                <div class="panel-title">📝 실시간 메모장</div>
-                <div class="editor-btn-group">
-                    <input type="date" id="memoDate" class="date-picker" onchange="loadMemoByDate(this.value)">
-                    <button class="btn btn-primary" onclick="saveMemo()">저장</button>
-                </div>
+                <div class="panel-title">📝 메모장</div>
             </div>
-            <span id="memoStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
-            <div class="memo-layout">
-                <div class="memo-sidebar">
-                    <div class="memo-sidebar-header">📅 날짜 목록</div>
-                    <ul id="memoDateList" class="memo-date-list"></ul>
+            
+            <div class="memo-app-container">
+                <div class="memo-top-bar">
+                    <button class="memo-add-btn" onclick="createNewMemo()" title="새 메모 추가">+</button>
+                    <input type="text" id="memoSearchInput" class="memo-search-input" placeholder="Search 메모 검색..." oninput="filterMemoCards(this.value)">
                 </div>
-                <div class="memo-content-area">
-                    <div class="editor-container">
-                        <div id="memoInput" class="editor-div" contenteditable="true"></div>
+
+                <div class="memo-main-layout">
+                    <!-- 좌측: 메모 카드 리스트 (2열 배치, 제목만 표기) -->
+                    <div class="memo-list-pane" id="memoListPane">
+                        <!-- 동적 생성 -->
+                    </div>
+
+                    <!-- 우측: 선택한 메모 상세 편집창 -->
+                    <div class="memo-editor-pane" id="memoEditorPane" style="display: none;">
+                        <input type="text" id="memoEditTitle" class="memo-edit-title" placeholder="메모 제목" oninput="updateCurrentMemoField()">
+                        
+                        <div class="memo-color-picker-row">
+                            <span style="font-size: 0.75rem; font-weight: bold; color: #64748b;">카드 색상:</span>
+                            <div class="color-dot" style="background: #fed7aa;" onclick="changeMemoColor('#fed7aa', this)"></div>
+                            <div class="color-dot" style="background: #bfdbfe;" onclick="changeMemoColor('#bfdbfe', this)"></div>
+                            <div class="color-dot" style="background: #bbf7d0;" onclick="changeMemoColor('#bbf7d0', this)"></div>
+                            <div class="color-dot" style="background: #fef08a;" onclick="changeMemoColor('#fef08a', this)"></div>
+                            <div class="color-dot" style="background: #fbcfe8;" onclick="changeMemoColor('#fbcfe8', this)"></div>
+                        </div>
+
+                        <div id="memoEditContent" class="memo-edit-content" contenteditable="true" oninput="updateCurrentMemoField()"></div>
+
+                        <div class="memo-pane-btns">
+                            <button class="btn btn-primary" onclick="saveMemoAppToCloud()">💾 저장하기</button>
+                            <button class="btn" style="background:#fee2e2; color:#ef4444;" onclick="deleteCurrentMemo()">🗑️ 삭제</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -813,6 +979,7 @@
         document.getElementById('bookmarkTabs').classList.remove('show');
     }
 
+    // 🎨 DEN 근무 및 툴바 표준 컬러 피커 적용 함수
     function applyColor(editorId, command, pickerId) {
         const colorValue = document.getElementById(pickerId).value;
         const editor = document.getElementById(editorId);
@@ -896,48 +1063,229 @@
         document.getElementById('imageModal').style.display = 'none';
     }
 
-    // 🪄 [최종 완성] 대소문자 무관, 줄 시작/끝/중간 어디 있든 모든 부서명을 완벽히 캐치하여 뱃지로 변환하는 엔진
+    // --------------------------------------------------
+    // 📝 카드형 메모장 로직 (빈 내용 시작, 시간 삭제, 2열, 제목만 표기)
+    // --------------------------------------------------
+    let memoList = [];
+    let currentMemoId = null;
+
+    async function loadMemoAppData() {
+        let saved = null;
+        if (db) {
+            try {
+                const doc = await db.collection("system_data").doc("memo_app_v5").get();
+                if (doc.exists) saved = doc.data().list;
+            } catch(e) { console.log(e); }
+        }
+        if (!saved) {
+            const local = localStorage.getItem('hospital_memo_app_v5');
+            saved = local ? JSON.parse(local) : [];
+        }
+        memoList = saved;
+        renderMemoList(memoList);
+        if (memoList.length > 0) {
+            selectMemoCard(memoList[0].id);
+        } else {
+            document.getElementById('memoEditorPane').style.display = 'none';
+        }
+    }
+
+    async function saveMemoAppToCloud() {
+        if (currentMemoId) {
+            const memo = memoList.find(m => m.id === currentMemoId);
+            if (memo) {
+                memo.title = document.getElementById('memoEditTitle').value;
+                memo.content = document.getElementById('memoEditContent').innerText;
+            }
+        }
+        localStorage.setItem('hospital_memo_app_v5', JSON.stringify(memoList));
+        if (db) {
+            try {
+                await db.collection("system_data").doc("memo_app_v5").set({ list: memoList });
+            } catch(e) { console.log(e); }
+        }
+        renderMemoList(memoList);
+        alert("메모가 저장되었습니다!");
+    }
+
+    function renderMemoList(list) {
+        const pane = document.getElementById('memoListPane');
+        pane.innerHTML = '';
+        if (list.length === 0) {
+            pane.innerHTML = '<p style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:20px; grid-column: span 2;">등록된 메모가 없습니다.</p>';
+            return;
+        }
+
+        list.forEach(m => {
+            const card = document.createElement('div');
+            card.className = `memo-card-item ${m.id === currentMemoId ? 'active' : ''}`;
+            card.style.backgroundColor = m.color || '#fef08a';
+            card.innerHTML = `
+                <div class="memo-card-title">${m.title || '제목 없음'}</div>
+            `;
+            card.onclick = () => selectMemoCard(m.id);
+            pane.appendChild(card);
+        });
+    }
+
+    function selectMemoCard(id) {
+        currentMemoId = id;
+        const memo = memoList.find(m => m.id === id);
+        const editorPane = document.getElementById('memoEditorPane');
+        
+        if (!memo) {
+            editorPane.style.display = 'none';
+            return;
+        }
+
+        editorPane.style.display = 'flex';
+        document.getElementById('memoEditTitle').value = memo.title;
+        document.getElementById('memoEditContent').innerText = memo.content;
+
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            if (dot.style.backgroundColor === memo.color) {
+                dot.classList.add('selected');
+            } else {
+                dot.classList.remove('selected');
+            }
+        });
+
+        renderMemoList(memoList);
+    }
+
+    function createNewMemo() {
+        const newMemo = {
+            id: 'memo_' + Date.now(),
+            title: '',
+            content: '',
+            color: '#fef08a'
+        };
+        memoList.unshift(newMemo);
+        selectMemoCard(newMemo.id);
+        saveMemoAppToCloud();
+    }
+
+    function deleteCurrentMemo() {
+        if (!currentMemoId) return;
+        if (confirm("이 메모를 삭제하시겠습니까?")) {
+            memoList = memoList.filter(m => m.id !== currentMemoId);
+            currentMemoId = memoList.length > 0 ? memoList[0].id : null;
+            saveMemoAppToCloud();
+            if (currentMemoId) {
+                selectMemoCard(currentMemoId);
+            } else {
+                document.getElementById('memoEditorPane').style.display = 'none';
+            }
+        }
+    }
+
+    function changeMemoColor(hex, dotEl) {
+        if (!currentMemoId) return;
+        const memo = memoList.find(m => m.id === currentMemoId);
+        if (memo) {
+            memo.color = hex;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            dotEl.classList.add('selected');
+            renderMemoList(memoList);
+            saveMemoAppToCloud();
+        }
+    }
+
+    function updateCurrentMemoField() {
+        if (!currentMemoId) return;
+        const memo = memoList.find(m => m.id === currentMemoId);
+        if (memo) {
+            memo.title = document.getElementById('memoEditTitle').value;
+            memo.content = document.getElementById('memoEditContent').innerText;
+            renderMemoList(memoList);
+        }
+    }
+
+    function filterMemoCards(keyword) {
+        const filtered = memoList.filter(m => 
+            m.title.toLowerCase().includes(keyword.toLowerCase()) || 
+            m.content.toLowerCase().includes(keyword.toLowerCase())
+        );
+        renderMemoList(filtered);
+    }
+    // --------------------------------------------------
+
+    // 🪄 드래그한 텍스트를 뱃지로 변환
+    function convertSelectedTextToBadge() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        const selectedText = selection.toString().trim();
+        if (!selectedText) return;
+
+        const tagMap = {
+            'NS1': 'tag-ns1', 'ns1': 'tag-ns1',
+            'NS3': 'tag-ns3', 'ns3': 'tag-ns3',
+            'NS5': 'tag-ns5', 'ns5': 'tag-ns5',
+            'OS1': 'tag-os1', 'os1': 'tag-os1',
+            'OS2': 'tag-os2', 'os2': 'tag-os2',
+            'GS': 'tag-gs', 'gs': 'tag-gs',
+            'NR': 'tag-nr', 'nr': 'tag-nr',
+            'FM': 'tag-fm', 'fm': 'tag-fm',
+            '임병': 'tag-lab', '검진': 'tag-chk',
+            '물치': 'tag-pt', '영상': 'tag-vid', '병동': 'tag-ward'
+        };
+
+        const cleanKey = selectedText.replace('#', '').toUpperCase();
+        const cls = tagMap[cleanKey] || tagMap[selectedText];
+
+        if (cls) {
+            const span = document.createElement('span');
+            span.className = cls;
+            span.setAttribute('data-tag', cleanKey);
+            span.innerText = cleanKey;
+
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(span);
+            document.getElementById('floatingToolbar').style.display = 'none';
+        } else {
+            alert("등록되지 않은 태그 이름입니다.");
+        }
+    }
+
+    // 🪄 공지사항 뱃지 자동 변환
     function convertHashToBadges() {
         const noticeDiv = document.getElementById('noticeInput');
         
-        // 1. 이미 변환되어 있는 뱃지들은 안전하게 순수 텍스트로 되돌림
-        const existingBadges = noticeDiv.querySelectorAll('span[data-tag]');
-        existingBadges.forEach(badge => {
-            const textNode = document.createTextNode(badge.getAttribute('data-tag'));
-            badge.replaceWith(textNode);
+        const badges = noticeDiv.querySelectorAll('span[data-tag]');
+        badges.forEach(b => {
+            const tagText = b.getAttribute('data-tag');
+            b.replaceWith(document.createTextNode(tagText));
         });
 
         let html = noticeDiv.innerHTML;
 
-        // 대소문자 매핑 설정 (소문자 os1, ns1 등도 대문자로 깔끔하게 뱃지화)
-        const tagRules = [
-            { pattern: /(?:^|[\s(>])#?(NS1|ns1)\b/gi, key: 'NS1', cls: 'tag-ns1' },
-            { pattern: /(?:^|[\s(>])#?(NS3|ns3)\b/gi, key: 'NS3', cls: 'tag-ns3' },
-            { pattern: /(?:^|[\s(>])#?(NS5|ns5)\b/gi, key: 'NS5', cls: 'tag-ns5' },
-            { pattern: /(?:^|[\s(>])#?(OS1|os1)\b/gi, key: 'OS1', cls: 'tag-os1' },
-            { pattern: /(?:^|[\s(>])#?(OS2|os2)\b/gi, key: 'OS2', cls: 'tag-os2' },
-            { pattern: /(?:^|[\s(>])#?(GS|gs)\b/gi,   key: 'GS',  cls: 'tag-gs' },
-            { pattern: /(?:^|[\s(>])#?(NR|nr)\b/gi,   key: 'NR',  cls: 'tag-nr' },
-            { pattern: /(?:^|[\s(>])#?(FM|fm)\b/gi,   key: 'FM',  cls: 'tag-fm' },
-            { pattern: /(?:^|[\s(>])#?(임병)\b/gu,     key: '임병', cls: 'tag-lab' },
-            { pattern: /(?:^|[\s(>])#?(검진)\b/gu,     key: '검진', cls: 'tag-chk' },
-            { pattern: /(?:^|[\s(>])#?(물치)\b/gu,     key: '물치', cls: 'tag-pt' },
-            { pattern: /(?:^|[\s(>])#?(영상)\b/gu,     key: '영상', cls: 'tag-vid' },
-            { pattern: /(?:^|[\s(>])#?(병동)\b/gu,     key: '병동', cls: 'tag-ward' }
+        const tags = [
+            { key: 'NS1', cls: 'tag-ns1' },
+            { key: 'NS3', cls: 'tag-ns3' },
+            { key: 'NS5', cls: 'tag-ns5' },
+            { key: 'OS1', cls: 'tag-os1' },
+            { key: 'OS2', cls: 'tag-os2' },
+            { key: 'GS',  cls: 'tag-gs' },
+            { key: 'NR',  cls: 'tag-nr' },
+            { key: 'FM',  cls: 'tag-fm' },
+            { key: '임병', cls: 'tag-lab' },
+            { key: '검진', cls: 'tag-chk' },
+            { key: '물치', cls: 'tag-pt' },
+            { key: '영상', cls: 'tag-vid' },
+            { key: '병동', cls: 'tag-ward' }
         ];
 
-        tagRules.forEach(rule => {
-            html = html.replace(rule.pattern, (match, p1, p2) => {
-                const prefix = match.charAt(0) === p1 ? '' : match.charAt(0);
-                return `${prefix}<span class="${rule.cls}" data-tag="${rule.key}">${rule.key}</span>`;
-            });
+        tags.forEach(t => {
+            const regex = new RegExp(`(?![^<]*>)(^|[^\\w가-힣])#?(${t.key})(?![\\w가-힣])`, 'gi');
+            html = html.replace(regex, `$1<span class="${t.cls}" data-tag="${t.key}">${t.key}</span>`);
         });
 
         noticeDiv.innerHTML = html;
-        alert("모든 부서 태그가 예쁜 뱃지로 변환되었습니다! 🪄");
+        alert("태그가 예쁜 뱃지로 변환되었습니다! 🪄");
     }
 
-    // 🖱️ 생성된 뱃지를 클릭하면 일반 텍스트로 되돌리는 기능
+    // 🖱️ 뱃지 클릭 시 원복
     document.addEventListener('click', function(e) {
         if (e.target.hasAttribute('data-tag') && e.target.closest('#noticeInput')) {
             const tagText = e.target.getAttribute('data-tag');
@@ -946,7 +1294,7 @@
         }
     });
 
-    // 🏷️ 태그 기반 공지사항 필터링 함수
+    // 🏷️ 공지 필터링
     let originalNoticeHtml = '';
 
     function filterNoticeByTag(tagName, btnElement) {
@@ -1051,87 +1399,6 @@
 
         statusEl.style.display = 'inline';
         setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
-    }
-
-    const memoInput = document.getElementById('memoInput');
-    const memoStatus = document.getElementById('memoStatus');
-    const memoDate = document.getElementById('memoDate');
-    const memoDateList = document.getElementById('memoDateList');
-
-    async function loadMemoByDate(targetDate) {
-        if (!targetDate) return;
-        memoDate.value = targetDate;
-        
-        let savedMemo = null;
-        if (db) {
-            try {
-                const doc = await db.collection("system_data").doc("memo_" + targetDate).get();
-                if (doc.exists) savedMemo = doc.data().content;
-            } catch(e) { console.log(e); }
-        }
-        if (!savedMemo) {
-            savedMemo = localStorage.getItem('hospital_user_memo_html_' + targetDate) || '';
-        }
-
-        memoInput.innerHTML = savedMemo;
-
-        const dateItems = document.querySelectorAll('.memo-date-item');
-        dateItems.forEach(item => {
-            if (item.innerText === targetDate) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-    }
-
-    async function saveMemo() {
-        const selectedDate = memoDate.value;
-        if (!selectedDate) {
-            alert('날짜를 먼저 선택해 주세요.');
-            return;
-        }
-        const content = memoInput.innerHTML;
-        localStorage.setItem('hospital_user_memo_html_' + selectedDate, content);
-        
-        if (db) {
-            try {
-                await db.collection("system_data").doc("memo_" + selectedDate).set({ content: content });
-            } catch(e) { console.log(e); }
-        }
-
-        updateMemoDateList();
-        memoStatus.style.display = 'inline';
-        setTimeout(() => { memoStatus.style.display = 'none'; }, 2000);
-    }
-
-    function updateMemoDateList() {
-        memoDateList.innerHTML = '';
-        let dates = [];
-
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key.startsWith('hospital_user_memo_html_')) {
-                let dateStr = key.replace('hospital_user_memo_html_', '');
-                if (dateStr) dates.push(dateStr);
-            }
-        }
-
-        dates.sort((a, b) => b.localeCompare(a));
-
-        if (dates.length === 0) {
-            const today = memoDate.value || new Date().toISOString().split('T')[0];
-            dates.push(today);
-        }
-
-        dates.forEach(date => {
-            let li = document.createElement('li');
-            li.className = 'memo-date-item';
-            if (date === memoDate.value) li.classList.add('active');
-            li.innerText = date;
-            li.onclick = function() { loadMemoByDate(date); };
-            memoDateList.appendChild(li);
-        });
     }
 
     function runAnalysis() {
@@ -1328,11 +1595,7 @@
         loadWork('d');
         loadWork('e');
         loadWork('n');
-
-        const today = new Date().toISOString().split('T')[0];
-        memoDate.value = today;
-        updateMemoDateList();
-        loadMemoByDate(today);
+        loadMemoAppData();
     });
 </script>
 
