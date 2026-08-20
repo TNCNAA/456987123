@@ -5,9 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>미니 블로그 시스템 (Dark Ocean)</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    
     <style>
         :root {
             --bg: #0f172a;
@@ -22,7 +19,8 @@
 
         .blog-container { max-width: 100%; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
 
-        .toolbar-sticky { position: sticky; top: 0; background: var(--bg); z-index: 100; padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+        /* 상단 카테고리 필터 바 */
+        .toolbar-sticky { position: sticky; top: 0; background: var(--bg); z-index: 1000; padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
         
         .cat-btn-group { display: flex; flex-wrap: wrap; gap: 4px; }
         .cat-filter-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: #1e293b; font-size: 0.8rem; font-weight: bold; color: var(--text-sub); }
@@ -32,13 +30,24 @@
         .btn-main { background: var(--primary); color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
         .btn-main:hover { background: #7dd3fc; }
 
-        .editor-toolbar { padding: 8px 0; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: white; }
+        /* ✨ [핵심 수정] 글쓰기 상단 전체 영역(저장버튼 + 제목선택 + 툴바)을 하나로 묶어 스크롤 고정 */
+        .write-sticky-header {
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 950;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .editor-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: white; padding-top: 8px; }
         .tool-btn { background: #334155; color: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
         .tool-btn:hover { background: #475569; }
 
         .editor-area { width: 100%; min-height: 400px; padding: 15px 0; border: none; background: transparent; color: white; outline: none; line-height: 1.6; font-size: 0.95rem; }
         .img-preview { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
 
+        /* 글 목록 카드 */
         .post-list { display: flex; flex-direction: column; gap: 0; }
         .post-card { padding: 14px 4px; background: var(--bg); cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s; }
         .post-card:hover { background: #1e293b; }
@@ -73,7 +82,8 @@
 <body>
 
 <div class="blog-container">
-    <div class="toolbar-sticky">
+    <!-- 상단 카테고리 필터 바 (목록 화면용) -->
+    <div id="viewListHeader" class="toolbar-sticky">
         <div class="cat-btn-group" id="categoryButtonGroup">
             <button class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
             <button class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
@@ -89,8 +99,7 @@
             <button class="cat-filter-btn" onclick="filterByCategory('N')">N</button>
             <button class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
         </div>
-        <div style="display:flex; gap:6px;">
-            <button class="btn-main" style="background:#a78bfa;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지변환</button>
+        <div>
             <button class="btn-main" onclick="openWriteMode(null)">✍️ 새 글쓰기</button>
         </div>
     </div>
@@ -100,29 +109,35 @@
 
     <!-- 2. 글쓰기 / 수정 에디터 화면 -->
     <div id="viewWrite" style="display:none;">
-        <div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; gap:8px;">
-            <select id="writeCategory" style="padding:6px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white;">
-                <option value="공지">공지</option><option value="NS">NS</option><option value="OS">OS</option><option value="GS">GS</option>
-                <option value="NR">NR</option><option value="임병">임병</option><option value="물치">물치</option><option value="FM">FM</option>
-                <option value="D">D</option><option value="E">E</option><option value="N">N</option><option value="기타">기타</option>
-            </select>
-            <input type="text" id="writeTitle" placeholder="제목을 입력하세요" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:4px; outline:none; background:#1e293b; color:white;">
+        <!-- ✨ 스크롤을 내려도 저장/취소버튼, 제목, 툴바 전체가 상단에 고정되도록 묶은 헤더 -->
+        <div class="write-sticky-header">
+            <div style="padding:8px 0; display:flex; justify-content:flex-end; gap:6px; border-bottom:1px solid var(--border); margin-bottom:8px;">
+                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">취소</button>
+                <button class="btn-main" onclick="savePostData()">저장하기</button>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+                <select id="writeCategory" style="padding:6px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white;">
+                    <option value="공지">공지</option><option value="NS">NS</option><option value="OS">OS</option><option value="GS">GS</option>
+                    <option value="NR">NR</option><option value="임병">임병</option><option value="물치">물치</option><option value="FM">FM</option>
+                    <option value="D">D</option><option value="E">E</option><option value="N">N</option><option value="기타">기타</option>
+                </select>
+                <input type="text" id="writeTitle" placeholder="제목을 입력하세요" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:4px; outline:none; background:#1e293b; color:white;">
+            </div>
+            
+            <div class="editor-toolbar">
+                <button class="tool-btn" onclick="document.execCommand('bold', false, null)"><b>B</b></button>
+                <button class="tool-btn" onclick="document.execCommand('underline', false, null)"><u>U</u></button>
+                <span>글자색:</span><input type="color" id="textColor" value="#f8fafc" onchange="document.execCommand('foreColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+                <span>형광펜:</span><input type="color" id="hiliteColor" value="#334155" onchange="document.execCommand('hiliteColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+                <span>박스색:</span><input type="color" id="boxColor" value="#f87171" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+                <button class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스적용/해제</button>
+                <button class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지변환</button>
+                <span style="font-size:0.75rem; color:#94a3b8; margin-left:auto;">💡 사진 Ctrl+V & Ctrl+Z 지원</span>
+            </div>
         </div>
-        
-        <div class="editor-toolbar">
-            <button class="tool-btn" onclick="document.execCommand('bold', false, null)"><b>B</b></button>
-            <button class="tool-btn" onclick="document.execCommand('underline', false, null)"><u>U</u></button>
-            <span>글자색:</span><input type="color" id="textColor" value="#f8fafc" onchange="document.execCommand('foreColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-            <span>형광펜:</span><input type="color" id="hiliteColor" value="#334155" onchange="document.execCommand('hiliteColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-            <span>박스색:</span><input type="color" id="boxColor" value="#f87171" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-            <button class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스적용/해제</button>
-            <span style="font-size:0.75rem; color:#94a3b8; margin-left:auto;">💡 사진 Ctrl+V 가능 (Ctrl+Z 취소 지원)</span>
-        </div>
+
         <div id="writeContent" class="editor-area" contenteditable="true" placeholder="내용을 입력하세요..."></div>
-        <div style="padding:10px 0; display:flex; justify-content:flex-end; gap:6px; border-top:1px solid var(--border);">
-            <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">취소</button>
-            <button class="btn-main" onclick="savePostData()">저장하기</button>
-        </div>
     </div>
 
     <!-- 3. 상세 보기 화면 -->
@@ -132,11 +147,11 @@
 </div>
 
 <script>
-    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_v14')) || [
+    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v3')) || [
         {
             id: 'post_1',
             category: '공지',
-            title: '다크 오션 블로그 시스템 안내',
+            title: '미니 블로그 시스템 안내',
             content: 'NS1, OS1 등 태그를 입력하고 🪄뱃지변환 버튼을 눌러보세요! (생성된 뱃지를 누르면 다시 일반 텍스트로 돌아갑니다.)',
             date: '2026.08.20.',
             comments: [{ date: '2026.08.20. 오전 4:50', text: '환영합니다!' }]
@@ -188,7 +203,6 @@
 
     setupPasteImage(editor);
 
-    // ✨ 뱃지 변환 로직 전면 수정 (텍스트 노드를 안전하게 탐색하여 변환)
     function convertPostBadgesInEditor() {
         const tagMap = {
             'NS1': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
@@ -201,12 +215,9 @@
             if (node.nodeType === Node.TEXT_NODE) {
                 let text = node.nodeValue;
                 let replaced = false;
-                
                 Object.keys(tagMap).forEach(key => {
                     const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
-                    if (regex.test(text)) {
-                        replaced = true;
-                    }
+                    if (regex.test(text)) replaced = true;
                 });
 
                 if (replaced) {
@@ -229,7 +240,6 @@
         alert("태그가 예쁜 뱃지로 변환되었습니다! 🪄");
     }
 
-    // 🖱️ 클릭 시 뱃지 또는 박스 토글 해제
     document.addEventListener('click', (e) => {
         if(e.target.classList.contains('tag-badge')) {
             const tagText = e.target.getAttribute('data-tag') || e.target.innerText;
@@ -260,6 +270,7 @@
 
     function switchBlogTab(tab) {
         document.getElementById('viewList').style.display = tab === 'list' ? 'block' : 'none';
+        document.getElementById('viewListHeader').style.display = tab === 'list' ? 'flex' : 'none';
         document.getElementById('viewWrite').style.display = tab === 'write' ? 'block' : 'none';
         document.getElementById('viewDetail').style.display = tab === 'detail' ? 'block' : 'none';
         if(tab === 'list') renderPostList();
@@ -341,7 +352,7 @@
         } else {
             blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: new Date().toLocaleDateString(), comments: [] });
         }
-        localStorage.setItem('my_blog_posts_v14', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v3', JSON.stringify(blogPosts));
         editingPostId = null;
         switchBlogTab('list');
     }
@@ -350,10 +361,18 @@
         const p = blogPosts.find(p => p.id === id);
         if(!p) return;
         document.getElementById('postDetailContainer').innerHTML = `
-            <button class="btn-main" style="background:#475569; color:white; margin-bottom:10px;" onclick="switchBlogTab('list')">← 목록으로</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">← 목록으로</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-main" style="background:#0284c7; color:#0f172a;" onclick="openWriteMode('${p.id}')">✏️ 수정하기</button>
+                    <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">🗑️ 삭제</button>
+                </div>
+            </div>
+
             <h2 style="color:white; margin-bottom:4px;">${p.title}</h2>
             <small style="color:var(--text-sub);">카테고리: ${p.category} | 작성일: ${p.date}</small>
             <div style="margin:15px 0; line-height:1.6; color:white;">${p.content}</div>
+            
             <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
             <h4 style="color:white;">댓글 (${p.comments.length})</h4>
             <div style="margin:10px 0;">
@@ -365,16 +384,13 @@
                     </div>
                 `).join('')}
             </div>
-            <div style="display:flex; flex-direction:column; gap:6px; border:1px solid var(--border); padding:8px; border-radius:6px; background:#1e293b;">
+            
+            <div style="display:flex; flex-direction:column; gap:6px; border:1px solid var(--border); padding:8px; border-radius:6px; background:#1e293b; margin-top:15px;">
                 <div id="commentInputDiv" class="editor-area" style="min-height:45px; padding:6px; border:none; background:#0f172a; color:white;" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:4px;">
                     <span style="font-size:0.7rem; color:#94a3b8;">💡 댓글 사진 Ctrl+V 가능</span>
                     <button class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="addComment('${p.id}')">댓글등록</button>
                 </div>
-            </div>
-            <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:8px;">
-                <button class="btn-main" style="background:#0284c7; color:#0f172a;" onclick="openWriteMode('${p.id}')">✏️ 수정하기</button>
-                <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">🗑️ 삭제</button>
             </div>
         `;
         setupPasteImage(document.getElementById('commentInputDiv'));
@@ -387,14 +403,14 @@
         if(!text) return;
         const post = blogPosts.find(p => p.id === id);
         post.comments.push({ date: new Date().toLocaleString(), text });
-        localStorage.setItem('my_blog_posts_v14', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v3', JSON.stringify(blogPosts));
         openPostDetail(id);
     }
 
     function deletePost(id) {
         if(confirm("정말 삭제하시겠습니까?")) {
             blogPosts = blogPosts.filter(p => p.id !== id);
-            localStorage.setItem('my_blog_posts_v14', JSON.stringify(blogPosts));
+            localStorage.setItem('my_blog_posts_final_v3', JSON.stringify(blogPosts));
             switchBlogTab('list');
         }
     }
