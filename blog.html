@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미니 블로그 시스템 (댓글 이미지 조절 완벽본)</title>
+    <title>미니 블로그 시스템 (팝업 재확인 제거)</title>
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -180,7 +180,6 @@
             display: block;
         }
         
-        /* 이미지 스타일 및 선택 효과 */
         .img-preview {
             max-width: 100%;
             height: auto;
@@ -193,7 +192,6 @@
             outline: 3px solid var(--primary);
         }
 
-        /* ✨ 10% 단위 크기 조절 툴바 */
         #imgResizeToolbar {
             display: none;
             position: absolute;
@@ -210,7 +208,7 @@
             background: #334155;
             color: white;
             border: none;
-            padding: 3px 5px;
+            padding: 3px 6px;
             font-size: 0.65rem;
             font-weight: bold;
             border-radius: 4px;
@@ -303,7 +301,6 @@
 </head>
 <body>
 
-<!-- ✨ 10% 단위 크기 조절 툴바 -->
 <div id="imgResizeToolbar">
     <button type="button" onclick="adjustImageSize(-0.1)">-10%</button>
     <button type="button" onclick="adjustImageSize(0.1)">+10%</button>
@@ -455,6 +452,9 @@
                 <!-- 🚨 박스 버튼 -->
                 <button type="button" class="tool-btn btn-main-red" onclick="applyBoxColor()">🚨 박스</button>
                 <button type="button" class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지</button>
+                
+                <!-- 사진 주소(URL) 추가 카메라 버튼 -->
+                <button type="button" class="tool-btn" style="background:#0284c7; color:white;" onclick="insertImageUrl()" title="사진 주소(URL) 추가">📷</button>
             </div>
         </div>
 
@@ -493,7 +493,7 @@
     let editingPostId = null;
     let undoStack = [];
     let savedRange = null;
-    let selectedImage = null; // 현재 선택된 이미지 추적
+    let selectedImage = null;
 
     async function loadCloudBlogData() {
         if (!db) return;
@@ -541,60 +541,44 @@
         editor.addEventListener('mouseup', saveSelection);
         editor.addEventListener('keyup', saveSelection);
         editor.addEventListener('touchend', saveSelection);
-    }
+        
+        editor.addEventListener('click', function(e) {
+            const toolbar = document.getElementById('imgResizeToolbar');
+            if (e.target.tagName === 'IMG') {
+                selectedImage = e.target;
+                
+                editor.querySelectorAll('img').forEach(img => img.classList.remove('selected'));
+                selectedImage.classList.add('selected');
 
-    // ✨ 공통 이미지 클릭 핸들러 (메인 글쓰기 + 댓글 입력창/수정창 모두 지원)
-    document.addEventListener('click', function(e) {
-        const toolbar = document.getElementById('imgResizeToolbar');
-        if (!toolbar) return;
-
-        if (e.target.tagName === 'IMG') {
-            selectedImage = e.target;
-            
-            // 모든 에디터 영역의 이미지 선택 해제 후 현재 이미지 선택
-            document.querySelectorAll('img').forEach(img => img.classList.remove('selected'));
-            selectedImage.classList.add('selected');
-
-            const rect = selectedImage.getBoundingClientRect();
-            toolbar.style.display = 'flex';
-            toolbar.style.top = (rect.top + window.scrollY - 35) + 'px';
-            toolbar.style.left = (rect.left + window.scrollX) + 'px';
-            e.stopPropagation();
-        } else {
-            if (!toolbar.contains(e.target)) {
-                toolbar.style.display = 'none';
-                if (selectedImage) {
-                    selectedImage.classList.remove('selected');
-                    selectedImage = null;
+                const rect = selectedImage.getBoundingClientRect();
+                toolbar.style.display = 'flex';
+                toolbar.style.top = (rect.top + window.scrollY - 35) + 'px';
+                toolbar.style.left = (rect.left + window.scrollX) + 'px';
+                e.stopPropagation();
+            } else {
+                if (toolbar && !toolbar.contains(e.target)) {
+                    toolbar.style.display = 'none';
+                    if (selectedImage) {
+                        selectedImage.classList.remove('selected');
+                        selectedImage = null;
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
-    // ✨ 10% 단위 미세 크기 조절 함수
-    function adjustImageSize(delta) {
+    function adjustImageSize(deltaPercent) {
         if (!selectedImage) return;
+        let currentWidth = selectedImage.clientWidth;
+        if (!currentWidth) currentWidth = selectedImage.naturalWidth || 300;
         
-        // 현재 width가 px 단위로 설정되어 있지 않다면 현재 렌더링된 clientWidth를 기준 삼음
-        let currentW = selectedImage.clientWidth;
-        if (!selectedImage.style.width) {
-            selectedImage.style.width = currentW + 'px';
-        }
-        
-        let currentWidthVal = parseInt(selectedImage.style.width);
-        let newWidth = currentWidthVal * (1 + delta);
-        
-        if (newWidth < 30) newWidth = 30; // 최소 크기 제한
+        let newWidth = currentWidth * (1 + deltaPercent);
+        if (newWidth < 50) newWidth = 50;
+
         selectedImage.style.width = newWidth + 'px';
         selectedImage.style.maxWidth = 'none';
-        
         saveUndoState();
-        
-        // 툴바 위치 갱신
-        const toolbar = document.getElementById('imgResizeToolbar');
-        const rect = selectedImage.getBoundingClientRect();
-        toolbar.style.top = (rect.top + window.scrollY - 35) + 'px';
-        toolbar.style.left = (rect.left + window.scrollX) + 'px';
+        document.getElementById('imgResizeToolbar').style.display = 'none';
     }
 
     function resetImageSize() {
@@ -607,12 +591,33 @@
 
     function deleteSelectedImage() {
         if (!selectedImage) return;
-        if (confirm("이 이미지를 삭제하시겠습니까?")) {
-            selectedImage.remove();
-            selectedImage = null;
-            document.getElementById('imgResizeToolbar').style.display = 'none';
-            saveUndoState();
+        selectedImage.remove();
+        selectedImage = null;
+        document.getElementById('imgResizeToolbar').style.display = 'none';
+        saveUndoState();
+    }
+
+    function insertImageUrl() {
+        if (!editor) return;
+        editor.focus();
+        restoreSelection();
+
+        const imgUrl = prompt("연결할 이미지 주소(URL)를 입력하세요:", "https://");
+        if (!imgUrl) return;
+
+        const img = document.createElement('img');
+        img.src = imgUrl;
+        img.className = 'img-preview';
+
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0 && editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(img);
+        } else {
+            editor.appendChild(img);
         }
+        saveUndoState();
     }
 
     function saveSelection() {
@@ -1249,7 +1254,6 @@
 
         noticeWriteContent.value = '';
         renderNoticeFeed();
-        alert('공지가 저장되었습니다!');
     }
 
     function renderNoticeFeed() {
@@ -1433,22 +1437,18 @@
     }
 
     function deleteComment(postId, commentIndex) {
-        if(confirm("댓글을 삭제하시겠습니까?")) {
-            const post = blogPosts.find(p => p.id === postId);
-            if(post && post.comments) {
-                post.comments.splice(commentIndex, 1);
-                saveCloudBlogData();
-                openPostDetail(postId);
-            }
+        const post = blogPosts.find(p => p.id === postId);
+        if(post && post.comments) {
+            post.comments.splice(commentIndex, 1);
+            saveCloudBlogData();
+            openPostDetail(postId);
         }
     }
 
     function deletePost(id) {
-        if(confirm("정말 삭제하시겠습니까?")) {
-            blogPosts = blogPosts.filter(p => p.id !== id);
-            saveCloudBlogData();
-            switchBlogTab('list');
-        }
+        blogPosts = blogPosts.filter(p => p.id !== id);
+        saveCloudBlogData();
+        switchBlogTab('list');
     }
 
     loadCloudBlogData();
