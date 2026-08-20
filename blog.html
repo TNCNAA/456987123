@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<a href="index.html" class="btn-main" style="background:#64748b;">🏠 메인</a>
+<a href="index.html" class="btn-main" style="background:#64748b; display:inline-block; margin-bottom:10px;">🏠 메인</a>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -20,14 +20,21 @@
         .blog-container { max-width: 100%; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
 
         /* 상단 카테고리 필터 바 */
-        .toolbar-sticky { position: sticky; top: 0; background: var(--bg); z-index: 1000; padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+        .toolbar-sticky { position: sticky; top: 0; background: var(--bg); z-index: 1000; padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+        .toolbar-top-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
         
         .cat-btn-group { display: flex; flex-wrap: wrap; gap: 4px; }
         .cat-filter-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: #1e293b; font-size: 0.8rem; font-weight: bold; color: var(--text-sub); }
         .cat-filter-btn:hover { background: #334155; color: white; }
         .cat-filter-btn.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
 
-        .btn-main { background: var(--primary); color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        /* ✨ 서브 탭 스타일 */
+        .sub-cat-bar { display: none; gap: 4px; padding-top: 4px; border-top: 1px dashed var(--border); flex-wrap: wrap; }
+        .sub-filter-btn { padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; background: #1e293b; font-size: 0.75rem; color: var(--text-sub); }
+        .sub-filter-btn:hover { background: #334155; color: white; }
+        .sub-filter-btn.active { background: #38bdf8; color: #0f172a; font-weight: bold; border-color: #38bdf8; }
+
+        .btn-main { background: var(--primary); color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-decoration: none; }
         .btn-main:hover { background: #7dd3fc; }
 
         /* 글쓰기 상단 전체 영역 스크롤 고정 */
@@ -44,22 +51,55 @@
         .tool-btn { background: #334155; color: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
         .tool-btn:hover { background: #475569; }
 
-        .editor-area { width: 100%; min-height: 400px; padding: 15px 0; border: none; background: transparent; color: white; outline: none; line-height: 1.6; font-size: 0.95rem; }
+        /* 글쓰기 에디터 영역 */
+        .editor-area { width: 100%; min-height: 400px; padding: 15px; border: 1px solid var(--border); border-radius: 6px; background: #f8fafc; color: #191919; outline: none; line-height: 1.6; font-size: 0.95rem; margin-top: 10px; }
+        .editor-area * { color: inherit; }
         .img-preview { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
 
         /* 글 목록 카드 */
         .post-list { display: flex; flex-direction: column; gap: 0; }
-        .post-card { padding: 14px 4px; background: var(--bg); cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+        .post-card { 
+            position: relative; 
+            padding: 14px 16px; 
+            background: var(--bg); 
+            cursor: pointer; 
+            border-bottom: 1px solid var(--border); 
+            transition: background 0.1s; 
+        }
         .post-card:hover { background: #1e293b; }
-        .post-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .post-card.pinned { background: #1e293b; border-left: 4px solid var(--primary); }
+
+        .post-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
         .post-category { font-size: 0.72rem; background: #334155; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        
+        .post-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
         .post-date { font-size: 0.75rem; color: var(--text-sub); }
+
         .post-title { font-size: 1.05rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
         .post-snippet { font-size: 0.85rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+        /* 오른쪽 모서리 고정 영역 */
+        .corner-pin {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .corner-pin:hover { opacity: 1; transform: scale(1.15); }
+        .post-card.pinned .corner-pin { opacity: 1; }
+
         .post-detail-view { background: var(--bg); padding: 10px 0; }
-        
-        .comment-item { background: #1e293b; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border); margin-bottom: 6px; display: flex; flex-direction: column; gap: 4px; color: white; }
+        .detail-content-box { background: #f8fafc; color: #191919; padding: 20px; border-radius: 8px; margin: 15px 0; line-height: 1.6; }
+
+        .comment-item { background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; color: white; }
         .comment-date { font-size: 0.7rem; color: var(--text-sub); text-align: right; }
 
         /* 🏷️ 부서별 뱃지 클래스 정의 */
@@ -84,24 +124,29 @@
 <div class="blog-container">
     <!-- 상단 카테고리 필터 바 -->
     <div id="viewListHeader" class="toolbar-sticky">
-        <div class="cat-btn-group" id="categoryButtonGroup">
-            <button class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('NS')">NS</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('OS')">OS</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('GS')">GS</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('NR')">NR</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('임병')">임병</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('물치')">물치</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('FM')">FM</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('D')">D</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('E')">E</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('N')">N</button>
-            <button class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
+        <div class="toolbar-top-row">
+            <div class="cat-btn-group" id="categoryButtonGroup">
+                <button class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('NS')">NS</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('OS')">OS</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('GS')">GS</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('NR')">NR</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('FM')">FM</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('D')">D</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('E')">E</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('N')">N</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('임병')">임병</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('물치')">물치</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('영상')">영상</button>
+            </div>
+            <div>
+                <button class="btn-main" onclick="openWriteMode(null)">글쓰기</button>
+            </div>
         </div>
-        <div>
-            <button class="btn-main" onclick="openWriteMode(null)">✍️ 새 글쓰기</button>
-        </div>
+        <!-- 하단 서브 카테고리 바 (NS, OS 등 선택 시 나타남) -->
+        <div id="subCatBar" class="sub-cat-bar"></div>
     </div>
 
     <!-- 1. 글 목록 화면 -->
@@ -112,14 +157,17 @@
         <div class="write-sticky-header">
             <div style="padding:8px 0; display:flex; justify-content:flex-end; gap:6px; border-bottom:1px solid var(--border); margin-bottom:8px;">
                 <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">취소</button>
-                <button class="btn-main" onclick="savePostData()">저장하기</button>
+                <button class="btn-main" onclick="savePostData()">저장</button>
             </div>
 
             <div style="display:flex; gap:8px;">
                 <select id="writeCategory" style="padding:6px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white;">
-                    <option value="공지">공지</option><option value="NS">NS</option><option value="OS">OS</option><option value="GS">GS</option>
-                    <option value="NR">NR</option><option value="임병">임병</option><option value="물치">물치</option><option value="FM">FM</option>
-                    <option value="D">D</option><option value="E">E</option><option value="N">N</option><option value="기타">기타</option>
+                    <option value="공지">공지</option>
+                    <option value="NS1">NS1</option><option value="NS3">NS3</option><option value="NS5">NS5</option>
+                    <option value="OS1">OS1</option><option value="OS2">OS2</option>
+                    <option value="GS">GS</option><option value="NR">NR</option><option value="FM">FM</option>
+                    <option value="D">D</option><option value="E">E</option><option value="N">N</option>
+                    <option value="기타">기타</option><option value="임병">임병</option><option value="물치">물치</option><option value="영상">영상</option>
                 </select>
                 <input type="text" id="writeTitle" placeholder="제목을 입력하세요" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:4px; outline:none; background:#1e293b; color:white;">
             </div>
@@ -128,7 +176,6 @@
                 <button class="tool-btn" onclick="document.execCommand('bold', false, null)"><b>B</b></button>
                 <button class="tool-btn" onclick="document.execCommand('underline', false, null)"><u>U</u></button>
                 
-                <!-- ✨ 글씨 크기 조절 셀렉트박스 (4 ~ 20 단계) -->
                 <span>크기:</span>
                 <select id="fontSizeSelect" onchange="changeFontSize(this.value)" style="padding:4px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white; font-size:0.8rem;">
                     <option value="1">4</option>
@@ -140,12 +187,11 @@
                     <option value="7">20</option>
                 </select>
 
-                <span>글자색:</span><input type="color" id="textColor" value="#f8fafc" onchange="document.execCommand('foreColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-                <span>형광펜:</span><input type="color" id="hiliteColor" value="#334155" onchange="document.execCommand('hiliteColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+                <span>글자색:</span><input type="color" id="textColor" value="#191919" onchange="document.execCommand('foreColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+                <span>형광펜:</span><input type="color" id="hiliteColor" value="#fef08a" onchange="document.execCommand('hiliteColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
                 <span>박스색:</span><input type="color" id="boxColor" value="#f87171" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-                <button class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스적용/해제</button>
-                <button class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지변환</button>
-                <span style="font-size:0.75rem; color:#94a3b8; margin-left:auto;">💡 사진 Ctrl+V & Ctrl+Z 지원</span>
+                <button class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스</button>
+                <button class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지</button>
             </div>
         </div>
 
@@ -159,17 +205,9 @@
 </div>
 
 <script>
-    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v5')) || [
-        {
-            id: 'post_1',
-            category: '공지',
-            title: '미니 블로그 시스템 안내',
-            content: 'NS1, OS1 등 태그를 입력하고 🪄뱃지변환 버튼을 눌러보세요! (생성된 뱃지를 누르면 다시 일반 텍스트로 돌아갑니다.)',
-            date: '2026.08.20.',
-            comments: [{ date: '2026.08.20. 오전 4:50', text: '환영합니다!' }]
-        }
-    ];
+    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v9')) || [];
     let currentCategoryFilter = '전체';
+    let currentSubFilter = '전체';
     let editingPostId = null;
     let undoStack = [];
 
@@ -215,17 +253,15 @@
 
     setupPasteImage(editor);
 
-    // ✨ 글씨 크기 조절 함수 (4~20 범위 매핑)
     function changeFontSize(sizeVal) {
         document.execCommand('fontSize', false, sizeVal);
         editor.focus();
         undoStack.push(editor.innerHTML);
     }
 
-    // 🪄 뱃지 변환 함수
     function convertPostBadgesInEditor() {
         const tagMap = {
-            'NS1': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
+            'NS1': 'tag-ns1', 'NS2': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
             'OS1': 'tag-os1', 'OS2': 'tag-os2', 'GS': 'tag-gs',
             'NR': 'tag-nr', 'FM': 'tag-fm', '임병': 'tag-lab',
             '검진': 'tag-chk', '물치': 'tag-pt', '영상': 'tag-vid', '병동': 'tag-ward'
@@ -244,10 +280,8 @@
 
         editor.innerHTML = html;
         undoStack.push(editor.innerHTML);
-        alert("태그가 예쁜 뱃지로 변환되었습니다! 🪄");
     }
 
-    // 🖱️ 클릭 시 뱃지 또는 박스 토글 해제
     document.addEventListener('click', (e) => {
         if(e.target.classList.contains('tag-badge')) {
             const tagText = e.target.getAttribute('data-tag') || e.target.innerText;
@@ -267,7 +301,7 @@
         if(!sel.rangeCount) return;
         const span = document.createElement('span');
         span.style.backgroundColor = document.getElementById('boxColor').value;
-        span.style.color = 'white';
+        span.style.color = '#191919';
         span.style.padding = '2px 6px';
         span.style.borderRadius = '4px';
         span.style.fontWeight = 'bold';
@@ -284,43 +318,106 @@
         if(tab === 'list') renderPostList();
     }
 
+    // ✨ 1번 방법: 대분류 클릭 시 하단 서브 탭 동적 생성 및 필터링
+    const subCategories = {
+        'NS': ['NS1', 'NS3', 'NS5'],
+        'OS': ['OS1', 'OS2']
+    };
+
     function filterByCategory(cat) {
         currentCategoryFilter = cat;
+        currentSubFilter = '전체'; // 대분류 바뀔 때 서브 초기화
+        
         document.querySelectorAll('.cat-filter-btn').forEach(btn => {
             if (btn.innerText === cat) btn.classList.add('active');
             else btn.classList.remove('active');
         });
+
+        const subBar = document.getElementById('subCatBar');
+        if (subCategories[cat]) {
+            subBar.style.display = 'flex';
+            let subHtml = `<button class="sub-filter-btn active" onclick="filterBySub('전체')">전체(${cat.toUpperCase()})</button>`;
+            subCategories[cat].forEach(sub => {
+                subHtml += `<button class="sub-filter-btn" onclick="filterBySub('${sub}')">${sub}</button>`;
+            });
+            subBar.innerHTML = subHtml;
+        } else {
+            subBar.style.display = 'none';
+            subBar.innerHTML = '';
+        }
+
         switchBlogTab('list');
+    }
+
+    function filterBySub(sub) {
+        currentSubFilter = sub;
+        document.querySelectorAll('.sub-filter-btn').forEach(btn => {
+            if (btn.innerText.includes(sub)) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        renderPostList();
+    }
+
+    function togglePin(id, event) {
+        event.stopPropagation();
+        const post = blogPosts.find(p => p.id === id);
+        if (post) {
+            post.isPinned = !post.isPinned;
+            localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+            renderPostList();
+        }
     }
 
     function renderPostList() {
         const container = document.getElementById('viewList');
         container.innerHTML = '';
 
-        const filtered = currentCategoryFilter === '전체' 
-            ? blogPosts 
-            : blogPosts.filter(p => p.category === currentCategoryFilter);
+        let filtered = blogPosts;
+        if (currentCategoryFilter !== '전체') {
+            if (subCategories[currentCategoryFilter]) {
+                if (currentSubFilter === '전체') {
+                    filtered = blogPosts.filter(p => p.category.startsWith(currentCategoryFilter));
+                } else {
+                    filtered = blogPosts.filter(p => p.category === currentSubFilter);
+                }
+            } else {
+                filtered = blogPosts.filter(p => p.category === currentCategoryFilter);
+            }
+        }
+
+        filtered.sort((a, b) => {
+            if (a.isPinned === b.isPinned) return 0;
+            return a.isPinned ? -1 : 1;
+        });
 
         if (filtered.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-sub); text-align:center; padding:40px;">'${currentCategoryFilter}' 카테고리에 등록된 글이 없습니다.</p>`;
+            container.innerHTML = `<p style="color:var(--text-sub); text-align:center; padding:40px;">등록된 글이 없습니다.</p>`;
             return;
         }
 
         filtered.forEach(p => {
             const card = document.createElement('div');
-            card.className = 'post-card';
+            card.className = `post-card ${p.isPinned ? 'pinned' : ''}`;
             card.onclick = () => openPostDetail(p.id);
+
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = p.content;
             const snippetText = tempDiv.textContent || tempDiv.innerText || '';
 
             card.innerHTML = `
+                <div class="corner-pin" onclick="togglePin('${p.id}', event)" title="${p.isPinned ? '고정 해제' : '상단 고정'}">
+                    ${p.isPinned ? '📌' : '📍'}
+                </div>
+
                 <div class="post-card-header">
                     <span class="post-category">${p.category}</span>
-                    <span class="post-date">${p.date}</span>
                 </div>
                 <div class="post-title">${p.title}</div>
                 <div class="post-snippet">${snippetText}</div>
+                
+                <div class="post-footer">
+                    <span class="post-date">${p.date}</span>
+                </div>
             `;
             container.appendChild(card);
         });
@@ -337,7 +434,7 @@
             document.getElementById('writeTitle').value = '';
             editor.innerHTML = '';
             if (currentCategoryFilter !== '전체') {
-                document.getElementById('writeCategory').value = currentCategoryFilter;
+                document.getElementById('writeCategory').value = currentSubFilter !== '전체' ? currentSubFilter : currentCategoryFilter;
             }
         }
         undoStack = [editor.innerHTML];
@@ -358,9 +455,9 @@
             const post = blogPosts.find(p => p.id === editingPostId);
             if (post) { post.title = title; post.category = category; post.content = content; }
         } else {
-            blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: new Date().toLocaleDateString(), comments: [] });
+            blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: new Date().toLocaleDateString(), comments: [], isPinned: false });
         }
-        localStorage.setItem('my_blog_posts_final_v5', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
         editingPostId = null;
         switchBlogTab('list');
     }
@@ -370,31 +467,38 @@
         if(!p) return;
         document.getElementById('postDetailContainer').innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">← 목록으로</button>
+                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">목록</button>
                 <div style="display:flex; gap:6px;">
-                    <button class="btn-main" style="background:#0284c7; color:#0f172a;" onclick="openWriteMode('${p.id}')">✏️ 수정하기</button>
-                    <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">🗑️ 삭제</button>
+                    <button class="btn-main" style="background:#0284c7; color:#0f172a;" onclick="openWriteMode('${p.id}')">수정</button>
+                    <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">삭제</button>
                 </div>
             </div>
 
             <h2 style="color:white; margin-bottom:4px;">${p.title}</h2>
             <small style="color:var(--text-sub);">카테고리: ${p.category} | 작성일: ${p.date}</small>
-            <div style="margin:15px 0; line-height:1.6; color:white;">${p.content}</div>
+            
+            <div class="detail-content-box">${p.content}</div>
             
             <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
             <h4 style="color:white;">댓글 (${p.comments.length})</h4>
-            <div style="margin:10px 0;">
+            <div style="margin:10px 0;" id="commentListContainer">
                 ${p.comments.length === 0 ? '<p style="font-size:0.8rem; color:#888;">댓글이 없습니다.</p>' : ''}
-                ${p.comments.map(c => `
-                    <div class="comment-item">
-                        <div>${c.text}</div>
-                        <span class="comment-date">🕒 ${c.date}</span>
+                ${p.comments.map((c, index) => `
+                    <div class="comment-item" id="comment-${p.id}-${index}">
+                        <div id="comment-text-${p.id}-${index}">${c.text}</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                            <span class="comment-date">🕒 ${c.date}</span>
+                            <div style="display:flex; gap:4px;">
+                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#0284c7; color:#0f172a;" onclick="editComment('${p.id}', ${index})">수정</button>
+                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#f87171; color:#0f172a;" onclick="deleteComment('${p.id}', ${index})">삭제</button>
+                            </div>
+                        </div>
                     </div>
                 `).join('')}
             </div>
             
             <div style="display:flex; flex-direction:column; gap:6px; border:1px solid var(--border); padding:8px; border-radius:6px; background:#1e293b; margin-top:15px;">
-                <div id="commentInputDiv" class="editor-area" style="min-height:45px; padding:6px; border:none; background:#0f172a; color:white;" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
+                <div id="commentInputDiv" class="editor-area" style="min-height:45px; padding:6px; background:#f8fafc; color:#191919;" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:4px;">
                     <span style="font-size:0.7rem; color:#94a3b8;">💡 댓글 사진 Ctrl+V 가능</span>
                     <button class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="addComment('${p.id}')">댓글등록</button>
@@ -411,14 +515,52 @@
         if(!text) return;
         const post = blogPosts.find(p => p.id === id);
         post.comments.push({ date: new Date().toLocaleString(), text });
-        localStorage.setItem('my_blog_posts_final_v5', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
         openPostDetail(id);
+    }
+
+    function editComment(postId, commentIndex) {
+        const textDiv = document.getElementById(`comment-text-${postId}-${commentIndex}`);
+        const currentContent = textDiv.innerHTML;
+        
+        textDiv.innerHTML = `
+            <div contenteditable="true" id="editCommentBox-${postId}-${commentIndex}" style="background:#f8fafc; color:#191919; padding:6px; border-radius:4px; min-height:35px; outline:none;">${currentContent}</div>
+            <div style="display:flex; justify-content:flex-end; gap:4px; margin-top:4px;">
+                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#475569; color:white;" onclick="openPostDetail('${postId}')">취소</button>
+                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#38bdf8; color:#0f172a;" onclick="saveEditedComment('${postId}', ${commentIndex})">저장</button>
+            </div>
+        `;
+        setupPasteImage(document.getElementById(`editCommentBox-${postId}-${commentIndex}`));
+    }
+
+    function saveEditedComment(postId, commentIndex) {
+        const editBox = document.getElementById(`editCommentBox-${postId}-${commentIndex}`);
+        const newText = editBox.innerHTML.trim();
+        if(!newText) return;
+
+        const post = blogPosts.find(p => p.id === postId);
+        if(post && post.comments[commentIndex]) {
+            post.comments[commentIndex].text = newText;
+            localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+            openPostDetail(postId);
+        }
+    }
+
+    function deleteComment(postId, commentIndex) {
+        if(confirm("댓글을 삭제하시겠습니까?")) {
+            const post = blogPosts.find(p => p.id === postId);
+            if(post) {
+                post.comments.splice(commentIndex, 1);
+                localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+                openPostDetail(postId);
+            }
+        }
     }
 
     function deletePost(id) {
         if(confirm("정말 삭제하시겠습니까?")) {
             blogPosts = blogPosts.filter(p => p.id !== id);
-            localStorage.setItem('my_blog_posts_final_v5', JSON.stringify(blogPosts));
+            localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
             switchBlogTab('list');
         }
     }
