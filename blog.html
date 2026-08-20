@@ -127,6 +127,19 @@
             <div class="editor-toolbar">
                 <button class="tool-btn" onclick="document.execCommand('bold', false, null)"><b>B</b></button>
                 <button class="tool-btn" onclick="document.execCommand('underline', false, null)"><u>U</u></button>
+                
+                <!-- ✨ 글씨 크기 조절 셀렉트박스 (4 ~ 20 단계) -->
+                <span>크기:</span>
+                <select id="fontSizeSelect" onchange="changeFontSize(this.value)" style="padding:4px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white; font-size:0.8rem;">
+                    <option value="1">4</option>
+                    <option value="2">6</option>
+                    <option value="3" selected>8 (기본)</option>
+                    <option value="4">10</option>
+                    <option value="5">12</option>
+                    <option value="6">16</option>
+                    <option value="7">20</option>
+                </select>
+
                 <span>글자색:</span><input type="color" id="textColor" value="#f8fafc" onchange="document.execCommand('foreColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
                 <span>형광펜:</span><input type="color" id="hiliteColor" value="#334155" onchange="document.execCommand('hiliteColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
                 <span>박스색:</span><input type="color" id="boxColor" value="#f87171" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
@@ -146,7 +159,7 @@
 </div>
 
 <script>
-    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v4')) || [
+    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v5')) || [
         {
             id: 'post_1',
             category: '공지',
@@ -202,7 +215,14 @@
 
     setupPasteImage(editor);
 
-    // ✨ [완벽 수정] 뱃지 변환 함수 (문자열 기반 치환으로 절대 먹통 안 됨)
+    // ✨ 글씨 크기 조절 함수 (4~20 범위 매핑)
+    function changeFontSize(sizeVal) {
+        document.execCommand('fontSize', false, sizeVal);
+        editor.focus();
+        undoStack.push(editor.innerHTML);
+    }
+
+    // 🪄 뱃지 변환 함수
     function convertPostBadgesInEditor() {
         const tagMap = {
             'NS1': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
@@ -212,14 +232,11 @@
         };
 
         let html = editor.innerHTML;
-        
-        // 이미 뱃지인 것들은 잠시 일반 텍스트로 풀어준 뒤 재변환
         Object.keys(tagMap).forEach(key => {
             const badgeRegex = new RegExp(`<span[^>]*class="tag-badge[^>]*>(${key})<\\/span>`, 'gi');
             html = html.replace(badgeRegex, '$1');
         });
 
-        // 각 태그를 뱃지 HTML로 교체
         Object.keys(tagMap).forEach(key => {
             const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
             html = html.replace(regex, `$1<span class="tag-badge ${tagMap[key]}" data-tag="$2">$2</span>`);
@@ -343,7 +360,7 @@
         } else {
             blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: new Date().toLocaleDateString(), comments: [] });
         }
-        localStorage.setItem('my_blog_posts_final_v4', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v5', JSON.stringify(blogPosts));
         editingPostId = null;
         switchBlogTab('list');
     }
@@ -394,14 +411,14 @@
         if(!text) return;
         const post = blogPosts.find(p => p.id === id);
         post.comments.push({ date: new Date().toLocaleString(), text });
-        localStorage.setItem('my_blog_posts_final_v4', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v5', JSON.stringify(blogPosts));
         openPostDetail(id);
     }
 
     function deletePost(id) {
         if(confirm("정말 삭제하시겠습니까?")) {
             blogPosts = blogPosts.filter(p => p.id !== id);
-            localStorage.setItem('my_blog_posts_final_v4', JSON.stringify(blogPosts));
+            localStorage.setItem('my_blog_posts_final_v5', JSON.stringify(blogPosts));
             switchBlogTab('list');
         }
     }
