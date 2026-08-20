@@ -30,7 +30,7 @@
         .btn-main { background: var(--primary); color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
         .btn-main:hover { background: #7dd3fc; }
 
-        /* ✨ [핵심 수정] 글쓰기 상단 전체 영역(저장버튼 + 제목선택 + 툴바)을 하나로 묶어 스크롤 고정 */
+        /* 글쓰기 상단 전체 영역 스크롤 고정 */
         .write-sticky-header {
             position: sticky;
             top: 0;
@@ -82,7 +82,7 @@
 <body>
 
 <div class="blog-container">
-    <!-- 상단 카테고리 필터 바 (목록 화면용) -->
+    <!-- 상단 카테고리 필터 바 -->
     <div id="viewListHeader" class="toolbar-sticky">
         <div class="cat-btn-group" id="categoryButtonGroup">
             <button class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
@@ -109,7 +109,6 @@
 
     <!-- 2. 글쓰기 / 수정 에디터 화면 -->
     <div id="viewWrite" style="display:none;">
-        <!-- ✨ 스크롤을 내려도 저장/취소버튼, 제목, 툴바 전체가 상단에 고정되도록 묶은 헤더 -->
         <div class="write-sticky-header">
             <div style="padding:8px 0; display:flex; justify-content:flex-end; gap:6px; border-bottom:1px solid var(--border); margin-bottom:8px;">
                 <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">취소</button>
@@ -147,7 +146,7 @@
 </div>
 
 <script>
-    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v3')) || [
+    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v4')) || [
         {
             id: 'post_1',
             category: '공지',
@@ -203,6 +202,7 @@
 
     setupPasteImage(editor);
 
+    // ✨ [완벽 수정] 뱃지 변환 함수 (문자열 기반 치환으로 절대 먹통 안 됨)
     function convertPostBadgesInEditor() {
         const tagMap = {
             'NS1': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
@@ -211,35 +211,26 @@
             '검진': 'tag-chk', '물치': 'tag-pt', '영상': 'tag-vid', '병동': 'tag-ward'
         };
 
-        function walkTextNodes(node) {
-            if (node.nodeType === Node.TEXT_NODE) {
-                let text = node.nodeValue;
-                let replaced = false;
-                Object.keys(tagMap).forEach(key => {
-                    const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
-                    if (regex.test(text)) replaced = true;
-                });
+        let html = editor.innerHTML;
+        
+        // 이미 뱃지인 것들은 잠시 일반 텍스트로 풀어준 뒤 재변환
+        Object.keys(tagMap).forEach(key => {
+            const badgeRegex = new RegExp(`<span[^>]*class="tag-badge[^>]*>(${key})<\\/span>`, 'gi');
+            html = html.replace(badgeRegex, '$1');
+        });
 
-                if (replaced) {
-                    const wrapper = document.createElement('span');
-                    let tempHtml = text;
-                    Object.keys(tagMap).forEach(key => {
-                        const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
-                        tempHtml = tempHtml.replace(regex, `$1<span class="tag-badge ${tagMap[key]}" data-tag="$2">$2</span>`);
-                    });
-                    wrapper.innerHTML = tempHtml;
-                    node.parentNode.replaceChild(wrapper, node);
-                }
-            } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SPAN') {
-                Array.from(node.childNodes).forEach(child => walkTextNodes(child));
-            }
-        }
+        // 각 태그를 뱃지 HTML로 교체
+        Object.keys(tagMap).forEach(key => {
+            const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
+            html = html.replace(regex, `$1<span class="tag-badge ${tagMap[key]}" data-tag="$2">$2</span>`);
+        });
 
-        walkTextNodes(editor);
+        editor.innerHTML = html;
         undoStack.push(editor.innerHTML);
         alert("태그가 예쁜 뱃지로 변환되었습니다! 🪄");
     }
 
+    // 🖱️ 클릭 시 뱃지 또는 박스 토글 해제
     document.addEventListener('click', (e) => {
         if(e.target.classList.contains('tag-badge')) {
             const tagText = e.target.getAttribute('data-tag') || e.target.innerText;
@@ -352,7 +343,7 @@
         } else {
             blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: new Date().toLocaleDateString(), comments: [] });
         }
-        localStorage.setItem('my_blog_posts_final_v3', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v4', JSON.stringify(blogPosts));
         editingPostId = null;
         switchBlogTab('list');
     }
@@ -403,14 +394,14 @@
         if(!text) return;
         const post = blogPosts.find(p => p.id === id);
         post.comments.push({ date: new Date().toLocaleString(), text });
-        localStorage.setItem('my_blog_posts_final_v3', JSON.stringify(blogPosts));
+        localStorage.setItem('my_blog_posts_final_v4', JSON.stringify(blogPosts));
         openPostDetail(id);
     }
 
     function deletePost(id) {
         if(confirm("정말 삭제하시겠습니까?")) {
             blogPosts = blogPosts.filter(p => p.id !== id);
-            localStorage.setItem('my_blog_posts_final_v3', JSON.stringify(blogPosts));
+            localStorage.setItem('my_blog_posts_final_v4', JSON.stringify(blogPosts));
             switchBlogTab('list');
         }
     }
