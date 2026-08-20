@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미니 블로그 시스템 (Dark Ocean)</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg: #0f172a;
+            --primary: #38bdf8;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: sans-serif; background-color: var(--bg); color: var(--text-main); padding: 10px; }
+
+        .blog-container { max-width: 100%; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+
+        .toolbar-sticky { position: sticky; top: 0; background: var(--bg); z-index: 100; padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+        
+        .cat-btn-group { display: flex; flex-wrap: wrap; gap: 4px; }
+        .cat-filter-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: #1e293b; font-size: 0.8rem; font-weight: bold; color: var(--text-sub); }
+        .cat-filter-btn:hover { background: #334155; color: white; }
+        .cat-filter-btn.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
+
+        .btn-main { background: var(--primary); color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        .btn-main:hover { background: #7dd3fc; }
+
+        .editor-toolbar { padding: 8px 0; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: white; }
+        .tool-btn { background: #334155; color: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .tool-btn:hover { background: #475569; }
+
+        .editor-area { width: 100%; min-height: 400px; padding: 15px 0; border: none; background: transparent; color: white; outline: none; line-height: 1.6; font-size: 0.95rem; }
+        .img-preview { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
+
+        .post-list { display: flex; flex-direction: column; gap: 0; }
+        .post-card { padding: 14px 4px; background: var(--bg); cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+        .post-card:hover { background: #1e293b; }
+        .post-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .post-category { font-size: 0.72rem; background: #334155; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .post-date { font-size: 0.75rem; color: var(--text-sub); }
+        .post-title { font-size: 1.05rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
+        .post-snippet { font-size: 0.85rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .post-detail-view { background: var(--bg); padding: 10px 0; }
+        
+        .comment-item { background: #1e293b; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border); margin-bottom: 6px; display: flex; flex-direction: column; gap: 4px; color: white; }
+        .comment-date { font-size: 0.7rem; color: var(--text-sub); text-align: right; }
+
+        /* 🏷️ 부서별 뱃지 클래스 정의 */
+        .tag-badge  { padding: 2px 6px; border-radius: 4px; font-weight: bold; color: white; display: inline-block; cursor: pointer; margin: 0 2px; }
+        .tag-ns1  { background: #ff9800; color: white; }
+        .tag-ns3  { background: #1c52ed; color: white; }
+        .tag-ns5  { background: #7b1fa2; color: white; }
+        .tag-os1  { background: #facc15; color: #0f172a; }
+        .tag-os2  { background: #ea580c; color: white; }
+        .tag-gs   { background: #00e676; color: #0f172a; }
+        .tag-nr   { background: #166534; color: white; }
+        .tag-fm   { background: #334155; color: white; border: 1px solid #94a3b8; }
+        .tag-lab  { background: #f43f5e; color: white; }
+        .tag-chk  { background: #38bdf8; color: #0f172a; }
+        .tag-pt   { background: #78350f; color: white; }
+        .tag-vid  { background: #000000; color: white; }
+        .tag-ward { background: #ec4899; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="blog-container">
+    <div class="toolbar-sticky">
+        <div class="cat-btn-group" id="categoryButtonGroup">
+            <button class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('NS')">NS</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('OS')">OS</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('GS')">GS</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('NR')">NR</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('임병')">임병</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('물치')">물치</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('FM')">FM</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('D')">D</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('E')">E</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('N')">N</button>
+            <button class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
+        </div>
+        <div style="display:flex; gap:6px;">
+            <button class="btn-main" style="background:#a78bfa;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지변환</button>
+            <button class="btn-main" onclick="openWriteMode(null)">✍️ 새 글쓰기</button>
+        </div>
+    </div>
+
+    <!-- 1. 글 목록 화면 -->
+    <div id="viewList" class="post-list"></div>
+
+    <!-- 2. 글쓰기 / 수정 에디터 화면 -->
+    <div id="viewWrite" style="display:none;">
+        <div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; gap:8px;">
+            <select id="writeCategory" style="padding:6px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white;">
+                <option value="공지">공지</option><option value="NS">NS</option><option value="OS">OS</option><option value="GS">GS</option>
+                <option value="NR">NR</option><option value="임병">임병</option><option value="물치">물치</option><option value="FM">FM</option>
+                <option value="D">D</option><option value="E">E</option><option value="N">N</option><option value="기타">기타</option>
+            </select>
+            <input type="text" id="writeTitle" placeholder="제목을 입력하세요" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:4px; outline:none; background:#1e293b; color:white;">
+        </div>
+        
+        <div class="editor-toolbar">
+            <button class="tool-btn" onclick="document.execCommand('bold', false, null)"><b>B</b></button>
+            <button class="tool-btn" onclick="document.execCommand('underline', false, null)"><u>U</u></button>
+            <span>글자색:</span><input type="color" id="textColor" value="#f8fafc" onchange="document.execCommand('foreColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+            <span>형광펜:</span><input type="color" id="hiliteColor" value="#334155" onchange="document.execCommand('hiliteColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+            <span>박스색:</span><input type="color" id="boxColor" value="#f87171" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
+            <button class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스적용/해제</button>
+            <span style="font-size:0.75rem; color:#94a3b8; margin-left:auto;">💡 사진 Ctrl+V 가능 (Ctrl+Z 취소 지원)</span>
+        </div>
+        <div id="writeContent" class="editor-area" contenteditable="true" placeholder="내용을 입력하세요..."></div>
+        <div style="padding:10px 0; display:flex; justify-content:flex-end; gap:6px; border-top:1px solid var(--border);">
+            <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">취소</button>
+            <button class="btn-main" onclick="savePostData()">저장하기</button>
+        </div>
+    </div>
+
+    <!-- 3. 상세 보기 화면 -->
+    <div id="viewDetail" style="display:none;" class="post-detail-view">
+        <div id="postDetailContainer"></div>
+    </div>
+</div>
+
+<script>
+    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_v14')) || [
+        {
+            id: 'post_1',
+            category: '공지',
+            title: '다크 오션 블로그 시스템 안내',
+            content: 'NS1, OS1 등 태그를 입력하고 🪄뱃지변환 버튼을 눌러보세요! (생성된 뱃지를 누르면 다시 일반 텍스트로 돌아갑니다.)',
+            date: '2026.08.20.',
+            comments: [{ date: '2026.08.20. 오전 4:50', text: '환영합니다!' }]
+        }
+    ];
+    let currentCategoryFilter = '전체';
+    let editingPostId = null;
+    let undoStack = [];
+
+    const editor = document.getElementById('writeContent');
+
+    editor.addEventListener('input', () => {
+        undoStack.push(editor.innerHTML);
+        if(undoStack.length > 50) undoStack.shift();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if(e.ctrlKey && e.key === 'z' && document.getElementById('viewWrite').style.display !== 'none') {
+            if(undoStack.length > 0) {
+                e.preventDefault();
+                undoStack.pop();
+                editor.innerHTML = undoStack[undoStack.length - 1] || '';
+            }
+        }
+    });
+
+    function setupPasteImage(element) {
+        element.addEventListener('paste', function(e) {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image") !== -1) {
+                    const blob = items[i].getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        img.className = 'img-preview';
+                        element.appendChild(img);
+                        if(element === editor) {
+                            undoStack.push(editor.innerHTML);
+                        }
+                    };
+                    reader.readAsDataURL(blob);
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+
+    setupPasteImage(editor);
+
+    // ✨ 뱃지 변환 로직 전면 수정 (텍스트 노드를 안전하게 탐색하여 변환)
+    function convertPostBadgesInEditor() {
+        const tagMap = {
+            'NS1': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
+            'OS1': 'tag-os1', 'OS2': 'tag-os2', 'GS': 'tag-gs',
+            'NR': 'tag-nr', 'FM': 'tag-fm', '임병': 'tag-lab',
+            '검진': 'tag-chk', '물치': 'tag-pt', '영상': 'tag-vid', '병동': 'tag-ward'
+        };
+
+        function walkTextNodes(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                let text = node.nodeValue;
+                let replaced = false;
+                
+                Object.keys(tagMap).forEach(key => {
+                    const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
+                    if (regex.test(text)) {
+                        replaced = true;
+                    }
+                });
+
+                if (replaced) {
+                    const wrapper = document.createElement('span');
+                    let tempHtml = text;
+                    Object.keys(tagMap).forEach(key => {
+                        const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
+                        tempHtml = tempHtml.replace(regex, `$1<span class="tag-badge ${tagMap[key]}" data-tag="$2">$2</span>`);
+                    });
+                    wrapper.innerHTML = tempHtml;
+                    node.parentNode.replaceChild(wrapper, node);
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SPAN') {
+                Array.from(node.childNodes).forEach(child => walkTextNodes(child));
+            }
+        }
+
+        walkTextNodes(editor);
+        undoStack.push(editor.innerHTML);
+        alert("태그가 예쁜 뱃지로 변환되었습니다! 🪄");
+    }
+
+    // 🖱️ 클릭 시 뱃지 또는 박스 토글 해제
+    document.addEventListener('click', (e) => {
+        if(e.target.classList.contains('tag-badge')) {
+            const tagText = e.target.getAttribute('data-tag') || e.target.innerText;
+            e.target.replaceWith(document.createTextNode(tagText));
+        }
+        else if(e.target.tagName === 'SPAN' && e.target.style.backgroundColor && !e.target.classList.contains('tag-badge')) {
+            const parent = e.target.parentNode;
+            while (e.target.firstChild) {
+                parent.insertBefore(e.target.firstChild, e.target);
+            }
+            parent.removeChild(e.target);
+        }
+    });
+
+    function applyBoxColor() {
+        const sel = window.getSelection();
+        if(!sel.rangeCount) return;
+        const span = document.createElement('span');
+        span.style.backgroundColor = document.getElementById('boxColor').value;
+        span.style.color = 'white';
+        span.style.padding = '2px 6px';
+        span.style.borderRadius = '4px';
+        span.style.fontWeight = 'bold';
+        span.appendChild(sel.getRangeAt(0).extractContents());
+        sel.getRangeAt(0).insertNode(span);
+        undoStack.push(editor.innerHTML);
+    }
+
+    function switchBlogTab(tab) {
+        document.getElementById('viewList').style.display = tab === 'list' ? 'block' : 'none';
+        document.getElementById('viewWrite').style.display = tab === 'write' ? 'block' : 'none';
+        document.getElementById('viewDetail').style.display = tab === 'detail' ? 'block' : 'none';
+        if(tab === 'list') renderPostList();
+    }
+
+    function filterByCategory(cat) {
+        currentCategoryFilter = cat;
+        document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+            if (btn.innerText === cat) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        switchBlogTab('list');
+    }
+
+    function renderPostList() {
+        const container = document.getElementById('viewList');
+        container.innerHTML = '';
+
+        const filtered = currentCategoryFilter === '전체' 
+            ? blogPosts 
+            : blogPosts.filter(p => p.category === currentCategoryFilter);
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<p style="color:var(--text-sub); text-align:center; padding:40px;">'${currentCategoryFilter}' 카테고리에 등록된 글이 없습니다.</p>`;
+            return;
+        }
+
+        filtered.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'post-card';
+            card.onclick = () => openPostDetail(p.id);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = p.content;
+            const snippetText = tempDiv.textContent || tempDiv.innerText || '';
+
+            card.innerHTML = `
+                <div class="post-card-header">
+                    <span class="post-category">${p.category}</span>
+                    <span class="post-date">${p.date}</span>
+                </div>
+                <div class="post-title">${p.title}</div>
+                <div class="post-snippet">${snippetText}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function openWriteMode(id) {
+        editingPostId = id;
+        if (id) {
+            const post = blogPosts.find(p => p.id === id);
+            document.getElementById('writeTitle').value = post.title;
+            document.getElementById('writeCategory').value = post.category;
+            editor.innerHTML = post.content;
+        } else {
+            document.getElementById('writeTitle').value = '';
+            editor.innerHTML = '';
+            if (currentCategoryFilter !== '전체') {
+                document.getElementById('writeCategory').value = currentCategoryFilter;
+            }
+        }
+        undoStack = [editor.innerHTML];
+        switchBlogTab('write');
+    }
+
+    function savePostData() {
+        const title = document.getElementById('writeTitle').value.trim();
+        const category = document.getElementById('writeCategory').value;
+        const content = editor.innerHTML.trim();
+
+        if (!title || !content) {
+            alert('제목과 내용을 모두 입력해주세요.');
+            return;
+        }
+
+        if (editingPostId) {
+            const post = blogPosts.find(p => p.id === editingPostId);
+            if (post) { post.title = title; post.category = category; post.content = content; }
+        } else {
+            blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: new Date().toLocaleDateString(), comments: [] });
+        }
+        localStorage.setItem('my_blog_posts_v14', JSON.stringify(blogPosts));
+        editingPostId = null;
+        switchBlogTab('list');
+    }
+
+    function openPostDetail(id) {
+        const p = blogPosts.find(p => p.id === id);
+        if(!p) return;
+        document.getElementById('postDetailContainer').innerHTML = `
+            <button class="btn-main" style="background:#475569; color:white; margin-bottom:10px;" onclick="switchBlogTab('list')">← 목록으로</button>
+            <h2 style="color:white; margin-bottom:4px;">${p.title}</h2>
+            <small style="color:var(--text-sub);">카테고리: ${p.category} | 작성일: ${p.date}</small>
+            <div style="margin:15px 0; line-height:1.6; color:white;">${p.content}</div>
+            <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
+            <h4 style="color:white;">댓글 (${p.comments.length})</h4>
+            <div style="margin:10px 0;">
+                ${p.comments.length === 0 ? '<p style="font-size:0.8rem; color:#888;">댓글이 없습니다.</p>' : ''}
+                ${p.comments.map(c => `
+                    <div class="comment-item">
+                        <div>${c.text}</div>
+                        <span class="comment-date">🕒 ${c.date}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; border:1px solid var(--border); padding:8px; border-radius:6px; background:#1e293b;">
+                <div id="commentInputDiv" class="editor-area" style="min-height:45px; padding:6px; border:none; background:#0f172a; color:white;" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:4px;">
+                    <span style="font-size:0.7rem; color:#94a3b8;">💡 댓글 사진 Ctrl+V 가능</span>
+                    <button class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="addComment('${p.id}')">댓글등록</button>
+                </div>
+            </div>
+            <div style="margin-top:15px; display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn-main" style="background:#0284c7; color:#0f172a;" onclick="openWriteMode('${p.id}')">✏️ 수정하기</button>
+                <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">🗑️ 삭제</button>
+            </div>
+        `;
+        setupPasteImage(document.getElementById('commentInputDiv'));
+        switchBlogTab('detail');
+    }
+
+    function addComment(id) {
+        const div = document.getElementById('commentInputDiv');
+        const text = div.innerHTML.trim();
+        if(!text) return;
+        const post = blogPosts.find(p => p.id === id);
+        post.comments.push({ date: new Date().toLocaleString(), text });
+        localStorage.setItem('my_blog_posts_v14', JSON.stringify(blogPosts));
+        openPostDetail(id);
+    }
+
+    function deletePost(id) {
+        if(confirm("정말 삭제하시겠습니까?")) {
+            blogPosts = blogPosts.filter(p => p.id !== id);
+            localStorage.setItem('my_blog_posts_v14', JSON.stringify(blogPosts));
+            switchBlogTab('list');
+        }
+    }
+
+    renderPostList();
+</script>
+</body>
+</html>
