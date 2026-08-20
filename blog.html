@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<a href="index.html" class="btn-main" style="background:#64748b; display:inline-block; margin-bottom:10px;">🏠 메인</a>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미니 블로그 시스템 (Dark Ocean)</title>
+    <title>미니 블로그 시스템 (댓글 이미지 조절 완벽본)</title>
+    <!-- Firebase SDK 로드 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
     <style>
         :root {
             --bg: #0f172a;
@@ -28,14 +31,19 @@
         .cat-filter-btn:hover { background: #334155; color: white; }
         .cat-filter-btn.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
 
-        /* ✨ 서브 탭 스타일 */
+        /* 서브 탭 스타일 */
         .sub-cat-bar { display: none; gap: 4px; padding-top: 4px; border-top: 1px dashed var(--border); flex-wrap: wrap; }
         .sub-filter-btn { padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; background: #1e293b; font-size: 0.75rem; color: var(--text-sub); }
         .sub-filter-btn:hover { background: #334155; color: white; }
         .sub-filter-btn.active { background: #38bdf8; color: #0f172a; font-weight: bold; border-color: #38bdf8; }
 
-        .btn-main { background: #64ea8ad7; color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-decoration: none; }
-        .btn-main:hover { background: #64ea8ad7; }
+        .btn-main { background: #64ea8ad7; color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-decoration: none; display: inline-block; }
+        .btn-main:hover { background: #52c875d7; }
+
+        .btn-main-gray { background: #64748b; color: white; }
+        .btn-main-slate { background: #475569; color: white; }
+        .btn-main-sky { background: #0284c7; color: #0f172a; }
+        .btn-main-red { background: #f87171; color: #0f172a; }
 
         /* 글쓰기 상단 전체 영역 스크롤 고정 */
         .write-sticky-header {
@@ -47,14 +55,168 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .editor-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: white; padding-top: 8px; }
+        .write-top-actions {
+            padding: 8px 0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .write-meta-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .write-category-select {
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #1e293b;
+            color: white;
+        }
+
+        .write-title-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            outline: none;
+            background: #1e293b;
+            color: white;
+        }
+
+        .editor-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: white; padding-top: 8px; position: relative; }
         .tool-btn { background: #334155; color: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
         .tool-btn:hover { background: #475569; }
+
+        .font-size-select {
+            padding: 4px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #1e293b;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        /* 글자색/형광펜 색상 팝업 패널 */
+        .editor-color-wrap { position: relative; display: inline-block; }
+        .editor-color-btn { display: inline-flex; align-items: center; gap: 5px; background: #334155; color: white; border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .editor-color-btn:hover { background: #475569; }
+        .color-preview { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.3); display: inline-block; }
+        .color-arrow { font-size: 0.65rem; color: var(--text-sub); }
+
+        .color-popup {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: auto;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            z-index: 1005;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            width: 210px;
+            max-width: calc(100vw - 30px);
+        }
+        @media (max-width: 480px) {
+            .color-popup { left: auto; right: 0; }
+        }
+        .color-popup.show { display: block; }
+        .color-popup-title { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: bold; color: var(--text-main); margin-bottom: 8px; }
+        .color-popup-close { background: transparent; border: none; color: var(--text-sub); font-size: 1rem; cursor: pointer; }
+        .color-popup-close:hover { color: white; }
+
+        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .popup-color { width: 100%; aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; padding: 0; transition: transform 0.15s, border-color 0.15s; }
+        .popup-color:hover { transform: scale(1.15); border-color: white; }
+
+        .c-main-dark { background: #191919; }
+        .c-red { background: #ef4444; }
+        .c-orange { background: #f97316; }
+        .c-yellow { background: #eab308; }
+        .c-green { background: #22c55e; }
+        .c-blue { background: #3b82f6; }
+        .c-purple { background: #a855f7; }
+        .c-pink { background: #ec4899; }
+
+        .c-hi-yellow { background: #fef08a; }
+        .c-hi-green { background: #bbf7d0; }
+        .c-hi-blue { background: #bae6fd; }
+        .c-hi-pink { background: #fbcfe8; }
+        .c-hi-orange { background: #fed7aa; }
+        .c-hi-purple { background: #ddd6fe; }
+        .c-hi-gray { background: #e2e8f0; }
+
+        .popup-color.eraser-btn {
+            background: #334155 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: #f87171;
+            font-weight: bold;
+        }
+        .popup-color.eraser-btn:hover { background: #475569 !important; }
+
+        .color-popup-divider { height: 1px; background: var(--border); margin: 10px 0; }
+        .color-popup-bottom { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .current-color-box { display: flex; align-items: center; gap: 5px; color: var(--text-sub); font-size: 0.75rem; }
+        .current-color-preview { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #64748b; }
+        .custom-color-btn { border: 1px solid var(--border); background: #334155; color: white; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+        .custom-color-btn:hover { background: #475569; }
+        .hidden-native-color { width: 0; height: 0; opacity: 0; position: absolute; pointer-events: none; }
 
         /* 글쓰기 에디터 영역 */
         .editor-area { width: 100%; min-height: 400px; padding: 15px; border: 1px solid var(--border); border-radius: 6px; background: #f8fafc; color: #191919; outline: none; line-height: 1.6; font-size: 0.95rem; margin-top: 10px; }
         .editor-area * { color: inherit; }
-        .img-preview { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
+        [contenteditable]:empty:before {
+            content: attr(placeholder);
+            color: #94a3b8;
+            pointer-events: none;
+            display: block;
+        }
+        
+        /* 이미지 스타일 및 선택 효과 */
+        .img-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 8px 0;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .img-preview.selected {
+            outline: 3px solid var(--primary);
+        }
+
+        /* ✨ 10% 단위 크기 조절 툴바 */
+        #imgResizeToolbar {
+            display: none;
+            position: absolute;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            z-index: 1100;
+            gap: 4px;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        #imgResizeToolbar button {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 3px 5px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #imgResizeToolbar button:hover { background: #475569; }
 
         /* 글 목록 카드 */
         .post-list { display: flex; flex-direction: column; gap: 0; }
@@ -78,20 +240,10 @@
         .post-title { font-size: 1.05rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
         .post-snippet { font-size: 0.85rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* 오른쪽 모서리 고정 영역 */
         .corner-pin {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 25px;
-            height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            cursor: pointer;
-            opacity: 0.4;
-            transition: opacity 0.2s, transform 0.2s;
+            position: absolute; top: 0; right: 0; width: 25px; height: 25px;
+            display: flex; align-items: center; justify-content: center; font-size: 0.6rem;
+            cursor: pointer; opacity: 0.4; transition: opacity 0.2s, transform 0.2s;
         }
         .corner-pin:hover { opacity: 1; transform: scale(1.15); }
         .post-card.pinned .corner-pin { opacity: 1; }
@@ -102,7 +254,25 @@
         .comment-item { background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; color: white; }
         .comment-date { font-size: 0.7rem; color: var(--text-sub); text-align: right; }
 
-        /* 🏷️ 부서별 뱃지 클래스 정의 */
+        .notice-container { display: none; flex-direction: column; gap: 20px; }
+        .notice-write-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .notice-editor-area { width: 100%; min-height: 150px; padding: 15px; border: 1px solid var(--border); border-radius: 6px; background: #ffffff; color: #191919; outline: none; line-height: 1.6; font-size: 0.95rem; resize: vertical; }
+        .btn-notice-save { background: var(--primary); color: #0f172a; border: none; padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.9rem; align-self: flex-start; }
+        .btn-notice-save:hover { background: #7dd3fc; }
+        .notice-feed-title { font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
+        .notice-feed-item { padding: 16px 0; border-bottom: 1px solid var(--border); }
+        .notice-timeline-block { padding: 8px 0; }
+        .notice-timeline-content { font-size: 0.95rem; color: #f8fafc; line-height: 1.6; margin-bottom: 4px; white-space: pre-wrap; }
+        .notice-timeline-footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 0.75rem; color: #64748b; font-style: italic; }
+        .notice-delete-date-btn { background: transparent; border: none; color: #ef4444; font-size: 0.9rem; font-weight: bold; cursor: pointer; padding: 0 4px; opacity: 0.6; }
+        .notice-delete-date-btn:hover { opacity: 1; }
+
+        .dept-notice-box { background: #1e293b; border: 1px solid var(--primary); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .dept-notice-header { font-size: 0.9rem; font-weight: bold; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .dept-notice-item { padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 0.9rem; line-height: 1.5; color: #f8fafc; }
+        .dept-notice-item:last-child { border-bottom: none; }
+        .dept-notice-date { font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; text-align: right; font-style: italic; }
+
         .tag-badge  { padding: 2px 6px; border-radius: 4px; font-weight: bold; color: white; display: inline-block; cursor: pointer; margin: 0 2px; }
         .tag-ns1  { background: #ff9800; color: white; }
         .tag-ns3  { background: #1c52ed; color: white; }
@@ -117,67 +287,93 @@
         .tag-pt   { background: #78350f; color: white; }
         .tag-vid  { background: #000000; color: white; }
         .tag-ward { background: #ec4899; color: white; }
+
+        .main-link-btn { margin-bottom: 10px; }
+        .detail-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .detail-action-group { display: flex; gap: 6px; }
+        .comment-box-wrap { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border); padding: 8px; border-radius: 6px; background: #1e293b; margin-top: 15px; }
+        .comment-input-area { min-height: 45px; padding: 6px; background: #f8fafc; color: #191919; }
+        .comment-footer-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 4px; }
+        .comment-tip { font-size: 0.7rem; color: #94a3b8; }
+        .detail-title-head { color: white; margin-bottom: 4px; }
+        .detail-meta-small { color: var(--text-sub); }
+        .comment-heading { color: white; }
+        .comment-list-empty { font-size: 0.8rem; color: #888; }
     </style>
 </head>
 <body>
 
+<!-- ✨ 10% 단위 크기 조절 툴바 -->
+<div id="imgResizeToolbar">
+    <button type="button" onclick="adjustImageSize(-0.1)">-10%</button>
+    <button type="button" onclick="adjustImageSize(0.1)">+10%</button>
+    <button type="button" onclick="resetImageSize()">원본</button>
+    <button type="button" style="color:#f87171;" onclick="deleteSelectedImage()">삭제</button>
+</div>
+
+<a href="index.html" class="btn-main btn-main-gray main-link-btn">🏠 메인</a>
+
 <div class="blog-container">
-    <!-- 상단 카테고리 필터 바 -->
     <div id="viewListHeader" class="toolbar-sticky">
         <div class="toolbar-top-row">
             <div class="cat-btn-group" id="categoryButtonGroup">
-                <button class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('NS')">NS</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('OS')">OS</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('GS')">GS</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('NR')">NR</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('FM')">FM</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('D')">D</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('E')">E</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('N')">N</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('임병')">임병</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('물치')">물치</button>
-                <button class="cat-filter-btn" onclick="filterByCategory('영상')">영상</button>
+                <button type="button" class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('NS')">NS</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('OS')">OS</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('GS')">GS</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('NR')">NR</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('FM')">FM</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('병동')">병동</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('임병')">임병</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('물치')">물치</button>
+                <button type="button" class="cat-filter-btn" onclick="filterByCategory('영상')">영상</button>
             </div>
             <div>
-                <button class="btn-main" onclick="openWriteMode(null)">글쓰기</button>
+                <button type="button" class="btn-main" onclick="openWriteMode(null)">글쓰기</button>
             </div>
         </div>
-        <!-- 하단 서브 카테고리 바 (NS, OS 등 선택 시 나타남) -->
         <div id="subCatBar" class="sub-cat-bar"></div>
     </div>
 
-    <!-- 1. 글 목록 화면 -->
     <div id="viewList" class="post-list"></div>
 
-    <!-- 2. 글쓰기 / 수정 에디터 화면 -->
+    <div id="viewNotice" class="notice-container">
+        <div class="notice-write-section">
+            <textarea id="noticeWriteContent" class="notice-editor-area" placeholder="공지 내용을 입력하세요..."></textarea>
+            <button type="button" class="btn-notice-save" onclick="saveNoticePost()">공지 저장하기</button>
+        </div>
+        <div>
+            <div class="notice-feed-title">📖 공지방</div>
+            <div id="noticeFeedContainer"></div>
+        </div>
+    </div>
+
     <div id="viewWrite" style="display:none;">
         <div class="write-sticky-header">
-            <div style="padding:8px 0; display:flex; justify-content:flex-end; gap:6px; border-bottom:1px solid var(--border); margin-bottom:8px;">
-                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">취소</button>
-                <button class="btn-main" onclick="savePostData()">저장</button>
+            <div class="write-top-actions">
+                <button type="button" class="btn-main btn-main-slate" onclick="switchBlogTab('list')">취소</button>
+                <button type="button" class="btn-main" onclick="savePostData()">저장</button>
             </div>
 
-            <div style="display:flex; gap:8px;">
-                <select id="writeCategory" style="padding:6px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white;">
-                    <option value="공지">공지</option>
+            <div class="write-meta-row">
+                <select id="writeCategory" class="write-category-select">
                     <option value="NS1">NS1</option><option value="NS3">NS3</option><option value="NS5">NS5</option>
                     <option value="OS1">OS1</option><option value="OS2">OS2</option>
                     <option value="GS">GS</option><option value="NR">NR</option><option value="FM">FM</option>
                     <option value="D">D</option><option value="E">E</option><option value="N">N</option>
                     <option value="기타">기타</option><option value="임병">임병</option><option value="물치">물치</option><option value="영상">영상</option>
                 </select>
-                <input type="text" id="writeTitle" placeholder="제목을 입력하세요" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:4px; outline:none; background:#1e293b; color:white;">
+                <input type="text" id="writeTitle" placeholder="제목을 입력하세요" class="write-title-input">
             </div>
             
             <div class="editor-toolbar">
-                <button class="tool-btn" onclick="document.execCommand('bold', false, null)"><b>B</b></button>
-                <button class="tool-btn" onclick="document.execCommand('underline', false, null)"><u>U</u></button>
+                <button type="button" class="tool-btn" onclick="applyFormat('bold')"><b>B</b></button>
+                <button type="button" class="tool-btn" onclick="applyFormat('underline')"><u>U</u></button>
                 
                 <span>크기:</span>
-                <select id="fontSizeSelect" onchange="changeFontSize(this.value)" style="padding:4px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white; font-size:0.8rem;">
+                <select id="fontSizeSelect" class="font-size-select" onchange="applyFormat('fontSize', this.value)">
                     <option value="1">4</option>
                     <option value="2">6</option>
                     <option value="3" selected>8 (기본)</option>
@@ -187,11 +383,78 @@
                     <option value="7">20</option>
                 </select>
 
-                <span>글자색:</span><input type="color" id="textColor" value="#191919" onchange="document.execCommand('foreColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-                <span>형광펜:</span><input type="color" id="hiliteColor" value="#fef08a" onchange="document.execCommand('hiliteColor', false, this.value)" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-                <span>박스색:</span><input type="color" id="boxColor" value="#f87171" style="width:22px; height:22px; border:none; background:transparent; cursor:pointer;">
-                <button class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스</button>
-                <button class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지</button>
+                <!-- 글자색 버튼 및 팝업 -->
+                <div class="editor-color-wrap">
+                    <button type="button" class="editor-color-btn" onmousedown="saveSelection()" onclick="toggleColorPopup('text', this)">
+                        <span>A</span>
+                        <span class="color-preview c-main-dark" id="textColorPreview"></span>
+                        <span class="color-arrow">▼</span>
+                    </button>
+                    <div class="color-popup" id="textColorPopup">
+                        <div class="color-popup-title">
+                            <span>글자색 선택</span>
+                            <button type="button" class="color-popup-close" onclick="closeColorPopups()">×</button>
+                        </div>
+                        <div class="color-grid">
+                            <button type="button" class="popup-color c-main-dark" onclick="selectPopupColor('text', '#191919')"></button>
+                            <button type="button" class="popup-color c-red" onclick="selectPopupColor('text', '#ef4444')"></button>
+                            <button type="button" class="popup-color c-orange" onclick="selectPopupColor('text', '#f97316')"></button>
+                            <button type="button" class="popup-color c-yellow" onclick="selectPopupColor('text', '#eab308')"></button>
+                            <button type="button" class="popup-color c-green" onclick="selectPopupColor('text', '#22c55e')"></button>
+                            <button type="button" class="popup-color c-blue" onclick="selectPopupColor('text', '#3b82f6')"></button>
+                            <button type="button" class="popup-color c-purple" onclick="selectPopupColor('text', '#a855f7')"></button>
+                            <button type="button" class="popup-color c-pink" onclick="selectPopupColor('text', '#ec4899')"></button>
+                        </div>
+                        <div class="color-popup-divider"></div>
+                        <div class="color-popup-bottom">
+                            <div class="current-color-box">
+                                <span class="current-color-preview c-main-dark" id="textCurrentColor"></span>
+                                <span id="textCurrentHex">#191919</span>
+                            </div>
+                            <button type="button" class="custom-color-btn" onclick="openNativeColor('text')">직접선택</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 형광펜 버튼 및 팝업 -->
+                <div class="editor-color-wrap">
+                    <button type="button" class="editor-color-btn" onmousedown="saveSelection()" onclick="toggleColorPopup('hilite', this)">
+                        <span>🖍</span>
+                        <span class="color-preview c-hi-yellow" id="hiliteColorPreview"></span>
+                        <span class="color-arrow">▼</span>
+                    </button>
+                    <div class="color-popup" id="hiliteColorPopup">
+                        <div class="color-popup-title">
+                            <span>형광펜 색상</span>
+                            <button type="button" class="color-popup-close" onclick="closeColorPopups()">×</button>
+                        </div>
+                        <div class="color-grid">
+                            <button type="button" class="popup-color c-hi-yellow" onclick="selectPopupColor('hilite', '#fef08a')"></button>
+                            <button type="button" class="popup-color c-hi-green" onclick="selectPopupColor('hilite', '#bbf7d0')"></button>
+                            <button type="button" class="popup-color c-hi-blue" onclick="selectPopupColor('hilite', '#bae6fd')"></button>
+                            <button type="button" class="popup-color c-hi-pink" onclick="selectPopupColor('hilite', '#fbcfe8')"></button>
+                            <button type="button" class="popup-color c-hi-orange" onclick="selectPopupColor('hilite', '#fed7aa')"></button>
+                            <button type="button" class="popup-color c-hi-purple" onclick="selectPopupColor('hilite', '#ddd6fe')"></button>
+                            <button type="button" class="popup-color c-hi-gray" onclick="selectPopupColor('hilite', '#e2e8f0')"></button>
+                            <button type="button" class="popup-color eraser-btn" onclick="removeHighlight()" title="형광펜 제거">✕</button>
+                        </div>
+                        <div class="color-popup-divider"></div>
+                        <div class="color-popup-bottom">
+                            <div class="current-color-box">
+                                <span class="current-color-preview c-hi-yellow" id="hiliteCurrentColor"></span>
+                                <span id="hiliteCurrentHex">#FEF08A</span>
+                            </div>
+                            <button type="button" class="custom-color-btn" onclick="openNativeColor('hilite')">직접선택</button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="color" id="nativeTextColor" class="hidden-native-color" value="#191919" onchange="onNativeColorChange('text', this.value)">
+                <input type="color" id="nativeHiliteColor" class="hidden-native-color" value="#fef08a" onchange="onNativeColorChange('hilite', this.value)">
+
+                <!-- 🚨 박스 버튼 -->
+                <button type="button" class="tool-btn btn-main-red" onclick="applyBoxColor()">🚨 박스</button>
+                <button type="button" class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지</button>
             </div>
         </div>
 
@@ -205,30 +468,362 @@
 </div>
 
 <script>
-    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v9')) || [];
+    // ===== Firebase 클라우드 연동 설정 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류:", e);
+    }
+
+    let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v10')) || [];
+    let timelinePosts = JSON.parse(localStorage.getItem('timeline_posts_v3')) || [];
     let currentCategoryFilter = '전체';
     let currentSubFilter = '전체';
     let editingPostId = null;
     let undoStack = [];
+    let savedRange = null;
+    let selectedImage = null; // 현재 선택된 이미지 추적
+
+    async function loadCloudBlogData() {
+        if (!db) return;
+        try {
+            const doc = await db.collection("system_data").doc("blog_sync_data").get();
+            if (doc.exists) {
+                const data = doc.data();
+                if (data.posts) {
+                    blogPosts = data.posts;
+                    localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+                }
+                if (data.timeline) {
+                    timelinePosts = data.timeline;
+                    localStorage.setItem('timeline_posts_v3', JSON.stringify(timelinePosts));
+                }
+                renderPostList();
+            }
+        } catch(e) {
+            console.log("클라우드 블로그 데이터 로드 실패:", e);
+        }
+    }
+
+    async function saveCloudBlogData() {
+        localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+        localStorage.setItem('timeline_posts_v3', JSON.stringify(timelinePosts));
+        if (!db) return;
+        try {
+            await db.collection("system_data").doc("blog_sync_data").set({
+                posts: blogPosts,
+                timeline: timelinePosts
+            });
+        } catch(e) {
+            console.log("클라우드 블로그 데이터 저장 실패:", e);
+        }
+    }
+
+    let editorColors = {
+        text: '#191919',
+        hilite: '#fef08a'
+    };
 
     const editor = document.getElementById('writeContent');
 
-    editor.addEventListener('input', () => {
-        undoStack.push(editor.innerHTML);
-        if(undoStack.length > 50) undoStack.shift();
-    });
+    if (editor) {
+        editor.addEventListener('mouseup', saveSelection);
+        editor.addEventListener('keyup', saveSelection);
+        editor.addEventListener('touchend', saveSelection);
+    }
 
-    document.addEventListener('keydown', (e) => {
-        if(e.ctrlKey && e.key === 'z' && document.getElementById('viewWrite').style.display !== 'none') {
-            if(undoStack.length > 0) {
-                e.preventDefault();
-                undoStack.pop();
-                editor.innerHTML = undoStack[undoStack.length - 1] || '';
+    // ✨ 공통 이미지 클릭 핸들러 (메인 글쓰기 + 댓글 입력창/수정창 모두 지원)
+    document.addEventListener('click', function(e) {
+        const toolbar = document.getElementById('imgResizeToolbar');
+        if (!toolbar) return;
+
+        if (e.target.tagName === 'IMG') {
+            selectedImage = e.target;
+            
+            // 모든 에디터 영역의 이미지 선택 해제 후 현재 이미지 선택
+            document.querySelectorAll('img').forEach(img => img.classList.remove('selected'));
+            selectedImage.classList.add('selected');
+
+            const rect = selectedImage.getBoundingClientRect();
+            toolbar.style.display = 'flex';
+            toolbar.style.top = (rect.top + window.scrollY - 35) + 'px';
+            toolbar.style.left = (rect.left + window.scrollX) + 'px';
+            e.stopPropagation();
+        } else {
+            if (!toolbar.contains(e.target)) {
+                toolbar.style.display = 'none';
+                if (selectedImage) {
+                    selectedImage.classList.remove('selected');
+                    selectedImage = null;
+                }
             }
         }
     });
 
+    // ✨ 10% 단위 미세 크기 조절 함수
+    function adjustImageSize(delta) {
+        if (!selectedImage) return;
+        
+        // 현재 width가 px 단위로 설정되어 있지 않다면 현재 렌더링된 clientWidth를 기준 삼음
+        let currentW = selectedImage.clientWidth;
+        if (!selectedImage.style.width) {
+            selectedImage.style.width = currentW + 'px';
+        }
+        
+        let currentWidthVal = parseInt(selectedImage.style.width);
+        let newWidth = currentWidthVal * (1 + delta);
+        
+        if (newWidth < 30) newWidth = 30; // 최소 크기 제한
+        selectedImage.style.width = newWidth + 'px';
+        selectedImage.style.maxWidth = 'none';
+        
+        saveUndoState();
+        
+        // 툴바 위치 갱신
+        const toolbar = document.getElementById('imgResizeToolbar');
+        const rect = selectedImage.getBoundingClientRect();
+        toolbar.style.top = (rect.top + window.scrollY - 35) + 'px';
+        toolbar.style.left = (rect.left + window.scrollX) + 'px';
+    }
+
+    function resetImageSize() {
+        if (!selectedImage) return;
+        selectedImage.style.width = '';
+        selectedImage.style.maxWidth = '100%';
+        saveUndoState();
+        document.getElementById('imgResizeToolbar').style.display = 'none';
+    }
+
+    function deleteSelectedImage() {
+        if (!selectedImage) return;
+        if (confirm("이 이미지를 삭제하시겠습니까?")) {
+            selectedImage.remove();
+            selectedImage = null;
+            document.getElementById('imgResizeToolbar').style.display = 'none';
+            saveUndoState();
+        }
+    }
+
+    function saveSelection() {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            if (editor && editor.contains(range.commonAncestorContainer)) {
+                savedRange = range.cloneRange();
+            }
+        }
+    }
+
+    function restoreSelection() {
+        if (savedRange) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+        }
+    }
+
+    function saveUndoState() {
+        if (!editor) return;
+        const current = editor.innerHTML;
+        if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== current) {
+            undoStack.push(current);
+        }
+        if (undoStack.length > 50) undoStack.shift();
+    }
+
+    function applyFormat(command, value = null) {
+        if (!editor) return;
+        editor.focus();
+        restoreSelection();
+        document.execCommand(command, false, value);
+        saveSelection();
+        saveUndoState();
+    }
+
+    function toggleColorPopup(type, btn) {
+        closeColorPopups();
+        const popup = document.getElementById(type + 'ColorPopup');
+        if (popup) {
+            popup.classList.toggle('show');
+        }
+    }
+
+    function closeColorPopups() {
+        document.querySelectorAll('.color-popup').forEach(p => p.classList.remove('show'));
+    }
+
+    function selectPopupColor(type, colorHex) {
+        editorColors[type] = colorHex;
+        
+        const previewEl = document.getElementById(type + 'ColorPreview');
+        const currentEl = document.getElementById(type + 'CurrentColor');
+        const hexEl = document.getElementById(type + 'CurrentHex');
+
+        if (previewEl) previewEl.style.background = colorHex;
+        if (currentEl) currentEl.style.background = colorHex;
+        if (hexEl) hexEl.innerText = colorHex.toUpperCase();
+
+        if (type === 'text') {
+            applyTextColor(colorHex);
+        } else if (type === 'hilite') {
+            applyHiliteColor(colorHex);
+        }
+        closeColorPopups();
+    }
+
+    function openNativeColor(type) {
+        closeColorPopups();
+        const nativeInput = document.getElementById('native' + type.charAt(0).toUpperCase() + type.slice(1) + 'Color');
+        if (nativeInput) nativeInput.click();
+    }
+
+    function onNativeColorChange(type, colorHex) {
+        editorColors[type] = colorHex;
+        
+        const previewEl = document.getElementById(type + 'ColorPreview');
+        const currentEl = document.getElementById(type + 'CurrentColor');
+        const hexEl = document.getElementById(type + 'CurrentHex');
+
+        if (previewEl) previewEl.style.background = colorHex;
+        if (currentEl) currentEl.style.background = colorHex;
+        if (hexEl) hexEl.innerText = colorHex.toUpperCase();
+
+        if (type === 'text') {
+            applyTextColor(colorHex);
+        } else if (type === 'hilite') {
+            applyHiliteColor(colorHex);
+        }
+    }
+
+    function applyTextColor(colorValue) {
+        if (!editor) return;
+        editor.focus();
+        restoreSelection();
+        const sel = window.getSelection();
+        if (!sel.rangeCount || sel.isCollapsed) return;
+
+        const range = sel.getRangeAt(0);
+        let container = range.commonAncestorContainer;
+        if (container.nodeType === Node.TEXT_NODE) container = container.parentNode;
+
+        if (container && container.tagName === 'SPAN' && container !== editor) {
+            container.style.color = colorValue;
+        } else {
+            const span = document.createElement('span');
+            span.style.color = colorValue;
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+        }
+        
+        saveSelection();
+        saveUndoState();
+    }
+
+    function applyHiliteColor(colorValue) {
+        if (!editor) return;
+        editor.focus();
+        restoreSelection();
+        const sel = window.getSelection();
+        if (!sel.rangeCount || sel.isCollapsed) return;
+
+        const range = sel.getRangeAt(0);
+        let container = range.commonAncestorContainer;
+        if (container.nodeType === Node.TEXT_NODE) container = container.parentNode;
+
+        if (container && container.tagName === 'SPAN' && container !== editor) {
+            container.style.backgroundColor = colorValue;
+        } else {
+            const span = document.createElement('span');
+            span.style.backgroundColor = colorValue;
+            span.appendChild(range.extractContents());
+            range.insertNode(span);
+        }
+        
+        saveSelection();
+        saveUndoState();
+    }
+
+    function removeHighlight() {
+        if (!editor) return;
+        editor.focus();
+        restoreSelection();
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+
+        const range = sel.getRangeAt(0);
+        let container = range.commonAncestorContainer;
+        if (container.nodeType === Node.TEXT_NODE) {
+            container = container.parentNode;
+        }
+
+        const spans = container.querySelectorAll ? container.querySelectorAll('span') : [];
+        spans.forEach(span => {
+            if (sel.containsNode(span, true) && !span.classList.contains('tag-badge')) {
+                span.style.backgroundColor = '';
+                if (!span.style.color && !span.style.fontWeight && !span.style.border) {
+                    const parent = span.parentNode;
+                    while (span.firstChild) {
+                        parent.insertBefore(span.firstChild, span);
+                    }
+                    parent.removeChild(span);
+                }
+            }
+        });
+
+        if (container.tagName === 'SPAN' && !container.classList.contains('tag-badge') && container !== editor) {
+            container.style.backgroundColor = '';
+        }
+
+        closeColorPopups();
+        saveSelection();
+        saveUndoState();
+    }
+
+    if (editor) {
+        editor.addEventListener('input', () => {
+            saveSelection();
+            saveUndoState();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        const viewWrite = document.getElementById('viewWrite');
+        if(e.ctrlKey && e.key.toLowerCase() === 'z' && viewWrite && viewWrite.style.display !== 'none') {
+            if(undoStack.length <= 1) return;
+            e.preventDefault();
+            undoStack.pop();
+            if (editor) {
+                editor.innerHTML = undoStack[undoStack.length - 1];
+                const range = document.createRange();
+                range.selectNodeContents(editor);
+                range.collapse(false);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                saveSelection();
+            }
+        }
+    });
+
+    document.addEventListener('mousedown', function(event) {
+        if (!event.target.closest('.editor-color-wrap') && !event.target.closest('#imgResizeToolbar')) {
+            closeColorPopups();
+        }
+    });
+
     function setupPasteImage(element) {
+        if (!element) return;
         element.addEventListener('paste', function(e) {
             const items = e.clipboardData.items;
             for (let i = 0; i < items.length; i++) {
@@ -239,13 +834,26 @@
                         const img = document.createElement('img');
                         img.src = event.target.result;
                         img.className = 'img-preview';
-                        element.appendChild(img);
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0 && element.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+                            const range = selection.getRangeAt(0);
+                            range.deleteContents();
+                            range.insertNode(img);
+                            const newRange = document.createRange();
+                            newRange.setStartAfter(img);
+                            newRange.collapse(true);
+                            selection.removeAllRanges();
+                            selection.addRange(newRange);
+                        } else {
+                            element.appendChild(img);
+                        }
                         if(element === editor) {
-                            undoStack.push(editor.innerHTML);
+                            saveUndoState();
                         }
                     };
                     reader.readAsDataURL(blob);
                     e.preventDefault();
+                    break;
                 }
             }
         });
@@ -253,33 +861,68 @@
 
     setupPasteImage(editor);
 
-    function changeFontSize(sizeVal) {
-        document.execCommand('fontSize', false, sizeVal);
-        editor.focus();
-        undoStack.push(editor.innerHTML);
+    function escapeHTML(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function sanitizeHTML(html) {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        temp.querySelectorAll('script, iframe, object, embed').forEach(el => el.remove());
+        temp.querySelectorAll('*').forEach(el => {
+            [...el.attributes].forEach(attr => {
+                if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
+                if (['href', 'src'].includes(attr.name.toLowerCase()) && attr.value.trim().toLowerCase().startsWith('javascript:')) el.removeAttribute(attr.name);
+            });
+        });
+        return temp.innerHTML;
     }
 
     function convertPostBadgesInEditor() {
+        if (!editor) return;
+        editor.focus();
+        restoreSelection();
         const tagMap = {
-            'NS1': 'tag-ns1', 'NS2': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
+            'NS1': 'tag-ns1', 'NS3': 'tag-ns3', 'NS5': 'tag-ns5',
             'OS1': 'tag-os1', 'OS2': 'tag-os2', 'GS': 'tag-gs',
-            'NR': 'tag-nr', 'FM': 'tag-fm', '임병': 'tag-lab',
-            '검진': 'tag-chk', '물치': 'tag-pt', '영상': 'tag-vid', '병동': 'tag-ward'
+            'NR': 'tag-nr', 'FM': 'tag-fm', 'D': 'tag-d', 'E': 'tag-e', 'N': 'tag-n',
+            '임병': 'tag-lab', '검진': 'tag-chk', '물치': 'tag-pt', '영상': 'tag-vid'
         };
 
-        let html = editor.innerHTML;
-        Object.keys(tagMap).forEach(key => {
-            const badgeRegex = new RegExp(`<span[^>]*class="tag-badge[^>]*>(${key})<\\/span>`, 'gi');
-            html = html.replace(badgeRegex, '$1');
+        const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+        let textNodes = [];
+        while(node = walker.nextNode()) textNodes.push(node);
+
+        textNodes.forEach(textNode => {
+            let text = textNode.nodeValue;
+            let modified = false;
+            Object.keys(tagMap).forEach(key => {
+                const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
+                if (regex.test(text)) modified = true;
+            });
+
+            if (modified) {
+                let tempDiv = document.createElement('div');
+                let html = text;
+                Object.keys(tagMap).forEach(key => {
+                    const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
+                    html = html.replace(regex, `$1<span class="tag-badge tag-${key.toLowerCase()}" data-tag="$2">$2</span>`);
+                });
+                tempDiv.innerHTML = html;
+                
+                const frag = document.createDocumentFragment();
+                while(tempDiv.firstChild) frag.appendChild(tempDiv.firstChild);
+                textNode.parentNode.replaceChild(frag, textNode);
+            }
         });
 
-        Object.keys(tagMap).forEach(key => {
-            const regex = new RegExp(`(^|[^\\w가-힣])#?(${key})(?![\\w가-힣])`, 'gi');
-            html = html.replace(regex, `$1<span class="tag-badge ${tagMap[key]}" data-tag="$2">$2</span>`);
-        });
-
-        editor.innerHTML = html;
-        undoStack.push(editor.innerHTML);
+        saveUndoState();
     }
 
     document.addEventListener('click', (e) => {
@@ -289,56 +932,108 @@
         }
         else if(e.target.tagName === 'SPAN' && e.target.style.backgroundColor && !e.target.classList.contains('tag-badge')) {
             const parent = e.target.parentNode;
-            while (e.target.firstChild) {
-                parent.insertBefore(e.target.firstChild, e.target);
-            }
+            while (e.target.firstChild) parent.insertBefore(e.target.firstChild, e.target);
             parent.removeChild(e.target);
         }
     });
 
     function applyBoxColor() {
+        if (!editor) return;
+        editor.focus();
+        restoreSelection();
         const sel = window.getSelection();
-        if(!sel.rangeCount) return;
+        if(!sel.rangeCount || sel.isCollapsed) return;
+        const range = sel.getRangeAt(0);
         const span = document.createElement('span');
-        span.style.backgroundColor = document.getElementById('boxColor').value;
-        span.style.color = '#191919';
-        span.style.padding = '2px 6px';
-        span.style.borderRadius = '4px';
+        span.style.backgroundColor = '#f87171';
+        span.style.color = '#ffffff';
+        span.style.padding = '3px 8px';
+        span.style.borderRadius = '6px';
         span.style.fontWeight = 'bold';
-        span.appendChild(sel.getRangeAt(0).extractContents());
-        sel.getRangeAt(0).insertNode(span);
-        undoStack.push(editor.innerHTML);
+        span.style.border = '1px solid #ef4444';
+        span.style.display = 'inline-block';
+        span.style.margin = '2px 0';
+        span.appendChild(range.extractContents());
+        range.insertNode(span);
+        
+        saveSelection();
+        saveUndoState();
     }
 
     function switchBlogTab(tab) {
-        document.getElementById('viewList').style.display = tab === 'list' ? 'block' : 'none';
-        document.getElementById('viewListHeader').style.display = tab === 'list' ? 'flex' : 'none';
-        document.getElementById('viewWrite').style.display = tab === 'write' ? 'block' : 'none';
-        document.getElementById('viewDetail').style.display = tab === 'detail' ? 'block' : 'none';
+        const vList = document.getElementById('viewList');
+        const vNotice = document.getElementById('viewNotice');
+        const vListHeader = document.getElementById('viewListHeader');
+        const vWrite = document.getElementById('viewWrite');
+        const vDetail = document.getElementById('viewDetail');
+
+        if (vList) vList.style.display = tab === 'list' ? 'block' : 'none';
+        if (vNotice) vNotice.style.display = tab === 'notice' ? 'flex' : 'none';
+        if (vListHeader) vListHeader.style.display = (tab === 'list' || tab === 'notice') ? 'flex' : 'none';
+        if (vWrite) vWrite.style.display = tab === 'write' ? 'block' : 'none';
+        if (vDetail) vDetail.style.display = tab === 'detail' ? 'block' : 'none';
+        
+        window.scrollTo(0, 0);
+
         if(tab === 'list') renderPostList();
+        if(tab === 'notice') renderNoticeFeed();
     }
 
-    // ✨ 1번 방법: 대분류 클릭 시 하단 서브 탭 동적 생성 및 필터링
     const subCategories = {
         'NS': ['NS1', 'NS3', 'NS5'],
-        'OS': ['OS1', 'OS2']
+        'OS': ['OS1', 'OS2'],
+        '병동': ['D', 'E', 'N']
     };
+
+    function checkKeywordMatch(text, category, subCategory) {
+        if (!text) return false;
+        const lowerText = text.toLowerCase();
+        
+        if (category === 'NS') {
+            const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['ns1', 'ns3', 'ns5', 'ns'];
+            return targets.some(t => lowerText.includes(t));
+        }
+        if (category === 'OS') {
+            const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['os1', 'os2', 'os'];
+            return targets.some(t => lowerText.includes(t));
+        }
+        if (category === '병동') {
+            const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['d', 'e', 'n', '병동'];
+            return targets.some(t => {
+                if (t === 'd' || t === 'e' || t === 'n') {
+                    const regex = new RegExp(`(^|[^\\w가-힣])` + t + `([^\\w가-힣]|$)`, 'i');
+                    return regex.test(text);
+                }
+                return lowerText.includes(t);
+            });
+        }
+        if (category === 'GS') {
+            return lowerText.includes('gs');
+        }
+        if (category === 'NR' || category === 'FM' || category === '임병' || category === '물치' || category === '영상') {
+            return lowerText.includes(category.toLowerCase());
+        }
+        return false;
+    }
+
+    const allMainCategories = ['NS', 'OS', 'GS', 'NR', 'FM', '병동', '임병', '물치', '영상'];
 
     function filterByCategory(cat) {
         currentCategoryFilter = cat;
-        currentSubFilter = '전체'; // 대분류 바뀔 때 서브 초기화
+        currentSubFilter = '전체';
         
         document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-            if (btn.innerText === cat) btn.classList.add('active');
-            else btn.classList.remove('active');
+            btn.classList.toggle('active', btn.innerText === cat);
         });
 
         const subBar = document.getElementById('subCatBar');
+        if (!subBar) return;
+
         if (subCategories[cat]) {
             subBar.style.display = 'flex';
-            let subHtml = `<button class="sub-filter-btn active" onclick="filterBySub('전체')">전체(${cat.toUpperCase()})</button>`;
+            let subHtml = `<button type="button" class="sub-filter-btn active" data-sub="전체" onclick="filterBySub('전체')">전체(${cat.toUpperCase()})</button>`;
             subCategories[cat].forEach(sub => {
-                subHtml += `<button class="sub-filter-btn" onclick="filterBySub('${sub}')">${sub}</button>`;
+                subHtml += `<button type="button" class="sub-filter-btn" data-sub="${sub}" onclick="filterBySub('${sub}')">${sub}</button>`;
             });
             subBar.innerHTML = subHtml;
         } else {
@@ -346,14 +1041,17 @@
             subBar.innerHTML = '';
         }
 
-        switchBlogTab('list');
+        if (cat === '공지') {
+            switchBlogTab('notice');
+        } else {
+            switchBlogTab('list');
+        }
     }
 
     function filterBySub(sub) {
         currentSubFilter = sub;
         document.querySelectorAll('.sub-filter-btn').forEach(btn => {
-            if (btn.innerText.includes(sub)) btn.classList.add('active');
-            else btn.classList.remove('active');
+            btn.classList.toggle('active', btn.dataset.sub === sub);
         });
         renderPostList();
     }
@@ -363,35 +1061,76 @@
         const post = blogPosts.find(p => p.id === id);
         if (post) {
             post.isPinned = !post.isPinned;
-            localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+            saveCloudBlogData();
             renderPostList();
         }
     }
 
     function renderPostList() {
         const container = document.getElementById('viewList');
+        if (!container) return;
         container.innerHTML = '';
+
+        let matchedNotices = [];
+        if (currentCategoryFilter !== '전체') {
+            timelinePosts.forEach(tp => {
+                const fallbackDate = tp.createdAt ? new Date(tp.createdAt).toLocaleDateString('en-US') : getTodayDateStr();
+                let entries = parseContentToEntries(tp.content, tp.id, fallbackDate);
+                entries.forEach(entry => {
+                    if (currentCategoryFilter === '기타') {
+                        const hasAnyMainKeyword = allMainCategories.some(mainCat => checkKeywordMatch(entry.content, mainCat, '전체'));
+                        if (!hasAnyMainKeyword) {
+                            matchedNotices.push({ content: entry.content, date: entry.date });
+                        }
+                    } else {
+                        if (checkKeywordMatch(entry.content, currentCategoryFilter, currentSubFilter)) {
+                            matchedNotices.push({ content: entry.content, date: entry.date });
+                        }
+                    }
+                });
+            });
+        }
+
+        if (currentCategoryFilter !== '전체' && matchedNotices.length > 0) {
+            const noticeBox = document.createElement('div');
+            noticeBox.className = 'dept-notice-box';
+            
+            let headerTitle = currentSubFilter !== '전체' ? currentSubFilter : currentCategoryFilter;
+            let noticeHtml = `<div class="dept-notice-header">📌 [공지방 연동] ${headerTitle} </div>`;
+            matchedNotices.forEach(n => {
+                noticeHtml += `
+                    <div class="dept-notice-item">
+                        <div>${escapeHTML(n.content).replace(/\n/g, '<br>')}</div>
+                        <div class="dept-notice-date">${n.date}</div>
+                    </div>
+                `;
+            });
+            noticeBox.innerHTML = noticeHtml;
+            container.appendChild(noticeBox);
+        }
 
         let filtered = blogPosts;
         if (currentCategoryFilter !== '전체') {
-            if (subCategories[currentCategoryFilter]) {
+            if (currentCategoryFilter === '기타') {
+                filtered = blogPosts.filter(p => p.category === '기타' || !allMainCategories.some(mc => p.category.toLowerCase().includes(mc.toLowerCase())));
+            } else if (subCategories[currentCategoryFilter]) {
                 if (currentSubFilter === '전체') {
-                    filtered = blogPosts.filter(p => p.category.startsWith(currentCategoryFilter));
+                    filtered = blogPosts.filter(p => subCategories[currentCategoryFilter].some(sub => p.category.toLowerCase() === sub.toLowerCase()) || p.category.toLowerCase() === currentCategoryFilter.toLowerCase());
                 } else {
-                    filtered = blogPosts.filter(p => p.category === currentSubFilter);
+                    filtered = blogPosts.filter(p => p.category.toLowerCase() === currentSubFilter.toLowerCase());
                 }
             } else {
-                filtered = blogPosts.filter(p => p.category === currentCategoryFilter);
+                filtered = blogPosts.filter(p => p.category.toLowerCase() === currentCategoryFilter.toLowerCase());
             }
         }
 
         filtered.sort((a, b) => {
-            if (a.isPinned === b.isPinned) return 0;
-            return a.isPinned ? -1 : 1;
+            if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+            return new Date(b.date) - new Date(a.date);
         });
 
-        if (filtered.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-sub); text-align:center; padding:40px;">등록된 글이 없습니다.</p>`;
+        if (filtered.length === 0 && matchedNotices.length === 0) {
+            container.innerHTML += `<p style="color:var(--text-sub); text-align:center; padding:40px;">등록된 글이 없습니다.</p>`;
             return;
         }
 
@@ -412,8 +1151,8 @@
                 <div class="post-card-header">
                     <span class="post-category">${p.category}</span>
                 </div>
-                <div class="post-title">${p.title}</div>
-                <div class="post-snippet">${snippetText}</div>
+                <div class="post-title">${escapeHTML(p.title)}</div>
+                <div class="post-snippet">${escapeHTML(snippetText)}</div>
                 
                 <div class="post-footer">
                     <span class="post-date">${p.date}</span>
@@ -423,27 +1162,162 @@
         });
     }
 
-    function openWriteMode(id) {
-        editingPostId = id;
-        if (id) {
-            const post = blogPosts.find(p => p.id === id);
-            document.getElementById('writeTitle').value = post.title;
-            document.getElementById('writeCategory').value = post.category;
-            editor.innerHTML = post.content;
-        } else {
-            document.getElementById('writeTitle').value = '';
-            editor.innerHTML = '';
-            if (currentCategoryFilter !== '전체') {
-                document.getElementById('writeCategory').value = currentSubFilter !== '전체' ? currentSubFilter : currentCategoryFilter;
+    function getTodayDateStr() {
+        const d = new Date();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        return `${mm}/${dd}/${yyyy}`;
+    }
+
+    function parseContentToEntries(rawContent, postId, fallbackDate = null) {
+        const regex = /(\d{4}[-./]\d{2}[-./]\d{2})|(\d{2}[-./]\d{2}[-./]\d{4})/g;
+        let matches = [...rawContent.matchAll(regex)];
+
+        if (matches.length === 0) {
+            return [{
+                postId: postId,
+                date: fallbackDate || getTodayDateStr(),
+                content: rawContent.trim()
+            }];
+        }
+
+        let entries = [];
+        for (let i = 0; i < matches.length; i++) {
+            let currentDateMatch = matches[i];
+            let rawDateStr = currentDateMatch[0];
+            let dateStr = rawDateStr;
+
+            let parts = rawDateStr.split(/[-./]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) {
+                    dateStr = `${parts[1]}/${parts[2]}/${parts[0]}`;
+                } else {
+                    dateStr = `${parts[0]}/${parts[1]}/${parts[2]}`;
+                }
+            }
+            
+            let matchStart = currentDateMatch.index;
+            let matchEnd = currentDateMatch.index + currentDateMatch[0].length;
+            
+            let prevEnd = (i === 0) ? 0 : (matches[i - 1].index + matches[i - 1][0].length);
+            let nextStart = (i < matches.length - 1) ? matches[i + 1].index : rawContent.length;
+
+            let textStr = "";
+            let precedingText = rawContent.substring(prevEnd, matchStart).trim();
+            let followingText = rawContent.substring(matchEnd, nextStart).trim();
+
+            if (precedingText && !followingText) {
+                textStr = precedingText;
+            } else {
+                textStr = followingText;
+                if (!textStr && precedingText) textStr = precedingText;
+            }
+
+            textStr = textStr.replace(/^[\r\n]+/, '').replace(/[\r\n]+$/, '');
+
+            if (textStr) {
+                entries.push({
+                    postId: postId,
+                    date: dateStr,
+                    content: textStr
+                });
             }
         }
-        undoStack = [editor.innerHTML];
+
+        if (entries.length === 0) {
+            entries.push({
+                postId: postId,
+                date: fallbackDate || getTodayDateStr(),
+                content: rawContent.trim()
+            });
+        }
+
+        return entries;
+    }
+
+    function saveNoticePost() {
+        const noticeWriteContent = document.getElementById('noticeWriteContent');
+        if (!noticeWriteContent) return;
+        const content = noticeWriteContent.value.trim();
+        if(!content) { alert('내용을 입력해주세요.'); return; }
+
+        const newPostId = Date.now();
+        const newPost = { id: newPostId, content: content, createdAt: new Date().toISOString() };
+        timelinePosts.unshift(newPost);
+        saveCloudBlogData();
+
+        noticeWriteContent.value = '';
+        renderNoticeFeed();
+        alert('공지가 저장되었습니다!');
+    }
+
+    function renderNoticeFeed() {
+        const feedContainer = document.getElementById('noticeFeedContainer');
+        if(!feedContainer) return;
+        if(timelinePosts.length === 0) {
+            feedContainer.innerHTML = `<p style="color:var(--text-sub); text-align:center; padding:20px;">작성된 공지가 없습니다.</p>`;
+            return;
+        }
+
+        let allEntries = [];
+        timelinePosts.forEach(p => {
+            const fallbackDate = p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US') : getTodayDateStr();
+            let entries = parseContentToEntries(p.content, p.id, fallbackDate);
+            allEntries.push(...entries);
+        });
+
+        allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        feedContainer.innerHTML = allEntries.map(entry => `
+            <div class="notice-feed-item">
+                <div class="notice-timeline-block">
+                    <div class="notice-timeline-content">${escapeHTML(entry.content).replace(/\n/g, '<br>')}</div>
+                    <div class="notice-timeline-footer">
+                        <span>${entry.date}</span>
+                        <button type="button" class="notice-delete-date-btn" onclick="removeNoticePost(${entry.postId})" title="전체 삭제">×</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function removeNoticePost(id) {
+        timelinePosts = timelinePosts.filter(p => p.id !== id);
+        saveCloudBlogData();
+        renderNoticeFeed();
+    }
+
+    function openWriteMode(id) {
+        editingPostId = id;
+        const writeTitle = document.getElementById('writeTitle');
+        const writeCategory = document.getElementById('writeCategory');
+
+        if (id) {
+            const post = blogPosts.find(p => p.id === id);
+            if (post) {
+                if (writeTitle) writeTitle.value = post.title || '';
+                if (writeCategory) writeCategory.value = post.category || '기타';
+                if (editor) editor.innerHTML = post.content || '';
+            }
+        } else {
+            if (writeTitle) writeTitle.value = '';
+            if (editor) editor.innerHTML = '';
+            if (currentCategoryFilter !== '전체' && currentCategoryFilter !== '공지' && writeCategory) {
+                writeCategory.value = currentSubFilter !== '전체' ? currentSubFilter : currentCategoryFilter;
+            }
+        }
+        undoStack = editor ? [editor.innerHTML] : [];
         switchBlogTab('write');
     }
 
     function savePostData() {
-        const title = document.getElementById('writeTitle').value.trim();
-        const category = document.getElementById('writeCategory').value;
+        const writeTitle = document.getElementById('writeTitle');
+        const writeCategory = document.getElementById('writeCategory');
+        if (!writeTitle || !writeCategory || !editor) return;
+
+        const title = writeTitle.value.trim();
+        const category = writeCategory.value;
         const content = editor.innerHTML.trim();
 
         if (!title || !content) {
@@ -451,13 +1325,16 @@
             return;
         }
 
+        const d = new Date();
+        const todayFormatted = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
+
         if (editingPostId) {
             const post = blogPosts.find(p => p.id === editingPostId);
             if (post) { post.title = title; post.category = category; post.content = content; }
         } else {
-            blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: new Date().toLocaleDateString(), comments: [], isPinned: false });
+            blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: todayFormatted, comments: [], isPinned: false });
         }
-        localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+        saveCloudBlogData();
         editingPostId = null;
         switchBlogTab('list');
     }
@@ -465,43 +1342,48 @@
     function openPostDetail(id) {
         const p = blogPosts.find(p => p.id === id);
         if(!p) return;
-        document.getElementById('postDetailContainer').innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">목록</button>
-                <div style="display:flex; gap:6px;">
-                    <button class="btn-main" style="background:#0284c7; color:#0f172a;" onclick="openWriteMode('${p.id}')">수정</button>
-                    <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">삭제</button>
+        
+        const comments = p.comments || [];
+        const detailContainer = document.getElementById('postDetailContainer');
+        if (!detailContainer) return;
+
+        detailContainer.innerHTML = `
+            <div class="detail-top-bar">
+                <button type="button" class="btn-main btn-main-slate" onclick="switchBlogTab('list')">목록</button>
+                <div class="detail-action-group">
+                    <button type="button" class="btn-main btn-main-sky" onclick="openWriteMode('${p.id}')">수정</button>
+                    <button type="button" class="btn-main btn-main-red" onclick="deletePost('${p.id}')">삭제</button>
                 </div>
             </div>
 
-            <h2 style="color:white; margin-bottom:4px;">${p.title}</h2>
-            <small style="color:var(--text-sub);">카테고리: ${p.category} | 작성일: ${p.date}</small>
+            <h2 class="detail-title-head">${escapeHTML(p.title)}</h2>
+            <small class="detail-meta-small">카테고리: ${p.category} | 작성일: ${p.date}</small>
             
             <div class="detail-content-box">${p.content}</div>
             
             <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
-            <h4 style="color:white;">댓글 (${p.comments.length})</h4>
+            <h4 class="comment-heading">댓글 (${comments.length})</h4>
             <div style="margin:10px 0;" id="commentListContainer">
-                ${p.comments.length === 0 ? '<p style="font-size:0.8rem; color:#888;">댓글이 없습니다.</p>' : ''}
-                ${p.comments.map((c, index) => `
+                ${comments.length === 0 ? '<p class="comment-list-empty">댓글이 없습니다.</p>' : ''}
+                ${comments.map((c, index) => `
                     <div class="comment-item" id="comment-${p.id}-${index}">
-                        <div id="comment-text-${p.id}-${index}">${c.text}</div>
+                        <div id="comment-text-${p.id}-${index}">${sanitizeHTML(c.text)}</div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                             <span class="comment-date">🕒 ${c.date}</span>
                             <div style="display:flex; gap:4px;">
-                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#0284c7; color:#0f172a;" onclick="editComment('${p.id}', ${index})">수정</button>
-                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#f87171; color:#0f172a;" onclick="deleteComment('${p.id}', ${index})">삭제</button>
+                                <button type="button" class="btn-main btn-main-sky" style="padding:2px 6px; font-size:0.65rem;" onclick="editComment('${p.id}', ${index})">수정</button>
+                                <button type="button" class="btn-main btn-main-red" style="padding:2px 6px; font-size:0.65rem;" onclick="deleteComment('${p.id}', ${index})">삭제</button>
                             </div>
                         </div>
                     </div>
                 `).join('')}
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:6px; border:1px solid var(--border); padding:8px; border-radius:6px; background:#1e293b; margin-top:15px;">
-                <div id="commentInputDiv" class="editor-area" style="min-height:45px; padding:6px; background:#f8fafc; color:#191919;" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
-                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:4px;">
-                    <span style="font-size:0.7rem; color:#94a3b8;">💡 댓글 사진 Ctrl+V 가능</span>
-                    <button class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="addComment('${p.id}')">댓글등록</button>
+            <div class="comment-box-wrap">
+                <div id="commentInputDiv" class="editor-area comment-input-area" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
+                <div class="comment-footer-row">
+                    <span class="comment-tip">💡 댓글 사진 Ctrl+V 가능</span>
+                    <button type="button" class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="addComment('${p.id}')">댓글등록</button>
                 </div>
             </div>
         `;
@@ -511,23 +1393,26 @@
 
     function addComment(id) {
         const div = document.getElementById('commentInputDiv');
+        if (!div) return;
         const text = div.innerHTML.trim();
         if(!text) return;
         const post = blogPosts.find(p => p.id === id);
+        if (!post.comments) post.comments = [];
         post.comments.push({ date: new Date().toLocaleString(), text });
-        localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+        saveCloudBlogData();
         openPostDetail(id);
     }
 
     function editComment(postId, commentIndex) {
         const textDiv = document.getElementById(`comment-text-${postId}-${commentIndex}`);
+        if (!textDiv) return;
         const currentContent = textDiv.innerHTML;
         
         textDiv.innerHTML = `
             <div contenteditable="true" id="editCommentBox-${postId}-${commentIndex}" style="background:#f8fafc; color:#191919; padding:6px; border-radius:4px; min-height:35px; outline:none;">${currentContent}</div>
             <div style="display:flex; justify-content:flex-end; gap:4px; margin-top:4px;">
-                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#475569; color:white;" onclick="openPostDetail('${postId}')">취소</button>
-                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#38bdf8; color:#0f172a;" onclick="saveEditedComment('${postId}', ${commentIndex})">저장</button>
+                <button type="button" class="btn-main btn-main-slate" style="padding:2px 8px; font-size:0.65rem;" onclick="openPostDetail('${postId}')">취소</button>
+                <button type="button" class="btn-main btn-main-sky" style="padding:2px 8px; font-size:0.65rem;" onclick="saveEditedComment('${postId}', ${commentIndex})">저장</button>
             </div>
         `;
         setupPasteImage(document.getElementById(`editCommentBox-${postId}-${commentIndex}`));
@@ -535,13 +1420,14 @@
 
     function saveEditedComment(postId, commentIndex) {
         const editBox = document.getElementById(`editCommentBox-${postId}-${commentIndex}`);
+        if (!editBox) return;
         const newText = editBox.innerHTML.trim();
         if(!newText) return;
 
         const post = blogPosts.find(p => p.id === postId);
-        if(post && post.comments[commentIndex]) {
+        if(post && post.comments && post.comments[commentIndex]) {
             post.comments[commentIndex].text = newText;
-            localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+            saveCloudBlogData();
             openPostDetail(postId);
         }
     }
@@ -549,9 +1435,9 @@
     function deleteComment(postId, commentIndex) {
         if(confirm("댓글을 삭제하시겠습니까?")) {
             const post = blogPosts.find(p => p.id === postId);
-            if(post) {
+            if(post && post.comments) {
                 post.comments.splice(commentIndex, 1);
-                localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+                saveCloudBlogData();
                 openPostDetail(postId);
             }
         }
@@ -560,12 +1446,12 @@
     function deletePost(id) {
         if(confirm("정말 삭제하시겠습니까?")) {
             blogPosts = blogPosts.filter(p => p.id !== id);
-            localStorage.setItem('my_blog_posts_final_v9', JSON.stringify(blogPosts));
+            saveCloudBlogData();
             switchBlogTab('list');
         }
     }
 
-    renderPostList();
+    loadCloudBlogData();
 </script>
 </body>
 </html>
