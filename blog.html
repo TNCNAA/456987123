@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미니 블로그 시스템 (팝업 재확인 제거)</title>
+    <title>미니 블로그 시스템 (오류 수정완료 통합본)</title>
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -12,15 +12,19 @@
         :root {
             --bg: #0f172a;
             --primary: #38bdf8;
+            --primary-dark: #0369a1;
             --border: #334155;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: sans-serif; background-color: var(--bg); color: var(--text-main); padding: 10px; }
 
-        .blog-container { max-width: 100%; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+        .blog-container { max-width: 1550px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
 
         /* 상단 카테고리 필터 바 */
         .toolbar-sticky { position: sticky; top: 0; background: var(--bg); z-index: 1000; padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
@@ -31,21 +35,14 @@
         .cat-filter-btn:hover { background: #334155; color: white; }
         .cat-filter-btn.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
 
-        /* 서브 탭 스타일 */
         .sub-cat-bar { display: none; gap: 4px; padding-top: 4px; border-top: 1px dashed var(--border); flex-wrap: wrap; }
         .sub-filter-btn { padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; background: #1e293b; font-size: 0.75rem; color: var(--text-sub); }
         .sub-filter-btn:hover { background: #334155; color: white; }
         .sub-filter-btn.active { background: #38bdf8; color: #0f172a; font-weight: bold; border-color: #38bdf8; }
 
-        .btn-main { background: #64ea8ad7; color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-decoration: none; display: inline-block; }
+        .btn-main { background: #64ea8ad7; color: #0f172a; border: none; padding: 6px 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 0.8rem; text-decoration: none; }
         .btn-main:hover { background: #52c875d7; }
 
-        .btn-main-gray { background: #64748b; color: white; }
-        .btn-main-slate { background: #475569; color: white; }
-        .btn-main-sky { background: #0284c7; color: #0f172a; }
-        .btn-main-red { background: #f87171; color: #0f172a; }
-
-        /* 글쓰기 상단 전체 영역 스크롤 고정 */
         .write-sticky-header {
             position: sticky;
             top: 0;
@@ -55,120 +52,19 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .write-top-actions {
-            padding: 8px 0;
-            display: flex;
-            justify-content: flex-end;
-            gap: 6px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 8px;
-        }
-
-        .write-meta-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .write-category-select {
-            padding: 6px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            background: #1e293b;
-            color: white;
-        }
-
-        .write-title-input {
-            flex: 1;
-            padding: 6px 10px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            outline: none;
-            background: #1e293b;
-            color: white;
-        }
-
         .editor-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: white; padding-top: 8px; position: relative; }
         .tool-btn { background: #334155; color: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
         .tool-btn:hover { background: #475569; }
 
-        .font-size-select {
-            padding: 4px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            background: #1e293b;
-            color: white;
-            font-size: 0.8rem;
+        /* 인라인 색상 버튼 */
+        .color-dot-btn {
+            width: 22px; height: 22px; border-radius: 4px;
+            border: 2px solid rgba(255,255,255,0.25);
+            cursor: pointer; padding: 0; flex-shrink: 0;
+            transition: transform 0.12s, border-color 0.12s;
+            display: inline-flex; align-items: center; justify-content: center;
         }
-
-        /* 글자색/형광펜 색상 팝업 패널 */
-        .editor-color-wrap { position: relative; display: inline-block; }
-        .editor-color-btn { display: inline-flex; align-items: center; gap: 5px; background: #334155; color: white; border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-        .editor-color-btn:hover { background: #475569; }
-        .color-preview { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.3); display: inline-block; }
-        .color-arrow { font-size: 0.65rem; color: var(--text-sub); }
-
-        .color-popup {
-            display: none;
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            right: auto;
-            background: #1e293b;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            z-index: 1005;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            width: 210px;
-            max-width: calc(100vw - 30px);
-        }
-        @media (max-width: 480px) {
-            .color-popup { left: auto; right: 0; }
-        }
-        .color-popup.show { display: block; }
-        .color-popup-title { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: bold; color: var(--text-main); margin-bottom: 8px; }
-        .color-popup-close { background: transparent; border: none; color: var(--text-sub); font-size: 1rem; cursor: pointer; }
-        .color-popup-close:hover { color: white; }
-
-        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        .popup-color { width: 100%; aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; padding: 0; transition: transform 0.15s, border-color 0.15s; }
-        .popup-color:hover { transform: scale(1.15); border-color: white; }
-
-        .c-main-dark { background: #191919; }
-        .c-red { background: #ef4444; }
-        .c-orange { background: #f97316; }
-        .c-yellow { background: #eab308; }
-        .c-green { background: #22c55e; }
-        .c-blue { background: #3b82f6; }
-        .c-purple { background: #a855f7; }
-        .c-pink { background: #ec4899; }
-
-        .c-hi-yellow { background: #fef08a; }
-        .c-hi-green { background: #bbf7d0; }
-        .c-hi-blue { background: #bae6fd; }
-        .c-hi-pink { background: #fbcfe8; }
-        .c-hi-orange { background: #fed7aa; }
-        .c-hi-purple { background: #ddd6fe; }
-        .c-hi-gray { background: #e2e8f0; }
-
-        .popup-color.eraser-btn {
-            background: #334155 !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            color: #f87171;
-            font-weight: bold;
-        }
-        .popup-color.eraser-btn:hover { background: #475569 !important; }
-
-        .color-popup-divider { height: 1px; background: var(--border); margin: 10px 0; }
-        .color-popup-bottom { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-        .current-color-box { display: flex; align-items: center; gap: 5px; color: var(--text-sub); font-size: 0.75rem; }
-        .current-color-preview { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #64748b; }
-        .custom-color-btn { border: 1px solid var(--border); background: #334155; color: white; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
-        .custom-color-btn:hover { background: #475569; }
-        .hidden-native-color { width: 0; height: 0; opacity: 0; position: absolute; pointer-events: none; }
+        .color-dot-btn:hover { transform: scale(1.3); border-color: white; }
 
         /* 글쓰기 에디터 영역 */
         .editor-area { width: 100%; min-height: 400px; padding: 15px; border: 1px solid var(--border); border-radius: 6px; background: #f8fafc; color: #191919; outline: none; line-height: 1.6; font-size: 0.95rem; margin-top: 10px; }
@@ -179,44 +75,8 @@
             pointer-events: none;
             display: block;
         }
-        
-        .img-preview {
-            max-width: 100%;
-            height: auto;
-            border-radius: 6px;
-            margin: 8px 0;
-            display: inline-block;
-            cursor: pointer;
-        }
-        .img-preview.selected {
-            outline: 3px solid var(--primary);
-        }
+        .img-preview { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
 
-        #imgResizeToolbar {
-            display: none;
-            position: absolute;
-            background: #1e293b;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 4px 8px;
-            z-index: 1100;
-            gap: 4px;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        #imgResizeToolbar button {
-            background: #334155;
-            color: white;
-            border: none;
-            padding: 3px 6px;
-            font-size: 0.65rem;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #imgResizeToolbar button:hover { background: #475569; }
-
-        /* 글 목록 카드 */
         .post-list { display: flex; flex-direction: column; gap: 0; }
         .post-card { 
             position: relative; 
@@ -285,61 +145,45 @@
         .tag-pt   { background: #78350f; color: white; }
         .tag-vid  { background: #000000; color: white; }
         .tag-ward { background: #ec4899; color: white; }
-
-        .main-link-btn { margin-bottom: 10px; }
-        .detail-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .detail-action-group { display: flex; gap: 6px; }
-        .comment-box-wrap { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border); padding: 8px; border-radius: 6px; background: #1e293b; margin-top: 15px; }
-        .comment-input-area { min-height: 45px; padding: 6px; background: #f8fafc; color: #191919; }
-        .comment-footer-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 4px; }
-        .comment-tip { font-size: 0.7rem; color: #94a3b8; }
-        .detail-title-head { color: white; margin-bottom: 4px; }
-        .detail-meta-small { color: var(--text-sub); }
-        .comment-heading { color: white; }
-        .comment-list-empty { font-size: 0.8rem; color: #888; }
     </style>
 </head>
 <body>
 
-<div id="imgResizeToolbar">
-    <button type="button" onclick="adjustImageSize(-0.1)">-10%</button>
-    <button type="button" onclick="adjustImageSize(0.1)">+10%</button>
-    <button type="button" onclick="resetImageSize()">원본</button>
-    <button type="button" style="color:#f87171;" onclick="deleteSelectedImage()">삭제</button>
-</div>
-
-<a href="index.html" class="btn-main btn-main-gray main-link-btn">🏠 메인</a>
+<a href="index.html" class="btn-main" style="background:#64748b; display:inline-block; margin-bottom:10px; color:white;">🏠 메인</a>
 
 <div class="blog-container">
+    <!-- 상단 카테고리 필터 바 -->
     <div id="viewListHeader" class="toolbar-sticky">
         <div class="toolbar-top-row">
             <div class="cat-btn-group" id="categoryButtonGroup">
-                <button type="button" class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('NS')">NS</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('OS')">OS</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('GS')">GS</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('NR')">NR</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('FM')">FM</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('병동')">병동</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('임병')">임병</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('물치')">물치</button>
-                <button type="button" class="cat-filter-btn" onclick="filterByCategory('영상')">영상</button>
+                <button class="cat-filter-btn active" onclick="filterByCategory('전체')">전체</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('공지')">공지</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('NS')">NS</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('OS')">OS</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('GS')">GS</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('NR')">NR</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('FM')">FM</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('병동')">병동</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('기타')">기타</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('임병')">임병</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('물치')">물치</button>
+                <button class="cat-filter-btn" onclick="filterByCategory('영상')">영상</button>
             </div>
             <div>
-                <button type="button" class="btn-main" onclick="openWriteMode(null)">글쓰기</button>
+                <button class="btn-main" onclick="openWriteMode(null)">글쓰기</button>
             </div>
         </div>
         <div id="subCatBar" class="sub-cat-bar"></div>
     </div>
 
+    <!-- 1. 글 목록 화면 -->
     <div id="viewList" class="post-list"></div>
 
+    <!-- 1-1. 공지방 타임라인 화면 -->
     <div id="viewNotice" class="notice-container">
         <div class="notice-write-section">
             <textarea id="noticeWriteContent" class="notice-editor-area" placeholder="공지 내용을 입력하세요..."></textarea>
-            <button type="button" class="btn-notice-save" onclick="saveNoticePost()">공지 저장하기</button>
+            <button class="btn-notice-save" onclick="saveNoticePost()">공지 저장하기</button>
         </div>
         <div>
             <div class="notice-feed-title">📖 공지방</div>
@@ -347,22 +191,23 @@
         </div>
     </div>
 
+    <!-- 2. 글쓰기 / 수정 에디터 화면 -->
     <div id="viewWrite" style="display:none;">
         <div class="write-sticky-header">
-            <div class="write-top-actions">
-                <button type="button" class="btn-main btn-main-slate" onclick="switchBlogTab('list')">취소</button>
-                <button type="button" class="btn-main" onclick="savePostData()">저장</button>
+            <div style="padding:8px 0; display:flex; justify-content:flex-end; gap:6px; border-bottom:1px solid var(--border); margin-bottom:8px;">
+                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">취소</button>
+                <button class="btn-main" onclick="savePostData()">저장</button>
             </div>
 
-            <div class="write-meta-row">
-                <select id="writeCategory" class="write-category-select">
+            <div style="display:flex; gap:8px;">
+                <select id="writeCategory" style="padding:6px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white;">
                     <option value="NS1">NS1</option><option value="NS3">NS3</option><option value="NS5">NS5</option>
                     <option value="OS1">OS1</option><option value="OS2">OS2</option>
                     <option value="GS">GS</option><option value="NR">NR</option><option value="FM">FM</option>
                     <option value="D">D</option><option value="E">E</option><option value="N">N</option>
                     <option value="기타">기타</option><option value="임병">임병</option><option value="물치">물치</option><option value="영상">영상</option>
                 </select>
-                <input type="text" id="writeTitle" placeholder="제목을 입력하세요" class="write-title-input">
+                <input type="text" id="writeTitle" placeholder="제목을 입력하세요" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:4px; outline:none; background:#1e293b; color:white;">
             </div>
             
             <div class="editor-toolbar">
@@ -370,91 +215,42 @@
                 <button type="button" class="tool-btn" onclick="applyFormat('underline')"><u>U</u></button>
                 
                 <span>크기:</span>
-                <select id="fontSizeSelect" class="font-size-select" onchange="applyFormat('fontSize', this.value)">
-                    <option value="1">4</option>
-                    <option value="2">6</option>
-                    <option value="3" selected>8 (기본)</option>
-                    <option value="4">10</option>
-                    <option value="5">12</option>
-                    <option value="6">16</option>
-                    <option value="7">20</option>
+                <select id="fontSizeSelect" onchange="applyCustomFontSize(this.value)" style="padding:4px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white; font-size:0.8rem;">
+                    <option value="4px">4</option>
+                    <option value="6px">6</option>
+                    <option value="8px">8</option>
+                    <option value="10px">10</option>
+                    <option value="12px">12</option>
+                    <option value="14px">14</option>
+                    <option value="16px" selected>16 (기본)</option>
+                    <option value="18px">18</option>
+                    <option value="20px">20</option>
                 </select>
 
-                <!-- 글자색 버튼 및 팝업 -->
-                <div class="editor-color-wrap">
-                    <button type="button" class="editor-color-btn" onmousedown="saveSelection()" onclick="toggleColorPopup('text', this)">
-                        <span>A</span>
-                        <span class="color-preview c-main-dark" id="textColorPreview"></span>
-                        <span class="color-arrow">▼</span>
-                    </button>
-                    <div class="color-popup" id="textColorPopup">
-                        <div class="color-popup-title">
-                            <span>글자색 선택</span>
-                            <button type="button" class="color-popup-close" onclick="closeColorPopups()">×</button>
-                        </div>
-                        <div class="color-grid">
-                            <button type="button" class="popup-color c-main-dark" onclick="selectPopupColor('text', '#191919')"></button>
-                            <button type="button" class="popup-color c-red" onclick="selectPopupColor('text', '#ef4444')"></button>
-                            <button type="button" class="popup-color c-orange" onclick="selectPopupColor('text', '#f97316')"></button>
-                            <button type="button" class="popup-color c-yellow" onclick="selectPopupColor('text', '#eab308')"></button>
-                            <button type="button" class="popup-color c-green" onclick="selectPopupColor('text', '#22c55e')"></button>
-                            <button type="button" class="popup-color c-blue" onclick="selectPopupColor('text', '#3b82f6')"></button>
-                            <button type="button" class="popup-color c-purple" onclick="selectPopupColor('text', '#a855f7')"></button>
-                            <button type="button" class="popup-color c-pink" onclick="selectPopupColor('text', '#ec4899')"></button>
-                        </div>
-                        <div class="color-popup-divider"></div>
-                        <div class="color-popup-bottom">
-                            <div class="current-color-box">
-                                <span class="current-color-preview c-main-dark" id="textCurrentColor"></span>
-                                <span id="textCurrentHex">#191919</span>
-                            </div>
-                            <button type="button" class="custom-color-btn" onclick="openNativeColor('text')">직접선택</button>
-                        </div>
-                    </div>
-                </div>
+                <!-- 글자색 인라인 버튼 (onmousedown으로 selection 보존) -->
+                <span style="font-size:0.75rem;color:var(--text-sub);">A색:</span>
+                <button type="button" class="color-dot-btn" style="background:#191919;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#191919')" title="검정"></button>
+                <button type="button" class="color-dot-btn" style="background:#ef4444;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#ef4444')" title="빨강"></button>
+                <button type="button" class="color-dot-btn" style="background:#f97316;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#f97316')" title="주황"></button>
+                <button type="button" class="color-dot-btn" style="background:#eab308;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#eab308')" title="노랑"></button>
+                <button type="button" class="color-dot-btn" style="background:#22c55e;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#22c55e')" title="초록"></button>
+                <button type="button" class="color-dot-btn" style="background:#3b82f6;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#3b82f6')" title="파랑"></button>
+                <button type="button" class="color-dot-btn" style="background:#a855f7;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#a855f7')" title="보라"></button>
+                <button type="button" class="color-dot-btn" style="background:#ec4899;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#ec4899')" title="분홍"></button>
 
-                <!-- 형광펜 버튼 및 팝업 -->
-                <div class="editor-color-wrap">
-                    <button type="button" class="editor-color-btn" onmousedown="saveSelection()" onclick="toggleColorPopup('hilite', this)">
-                        <span>🖍</span>
-                        <span class="color-preview c-hi-yellow" id="hiliteColorPreview"></span>
-                        <span class="color-arrow">▼</span>
-                    </button>
-                    <div class="color-popup" id="hiliteColorPopup">
-                        <div class="color-popup-title">
-                            <span>형광펜 색상</span>
-                            <button type="button" class="color-popup-close" onclick="closeColorPopups()">×</button>
-                        </div>
-                        <div class="color-grid">
-                            <button type="button" class="popup-color c-hi-yellow" onclick="selectPopupColor('hilite', '#fef08a')"></button>
-                            <button type="button" class="popup-color c-hi-green" onclick="selectPopupColor('hilite', '#bbf7d0')"></button>
-                            <button type="button" class="popup-color c-hi-blue" onclick="selectPopupColor('hilite', '#bae6fd')"></button>
-                            <button type="button" class="popup-color c-hi-pink" onclick="selectPopupColor('hilite', '#fbcfe8')"></button>
-                            <button type="button" class="popup-color c-hi-orange" onclick="selectPopupColor('hilite', '#fed7aa')"></button>
-                            <button type="button" class="popup-color c-hi-purple" onclick="selectPopupColor('hilite', '#ddd6fe')"></button>
-                            <button type="button" class="popup-color c-hi-gray" onclick="selectPopupColor('hilite', '#e2e8f0')"></button>
-                            <button type="button" class="popup-color eraser-btn" onclick="removeHighlight()" title="형광펜 제거">✕</button>
-                        </div>
-                        <div class="color-popup-divider"></div>
-                        <div class="color-popup-bottom">
-                            <div class="current-color-box">
-                                <span class="current-color-preview c-hi-yellow" id="hiliteCurrentColor"></span>
-                                <span id="hiliteCurrentHex">#FEF08A</span>
-                            </div>
-                            <button type="button" class="custom-color-btn" onclick="openNativeColor('hilite')">직접선택</button>
-                        </div>
-                    </div>
-                </div>
-
-                <input type="color" id="nativeTextColor" class="hidden-native-color" value="#191919" onchange="onNativeColorChange('text', this.value)">
-                <input type="color" id="nativeHiliteColor" class="hidden-native-color" value="#fef08a" onchange="onNativeColorChange('hilite', this.value)">
+                <!-- 형광펜 인라인 버튼 -->
+                <span style="font-size:0.75rem;color:var(--text-sub);">🖍:</span>
+                <button type="button" class="color-dot-btn" style="background:#fef08a;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#fef08a')" title="노랑 형광"></button>
+                <button type="button" class="color-dot-btn" style="background:#bbf7d0;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#bbf7d0')" title="초록 형광"></button>
+                <button type="button" class="color-dot-btn" style="background:#bae6fd;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#bae6fd')" title="하늘 형광"></button>
+                <button type="button" class="color-dot-btn" style="background:#fbcfe8;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#fbcfe8')" title="핑크 형광"></button>
+                <button type="button" class="color-dot-btn" style="background:#fed7aa;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#fed7aa')" title="살구 형광"></button>
+                <button type="button" class="color-dot-btn" style="background:#ddd6fe;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#ddd6fe')" title="보라 형광"></button>
+                <button type="button" class="color-dot-btn" style="background:#334155;border:1px solid #94a3b8;color:#f87171;font-size:0.7rem;font-weight:bold;" onmousedown="saveSelection();event.preventDefault();removeHighlight()" title="형광펜 제거">✕</button>
 
                 <!-- 🚨 박스 버튼 -->
-                <button type="button" class="tool-btn btn-main-red" onclick="applyBoxColor()">🚨 박스</button>
+                <button type="button" class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스</button>
                 <button type="button" class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지</button>
-                
-                <!-- 사진 주소(URL) 추가 카메라 버튼 -->
-                <button type="button" class="tool-btn" style="background:#0284c7; color:white;" onclick="insertImageUrl()" title="사진 주소(URL) 추가">📷</button>
             </div>
         </div>
 
@@ -468,24 +264,6 @@
 </div>
 
 <script>
-    // ===== Firebase 클라우드 연동 설정 =====
-    const firebaseConfig = {
-        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
-        authDomain: "tncnaaa.firebaseapp.com",
-        projectId: "tncnaaa",
-        storageBucket: "tncnaaa.firebasestorage.app",
-        messagingSenderId: "822557545187",
-        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
-    };
-
-    let db = null;
-    try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-    } catch(e) {
-        console.log("Firebase 초기화 오류:", e);
-    }
-
     let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v10')) || [];
     let timelinePosts = JSON.parse(localStorage.getItem('timeline_posts_v3')) || [];
     let currentCategoryFilter = '전체';
@@ -493,42 +271,6 @@
     let editingPostId = null;
     let undoStack = [];
     let savedRange = null;
-    let selectedImage = null;
-
-    async function loadCloudBlogData() {
-        if (!db) return;
-        try {
-            const doc = await db.collection("system_data").doc("blog_sync_data").get();
-            if (doc.exists) {
-                const data = doc.data();
-                if (data.posts) {
-                    blogPosts = data.posts;
-                    localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-                }
-                if (data.timeline) {
-                    timelinePosts = data.timeline;
-                    localStorage.setItem('timeline_posts_v3', JSON.stringify(timelinePosts));
-                }
-                renderPostList();
-            }
-        } catch(e) {
-            console.log("클라우드 블로그 데이터 로드 실패:", e);
-        }
-    }
-
-    async function saveCloudBlogData() {
-        localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-        localStorage.setItem('timeline_posts_v3', JSON.stringify(timelinePosts));
-        if (!db) return;
-        try {
-            await db.collection("system_data").doc("blog_sync_data").set({
-                posts: blogPosts,
-                timeline: timelinePosts
-            });
-        } catch(e) {
-            console.log("클라우드 블로그 데이터 저장 실패:", e);
-        }
-    }
 
     let editorColors = {
         text: '#191919',
@@ -537,94 +279,15 @@
 
     const editor = document.getElementById('writeContent');
 
-    if (editor) {
-        editor.addEventListener('mouseup', saveSelection);
-        editor.addEventListener('keyup', saveSelection);
-        editor.addEventListener('touchend', saveSelection);
-        
-        editor.addEventListener('click', function(e) {
-            const toolbar = document.getElementById('imgResizeToolbar');
-            if (e.target.tagName === 'IMG') {
-                selectedImage = e.target;
-                
-                editor.querySelectorAll('img').forEach(img => img.classList.remove('selected'));
-                selectedImage.classList.add('selected');
-
-                const rect = selectedImage.getBoundingClientRect();
-                toolbar.style.display = 'flex';
-                toolbar.style.top = (rect.top + window.scrollY - 35) + 'px';
-                toolbar.style.left = (rect.left + window.scrollX) + 'px';
-                e.stopPropagation();
-            } else {
-                if (toolbar && !toolbar.contains(e.target)) {
-                    toolbar.style.display = 'none';
-                    if (selectedImage) {
-                        selectedImage.classList.remove('selected');
-                        selectedImage = null;
-                    }
-                }
-            }
-        });
-    }
-
-    function adjustImageSize(deltaPercent) {
-        if (!selectedImage) return;
-        let currentWidth = selectedImage.clientWidth;
-        if (!currentWidth) currentWidth = selectedImage.naturalWidth || 300;
-        
-        let newWidth = currentWidth * (1 + deltaPercent);
-        if (newWidth < 50) newWidth = 50;
-
-        selectedImage.style.width = newWidth + 'px';
-        selectedImage.style.maxWidth = 'none';
-        saveUndoState();
-        document.getElementById('imgResizeToolbar').style.display = 'none';
-    }
-
-    function resetImageSize() {
-        if (!selectedImage) return;
-        selectedImage.style.width = '';
-        selectedImage.style.maxWidth = '100%';
-        saveUndoState();
-        document.getElementById('imgResizeToolbar').style.display = 'none';
-    }
-
-    function deleteSelectedImage() {
-        if (!selectedImage) return;
-        selectedImage.remove();
-        selectedImage = null;
-        document.getElementById('imgResizeToolbar').style.display = 'none';
-        saveUndoState();
-    }
-
-    function insertImageUrl() {
-        if (!editor) return;
-        editor.focus();
-        restoreSelection();
-
-        const imgUrl = prompt("연결할 이미지 주소(URL)를 입력하세요:", "https://");
-        if (!imgUrl) return;
-
-        const img = document.createElement('img');
-        img.src = imgUrl;
-        img.className = 'img-preview';
-
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0 && editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
-            const range = selection.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(img);
-        } else {
-            editor.appendChild(img);
-        }
-        saveUndoState();
-    }
+    editor.addEventListener('mouseup', saveSelection);
+    editor.addEventListener('keyup', saveSelection);
+    editor.addEventListener('touchend', saveSelection);
 
     function saveSelection() {
         const sel = window.getSelection();
         if (sel.rangeCount > 0) {
             const range = sel.getRangeAt(0);
-            if (editor && editor.contains(range.commonAncestorContainer)) {
+            if (editor.contains(range.commonAncestorContainer)) {
                 savedRange = range.cloneRange();
             }
         }
@@ -639,7 +302,6 @@
     }
 
     function saveUndoState() {
-        if (!editor) return;
         const current = editor.innerHTML;
         if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== current) {
             undoStack.push(current);
@@ -648,7 +310,6 @@
     }
 
     function applyFormat(command, value = null) {
-        if (!editor) return;
         editor.focus();
         restoreSelection();
         document.execCommand(command, false, value);
@@ -656,111 +317,76 @@
         saveUndoState();
     }
 
-    function toggleColorPopup(type, btn) {
-        closeColorPopups();
-        const popup = document.getElementById(type + 'ColorPopup');
-        if (popup) {
-            popup.classList.toggle('show');
-        }
-    }
+    function applyCustomFontSize(sizeVal) {
+        editor.focus();
+        restoreSelection();
+        const sel = window.getSelection();
+        if (!sel.rangeCount || sel.isCollapsed) return;
 
-    function closeColorPopups() {
-        document.querySelectorAll('.color-popup').forEach(p => p.classList.remove('show'));
-    }
-
-    function selectPopupColor(type, colorHex) {
-        editorColors[type] = colorHex;
+        const range = sel.getRangeAt(0);
+        const span = document.createElement('span');
+        span.style.fontSize = sizeVal;
+        span.appendChild(range.extractContents());
+        range.insertNode(span);
         
-        const previewEl = document.getElementById(type + 'ColorPreview');
-        const currentEl = document.getElementById(type + 'CurrentColor');
-        const hexEl = document.getElementById(type + 'CurrentHex');
-
-        if (previewEl) previewEl.style.background = colorHex;
-        if (currentEl) currentEl.style.background = colorHex;
-        if (hexEl) hexEl.innerText = colorHex.toUpperCase();
-
-        if (type === 'text') {
-            applyTextColor(colorHex);
-        } else if (type === 'hilite') {
-            applyHiliteColor(colorHex);
-        }
-        closeColorPopups();
+        saveSelection();
+        saveUndoState();
     }
 
-    function openNativeColor(type) {
-        closeColorPopups();
-        const nativeInput = document.getElementById('native' + type.charAt(0).toUpperCase() + type.slice(1) + 'Color');
-        if (nativeInput) nativeInput.click();
-    }
+    // 색상 적용 공통 함수
+    // onmousedown 순서: saveSelection() → preventDefault() → 이 함수 호출
+    // savedRange에 이미 선택 영역이 들어 있으므로 거기서 바로 적용
+    function applyColorToRange(styleProp, colorValue) {
+        if (!savedRange || savedRange.collapsed) return;
 
-    function onNativeColorChange(type, colorHex) {
-        editorColors[type] = colorHex;
-        
-        const previewEl = document.getElementById(type + 'ColorPreview');
-        const currentEl = document.getElementById(type + 'CurrentColor');
-        const hexEl = document.getElementById(type + 'CurrentHex');
+        // savedRange로 selection 복원
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+        editor.focus();
 
-        if (previewEl) previewEl.style.background = colorHex;
-        if (currentEl) currentEl.style.background = colorHex;
-        if (hexEl) hexEl.innerText = colorHex.toUpperCase();
+        const range = sel.getRangeAt(0);
+        if (!range || range.collapsed) return;
 
-        if (type === 'text') {
-            applyTextColor(colorHex);
-        } else if (type === 'hilite') {
-            applyHiliteColor(colorHex);
-        }
+        const span = document.createElement('span');
+        span.style[styleProp] = colorValue;
+
+        const contents = range.extractContents();
+
+        // 기존 같은 속성 span 제거 (중첩 방지)
+        contents.querySelectorAll('span[style]').forEach(sp => {
+            sp.style[styleProp] = '';
+            const s = (sp.getAttribute('style') || '').replace(/[\s;]/g, '');
+            if (s === '') {
+                const p = sp.parentNode;
+                while (sp.firstChild) p.insertBefore(sp.firstChild, sp);
+                p.removeChild(sp);
+            }
+        });
+
+        span.appendChild(contents);
+        range.insertNode(span);
+
+        // 커서를 span 끝으로
+        const after = document.createRange();
+        after.setStartAfter(span);
+        after.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(after);
+        savedRange = after.cloneRange();
+
+        saveUndoState();
     }
 
     function applyTextColor(colorValue) {
-        if (!editor) return;
-        editor.focus();
-        restoreSelection();
-        const sel = window.getSelection();
-        if (!sel.rangeCount || sel.isCollapsed) return;
-
-        const range = sel.getRangeAt(0);
-        let container = range.commonAncestorContainer;
-        if (container.nodeType === Node.TEXT_NODE) container = container.parentNode;
-
-        if (container && container.tagName === 'SPAN' && container !== editor) {
-            container.style.color = colorValue;
-        } else {
-            const span = document.createElement('span');
-            span.style.color = colorValue;
-            span.appendChild(range.extractContents());
-            range.insertNode(span);
-        }
-        
-        saveSelection();
-        saveUndoState();
+        applyColorToRange('color', colorValue);
     }
 
     function applyHiliteColor(colorValue) {
-        if (!editor) return;
-        editor.focus();
-        restoreSelection();
-        const sel = window.getSelection();
-        if (!sel.rangeCount || sel.isCollapsed) return;
-
-        const range = sel.getRangeAt(0);
-        let container = range.commonAncestorContainer;
-        if (container.nodeType === Node.TEXT_NODE) container = container.parentNode;
-
-        if (container && container.tagName === 'SPAN' && container !== editor) {
-            container.style.backgroundColor = colorValue;
-        } else {
-            const span = document.createElement('span');
-            span.style.backgroundColor = colorValue;
-            span.appendChild(range.extractContents());
-            range.insertNode(span);
-        }
-        
-        saveSelection();
-        saveUndoState();
+        applyColorToRange('backgroundColor', colorValue);
     }
 
     function removeHighlight() {
-        if (!editor) return;
         editor.focus();
         restoreSelection();
         const sel = window.getSelection();
@@ -776,7 +402,7 @@
         spans.forEach(span => {
             if (sel.containsNode(span, true) && !span.classList.contains('tag-badge')) {
                 span.style.backgroundColor = '';
-                if (!span.style.color && !span.style.fontWeight && !span.style.border) {
+                if (!span.style.color && !span.style.fontWeight && !span.style.border && !span.style.fontSize) {
                     const parent = span.parentNode;
                     while (span.firstChild) {
                         parent.insertBefore(span.firstChild, span);
@@ -790,45 +416,28 @@
             container.style.backgroundColor = '';
         }
 
-        closeColorPopups();
         saveSelection();
         saveUndoState();
     }
 
-    if (editor) {
-        editor.addEventListener('input', () => {
-            saveSelection();
-            saveUndoState();
-        });
-    }
+    editor.addEventListener('input', () => {
+        saveSelection();
+        saveUndoState();
+    });
 
     document.addEventListener('keydown', (e) => {
-        const viewWrite = document.getElementById('viewWrite');
-        if(e.ctrlKey && e.key.toLowerCase() === 'z' && viewWrite && viewWrite.style.display !== 'none') {
-            if(undoStack.length <= 1) return;
-            e.preventDefault();
-            undoStack.pop();
-            if (editor) {
+        if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+            const activeWriteTab = document.getElementById('viewWrite');
+            if (activeWriteTab && activeWriteTab.style.display !== 'none' && undoStack.length > 1) {
+                e.preventDefault();
+                undoStack.pop();
                 editor.innerHTML = undoStack[undoStack.length - 1];
-                const range = document.createRange();
-                range.selectNodeContents(editor);
-                range.collapse(false);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
                 saveSelection();
             }
         }
     });
 
-    document.addEventListener('mousedown', function(event) {
-        if (!event.target.closest('.editor-color-wrap') && !event.target.closest('#imgResizeToolbar')) {
-            closeColorPopups();
-        }
-    });
-
     function setupPasteImage(element) {
-        if (!element) return;
         element.addEventListener('paste', function(e) {
             const items = e.clipboardData.items;
             for (let i = 0; i < items.length; i++) {
@@ -844,15 +453,10 @@
                             const range = selection.getRangeAt(0);
                             range.deleteContents();
                             range.insertNode(img);
-                            const newRange = document.createRange();
-                            newRange.setStartAfter(img);
-                            newRange.collapse(true);
-                            selection.removeAllRanges();
-                            selection.addRange(newRange);
                         } else {
                             element.appendChild(img);
                         }
-                        if(element === editor) {
+                        if (element === editor) {
                             saveUndoState();
                         }
                     };
@@ -889,7 +493,6 @@
     }
 
     function convertPostBadgesInEditor() {
-        if (!editor) return;
         editor.focus();
         restoreSelection();
         const tagMap = {
@@ -943,7 +546,6 @@
     });
 
     function applyBoxColor() {
-        if (!editor) return;
         editor.focus();
         restoreSelection();
         const sel = window.getSelection();
@@ -966,17 +568,12 @@
     }
 
     function switchBlogTab(tab) {
-        const vList = document.getElementById('viewList');
-        const vNotice = document.getElementById('viewNotice');
-        const vListHeader = document.getElementById('viewListHeader');
-        const vWrite = document.getElementById('viewWrite');
-        const vDetail = document.getElementById('viewDetail');
-
-        if (vList) vList.style.display = tab === 'list' ? 'block' : 'none';
-        if (vNotice) vNotice.style.display = tab === 'notice' ? 'flex' : 'none';
-        if (vListHeader) vListHeader.style.display = (tab === 'list' || tab === 'notice') ? 'flex' : 'none';
-        if (vWrite) vWrite.style.display = tab === 'write' ? 'block' : 'none';
-        if (vDetail) vDetail.style.display = tab === 'detail' ? 'block' : 'none';
+        document.getElementById('viewList').style.display = tab === 'list' ? 'block' : 'none';
+        const noticeContainer = document.getElementById('viewNotice');
+        if (noticeContainer) noticeContainer.style.display = tab === 'notice' ? 'flex' : 'none';
+        document.getElementById('viewListHeader').style.display = (tab === 'list' || tab === 'notice') ? 'flex' : 'none';
+        document.getElementById('viewWrite').style.display = tab === 'write' ? 'block' : 'none';
+        document.getElementById('viewDetail').style.display = tab === 'detail' ? 'block' : 'none';
         
         window.scrollTo(0, 0);
 
@@ -1032,13 +629,11 @@
         });
 
         const subBar = document.getElementById('subCatBar');
-        if (!subBar) return;
-
         if (subCategories[cat]) {
             subBar.style.display = 'flex';
-            let subHtml = `<button type="button" class="sub-filter-btn active" data-sub="전체" onclick="filterBySub('전체')">전체(${cat.toUpperCase()})</button>`;
+            let subHtml = `<button class="sub-filter-btn active" data-sub="전체" onclick="filterBySub('전체')">전체(${cat.toUpperCase()})</button>`;
             subCategories[cat].forEach(sub => {
-                subHtml += `<button type="button" class="sub-filter-btn" data-sub="${sub}" onclick="filterBySub('${sub}')">${sub}</button>`;
+                subHtml += `<button class="sub-filter-btn" data-sub="${sub}" onclick="filterBySub('${sub}')">${sub}</button>`;
             });
             subBar.innerHTML = subHtml;
         } else {
@@ -1066,14 +661,13 @@
         const post = blogPosts.find(p => p.id === id);
         if (post) {
             post.isPinned = !post.isPinned;
-            saveCloudBlogData();
+            localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
             renderPostList();
         }
     }
 
     function renderPostList() {
         const container = document.getElementById('viewList');
-        if (!container) return;
         container.innerHTML = '';
 
         let matchedNotices = [];
@@ -1242,18 +836,17 @@
     }
 
     function saveNoticePost() {
-        const noticeWriteContent = document.getElementById('noticeWriteContent');
-        if (!noticeWriteContent) return;
-        const content = noticeWriteContent.value.trim();
+        const content = document.getElementById('noticeWriteContent').value.trim();
         if(!content) { alert('내용을 입력해주세요.'); return; }
 
         const newPostId = Date.now();
         const newPost = { id: newPostId, content: content, createdAt: new Date().toISOString() };
         timelinePosts.unshift(newPost);
-        saveCloudBlogData();
+        localStorage.setItem('timeline_posts_v3', JSON.stringify(timelinePosts));
 
-        noticeWriteContent.value = '';
+        document.getElementById('noticeWriteContent').value = '';
         renderNoticeFeed();
+        alert('공지가 저장되었습니다!');
     }
 
     function renderNoticeFeed() {
@@ -1279,7 +872,7 @@
                     <div class="notice-timeline-content">${escapeHTML(entry.content).replace(/\n/g, '<br>')}</div>
                     <div class="notice-timeline-footer">
                         <span>${entry.date}</span>
-                        <button type="button" class="notice-delete-date-btn" onclick="removeNoticePost(${entry.postId})" title="전체 삭제">×</button>
+                        <button class="notice-delete-date-btn" onclick="removeNoticePost(${entry.postId})" title="전체 삭제">×</button>
                     </div>
                 </div>
             </div>
@@ -1288,40 +881,33 @@
 
     function removeNoticePost(id) {
         timelinePosts = timelinePosts.filter(p => p.id !== id);
-        saveCloudBlogData();
+        localStorage.setItem('timeline_posts_v3', JSON.stringify(timelinePosts));
         renderNoticeFeed();
     }
 
     function openWriteMode(id) {
         editingPostId = id;
-        const writeTitle = document.getElementById('writeTitle');
-        const writeCategory = document.getElementById('writeCategory');
-
         if (id) {
             const post = blogPosts.find(p => p.id === id);
             if (post) {
-                if (writeTitle) writeTitle.value = post.title || '';
-                if (writeCategory) writeCategory.value = post.category || '기타';
-                if (editor) editor.innerHTML = post.content || '';
+                document.getElementById('writeTitle').value = post.title || '';
+                document.getElementById('writeCategory').value = post.category || '기타';
+                editor.innerHTML = post.content || '';
             }
         } else {
-            if (writeTitle) writeTitle.value = '';
-            if (editor) editor.innerHTML = '';
-            if (currentCategoryFilter !== '전체' && currentCategoryFilter !== '공지' && writeCategory) {
-                writeCategory.value = currentSubFilter !== '전체' ? currentSubFilter : currentCategoryFilter;
+            document.getElementById('writeTitle').value = '';
+            editor.innerHTML = '';
+            if (currentCategoryFilter !== '전체' && currentCategoryFilter !== '공지') {
+                document.getElementById('writeCategory').value = currentSubFilter !== '전체' ? currentSubFilter : currentCategoryFilter;
             }
         }
-        undoStack = editor ? [editor.innerHTML] : [];
+        undoStack = [editor.innerHTML];
         switchBlogTab('write');
     }
 
     function savePostData() {
-        const writeTitle = document.getElementById('writeTitle');
-        const writeCategory = document.getElementById('writeCategory');
-        if (!writeTitle || !writeCategory || !editor) return;
-
-        const title = writeTitle.value.trim();
-        const category = writeCategory.value;
+        const title = document.getElementById('writeTitle').value.trim();
+        const category = document.getElementById('writeCategory').value;
         const content = editor.innerHTML.trim();
 
         if (!title || !content) {
@@ -1338,7 +924,7 @@
         } else {
             blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: todayFormatted, comments: [], isPinned: false });
         }
-        saveCloudBlogData();
+        localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
         editingPostId = null;
         switchBlogTab('list');
     }
@@ -1348,46 +934,44 @@
         if(!p) return;
         
         const comments = p.comments || [];
-        const detailContainer = document.getElementById('postDetailContainer');
-        if (!detailContainer) return;
 
-        detailContainer.innerHTML = `
-            <div class="detail-top-bar">
-                <button type="button" class="btn-main btn-main-slate" onclick="switchBlogTab('list')">목록</button>
-                <div class="detail-action-group">
-                    <button type="button" class="btn-main btn-main-sky" onclick="openWriteMode('${p.id}')">수정</button>
-                    <button type="button" class="btn-main btn-main-red" onclick="deletePost('${p.id}')">삭제</button>
+        document.getElementById('postDetailContainer').innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                <button class="btn-main" style="background:#475569; color:white;" onclick="switchBlogTab('list')">목록</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-main" style="background:#0284c7; color:#0f172a;" onclick="openWriteMode('${p.id}')">수정</button>
+                    <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">삭제</button>
                 </div>
             </div>
 
-            <h2 class="detail-title-head">${escapeHTML(p.title)}</h2>
-            <small class="detail-meta-small">카테고리: ${p.category} | 작성일: ${p.date}</small>
+            <h2 style="color:white; margin-bottom:4px;">${escapeHTML(p.title)}</h2>
+            <small style="color:var(--text-sub);">카테고리: ${p.category} | 작성일: ${p.date}</small>
             
             <div class="detail-content-box">${p.content}</div>
             
             <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
-            <h4 class="comment-heading">댓글 (${comments.length})</h4>
+            <h4 style="color:white;">댓글 (${comments.length})</h4>
             <div style="margin:10px 0;" id="commentListContainer">
-                ${comments.length === 0 ? '<p class="comment-list-empty">댓글이 없습니다.</p>' : ''}
+                ${comments.length === 0 ? '<p style="font-size:0.8rem; color:#888;">댓글이 없습니다.</p>' : ''}
                 ${comments.map((c, index) => `
                     <div class="comment-item" id="comment-${p.id}-${index}">
                         <div id="comment-text-${p.id}-${index}">${sanitizeHTML(c.text)}</div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                             <span class="comment-date">🕒 ${c.date}</span>
                             <div style="display:flex; gap:4px;">
-                                <button type="button" class="btn-main btn-main-sky" style="padding:2px 6px; font-size:0.65rem;" onclick="editComment('${p.id}', ${index})">수정</button>
-                                <button type="button" class="btn-main btn-main-red" style="padding:2px 6px; font-size:0.65rem;" onclick="deleteComment('${p.id}', ${index})">삭제</button>
+                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#0284c7; color:#0f172a;" onclick="editComment('${p.id}', ${index})">수정</button>
+                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#f87171; color:#0f172a;" onclick="deleteComment('${p.id}', ${index})">삭제</button>
                             </div>
                         </div>
                     </div>
                 `).join('')}
             </div>
             
-            <div class="comment-box-wrap">
-                <div id="commentInputDiv" class="editor-area comment-input-area" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
-                <div class="comment-footer-row">
-                    <span class="comment-tip">💡 댓글 사진 Ctrl+V 가능</span>
-                    <button type="button" class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="addComment('${p.id}')">댓글등록</button>
+            <div style="display:flex; flex-direction:column; gap:6px; border:1px solid var(--border); padding:8px; border-radius:6px; background:#1e293b; margin-top:15px;">
+                <div id="commentInputDiv" class="editor-area" style="min-height:45px; padding:6px; background:#f8fafc; color:#191919;" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:4px;">
+                    <span style="font-size:0.7rem; color:#94a3b8;">💡 댓글 사진 Ctrl+V 가능</span>
+                    <button class="btn-main" style="padding:4px 10px; font-size:0.75rem;" onclick="addComment('${p.id}')">댓글등록</button>
                 </div>
             </div>
         `;
@@ -1397,26 +981,24 @@
 
     function addComment(id) {
         const div = document.getElementById('commentInputDiv');
-        if (!div) return;
         const text = div.innerHTML.trim();
         if(!text) return;
         const post = blogPosts.find(p => p.id === id);
         if (!post.comments) post.comments = [];
         post.comments.push({ date: new Date().toLocaleString(), text });
-        saveCloudBlogData();
+        localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
         openPostDetail(id);
     }
 
     function editComment(postId, commentIndex) {
         const textDiv = document.getElementById(`comment-text-${postId}-${commentIndex}`);
-        if (!textDiv) return;
         const currentContent = textDiv.innerHTML;
         
         textDiv.innerHTML = `
             <div contenteditable="true" id="editCommentBox-${postId}-${commentIndex}" style="background:#f8fafc; color:#191919; padding:6px; border-radius:4px; min-height:35px; outline:none;">${currentContent}</div>
             <div style="display:flex; justify-content:flex-end; gap:4px; margin-top:4px;">
-                <button type="button" class="btn-main btn-main-slate" style="padding:2px 8px; font-size:0.65rem;" onclick="openPostDetail('${postId}')">취소</button>
-                <button type="button" class="btn-main btn-main-sky" style="padding:2px 8px; font-size:0.65rem;" onclick="saveEditedComment('${postId}', ${commentIndex})">저장</button>
+                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#475569; color:white;" onclick="openPostDetail('${postId}')">취소</button>
+                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#38bdf8; color:#0f172a;" onclick="saveEditedComment('${postId}', ${commentIndex})">저장</button>
             </div>
         `;
         setupPasteImage(document.getElementById(`editCommentBox-${postId}-${commentIndex}`));
@@ -1424,34 +1006,37 @@
 
     function saveEditedComment(postId, commentIndex) {
         const editBox = document.getElementById(`editCommentBox-${postId}-${commentIndex}`);
-        if (!editBox) return;
         const newText = editBox.innerHTML.trim();
         if(!newText) return;
 
         const post = blogPosts.find(p => p.id === postId);
         if(post && post.comments && post.comments[commentIndex]) {
             post.comments[commentIndex].text = newText;
-            saveCloudBlogData();
+            localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
             openPostDetail(postId);
         }
     }
 
     function deleteComment(postId, commentIndex) {
-        const post = blogPosts.find(p => p.id === postId);
-        if(post && post.comments) {
-            post.comments.splice(commentIndex, 1);
-            saveCloudBlogData();
-            openPostDetail(postId);
+        if(confirm("댓글을 삭제하시겠습니까?")) {
+            const post = blogPosts.find(p => p.id === postId);
+            if(post && post.comments) {
+                post.comments.splice(commentIndex, 1);
+                localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+                openPostDetail(postId);
+            }
         }
     }
 
     function deletePost(id) {
-        blogPosts = blogPosts.filter(p => p.id !== id);
-        saveCloudBlogData();
-        switchBlogTab('list');
+        if(confirm("정말 삭제하시겠습니까?")) {
+            blogPosts = blogPosts.filter(p => p.id !== id);
+            localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+            switchBlogTab('list');
+        }
     }
 
-    loadCloudBlogData();
+    renderPostList();
 </script>
 </body>
 </html>
