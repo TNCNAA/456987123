@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미니 블로그 시스템 (오류 수정완료 통합본)</title>
+    <title>미니 블로그</title>
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -215,19 +215,17 @@
                 <button type="button" class="tool-btn" onclick="applyFormat('underline')"><u>U</u></button>
                 
                 <span>크기:</span>
-                <select id="fontSizeSelect" onchange="applyCustomFontSize(this.value)" style="padding:4px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white; font-size:0.8rem;">
-                    <option value="4px">4</option>
-                    <option value="6px">6</option>
-                    <option value="8px">8</option>
-                    <option value="10px">10</option>
-                    <option value="12px">12</option>
-                    <option value="14px">14</option>
-                    <option value="16px" selected>16 (기본)</option>
-                    <option value="18px">18</option>
-                    <option value="20px">20</option>
+                <select id="fontSizeSelect" onchange="applyFormat('fontSize', this.value)" style="padding:4px; border:1px solid var(--border); border-radius:4px; background:#1e293b; color:white; font-size:0.8rem;">
+                    <option value="1">4</option>
+                    <option value="2">6</option>
+                    <option value="3" selected>8 (기본)</option>
+                    <option value="4">10</option>
+                    <option value="5">12</option>
+                    <option value="6">16</option>
+                    <option value="7">20</option>
                 </select>
 
-                <!-- 글자색 인라인 버튼 (onmousedown으로 selection 보존) -->
+                <!-- 글자색 인라인 버튼 -->
                 <span style="font-size:0.75rem;color:var(--text-sub);">A색:</span>
                 <button type="button" class="color-dot-btn" style="background:#191919;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#191919')" title="검정"></button>
                 <button type="button" class="color-dot-btn" style="background:#ef4444;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#ef4444')" title="빨강"></button>
@@ -254,7 +252,7 @@
             </div>
         </div>
 
-        <div id="writeContent" class="editor-area" contenteditable="true" placeholder="내용을 입력하세요..."></div>
+        <div id="writeContent" class="editor-area" contenteditable="true" spellcheck="false" placeholder="내용을 입력하세요..."></div>
     </div>
 
     <!-- 3. 상세 보기 화면 -->
@@ -264,6 +262,24 @@
 </div>
 
 <script>
+    // ===== Firebase 클라우드 연동 설정 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류 발생:", e);
+    }
+
     let blogPosts = JSON.parse(localStorage.getItem('my_blog_posts_final_v10')) || [];
     let timelinePosts = JSON.parse(localStorage.getItem('timeline_posts_v3')) || [];
     let currentCategoryFilter = '전체';
@@ -317,29 +333,9 @@
         saveUndoState();
     }
 
-    function applyCustomFontSize(sizeVal) {
-        editor.focus();
-        restoreSelection();
-        const sel = window.getSelection();
-        if (!sel.rangeCount || sel.isCollapsed) return;
-
-        const range = sel.getRangeAt(0);
-        const span = document.createElement('span');
-        span.style.fontSize = sizeVal;
-        span.appendChild(range.extractContents());
-        range.insertNode(span);
-        
-        saveSelection();
-        saveUndoState();
-    }
-
-    // 색상 적용 공통 함수
-    // onmousedown 순서: saveSelection() → preventDefault() → 이 함수 호출
-    // savedRange에 이미 선택 영역이 들어 있으므로 거기서 바로 적용
     function applyColorToRange(styleProp, colorValue) {
         if (!savedRange || savedRange.collapsed) return;
 
-        // savedRange로 selection 복원
         const sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(savedRange);
@@ -353,7 +349,6 @@
 
         const contents = range.extractContents();
 
-        // 기존 같은 속성 span 제거 (중첩 방지)
         contents.querySelectorAll('span[style]').forEach(sp => {
             sp.style[styleProp] = '';
             const s = (sp.getAttribute('style') || '').replace(/[\s;]/g, '');
@@ -367,7 +362,6 @@
         span.appendChild(contents);
         range.insertNode(span);
 
-        // 커서를 span 끝으로
         const after = document.createRange();
         after.setStartAfter(span);
         after.collapse(true);
@@ -662,6 +656,12 @@
         if (post) {
             post.isPinned = !post.isPinned;
             localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+            
+            // 파이어스토어에 고정 상태 동기화
+            if (db) {
+                db.collection("blog_posts").doc(String(id)).update({ isPinned: post.isPinned })
+                  .catch(err => console.error("고정 상태 동기화 실패:", err));
+            }
             renderPostList();
         }
     }
@@ -905,6 +905,7 @@
         switchBlogTab('write');
     }
 
+    // ✨ [파이어베이스 동기화 반영] 글 저장 함수
     function savePostData() {
         const title = document.getElementById('writeTitle').value.trim();
         const category = document.getElementById('writeCategory').value;
@@ -918,13 +919,29 @@
         const d = new Date();
         const todayFormatted = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
 
+        let postObj;
         if (editingPostId) {
             const post = blogPosts.find(p => p.id === editingPostId);
-            if (post) { post.title = title; post.category = category; post.content = content; }
+            if (post) { 
+                post.title = title; 
+                post.category = category; 
+                post.content = content; 
+                postObj = post; 
+            }
         } else {
-            blogPosts.unshift({ id: 'post_'+Date.now(), category, title, content, date: todayFormatted, comments: [], isPinned: false });
+            postObj = { id: 'post_'+Date.now(), category, title, content, date: todayFormatted, comments: [], isPinned: false };
+            blogPosts.unshift(postObj);
         }
+
+        // 로컬스토리지 저장
         localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+
+        // 파이어스토어 클라우드 저장
+        if (db) {
+            db.collection("blog_posts").doc(String(postObj.id)).set(postObj)
+              .catch(err => console.error("클라우드 저장 실패:", err));
+        }
+
         editingPostId = null;
         switchBlogTab('list');
     }
@@ -987,6 +1004,12 @@
         if (!post.comments) post.comments = [];
         post.comments.push({ date: new Date().toLocaleString(), text });
         localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+
+        if (db) {
+            db.collection("blog_posts").doc(String(id)).update({ comments: post.comments })
+              .catch(err => console.error("댓글 동기화 실패:", err));
+        }
+
         openPostDetail(id);
     }
 
@@ -1013,30 +1036,69 @@
         if(post && post.comments && post.comments[commentIndex]) {
             post.comments[commentIndex].text = newText;
             localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+
+            if (db) {
+                db.collection("blog_posts").doc(String(postId)).update({ comments: post.comments })
+                  .catch(err => console.error("댓글 수정 동기화 실패:", err));
+            }
+
             openPostDetail(postId);
         }
     }
 
     function deleteComment(postId, commentIndex) {
-        if(confirm("댓글을 삭제하시겠습니까?")) {
-            const post = blogPosts.find(p => p.id === postId);
-            if(post && post.comments) {
-                post.comments.splice(commentIndex, 1);
-                localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-                openPostDetail(postId);
+        const post = blogPosts.find(p => p.id === postId);
+        if(post && post.comments) {
+            post.comments.splice(commentIndex, 1);
+            localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+
+            if (db) {
+                db.collection("blog_posts").doc(String(postId)).update({ comments: post.comments })
+                  .catch(err => console.error("댓글 삭제 동기화 실패:", err));
             }
+
+            openPostDetail(postId);
         }
     }
 
+    // ✨ [파이어베이스 동기화 반영] 글 삭제 함수
     function deletePost(id) {
         if(confirm("정말 삭제하시겠습니까?")) {
             blogPosts = blogPosts.filter(p => p.id !== id);
             localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+
+            if (db) {
+                db.collection("blog_posts").doc(String(id)).delete()
+                  .catch(err => console.error("클라우드 삭제 실패:", err));
+            }
+
             switchBlogTab('list');
         }
     }
 
-    renderPostList();
+    // ✨ [파이어베이스 동기화 반영] 앱 실행 시 클라우드에서 최신 글 불러오기
+    async function initBlogData() {
+        if (db) {
+            try {
+                const snapshot = await db.collection("blog_posts").get();
+                if (!snapshot.empty) {
+                    let cloudPosts = [];
+                    snapshot.forEach(doc => {
+                        cloudPosts.push(doc.data());
+                    });
+                    cloudPosts.sort((a, b) => (a.isPinned === b.isPinned ? new Date(b.date) - new Date(a.date) : a.isPinned ? -1 : 1));
+                    blogPosts = cloudPosts;
+                    localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
+                }
+            } catch (e) {
+                console.log("클라우드 데이터 로드 실패, 로컬 데이터 사용:", e);
+            }
+        }
+        renderPostList();
+    }
+
+    // 앱 시작 시 클라우드 연동 초기화 실행
+    initBlogData();
 </script>
 </body>
 </html>
