@@ -107,8 +107,17 @@
         .post-card.pinned .corner-pin { opacity: 1; }
 
         .post-detail-view { background: var(--bg); padding: 10px 0; }
-        .detail-content-box { background: #f8fafc; color: #191919; padding: 20px; border-radius: 8px; margin: 15px 0; line-height: 1.6; }
-
+.detail-content-box { 
+    background: #f8fafc; 
+    color: #191919; 
+    padding: 15px; 
+    border: 1px solid var(--border);
+    border-radius: 6px; 
+    margin: 15px 0; 
+    line-height: 1.6; 
+    font-size: 0.95rem;
+    white-space: pre-wrap; /* 👈 작성할 때의 줄바꿈과 공백을 똑같이 유지해 줌 */
+}
         .comment-item { background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; color: white; }
         .comment-date { font-size: 0.7rem; color: var(--text-sub); text-align: right; }
 
