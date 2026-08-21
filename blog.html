@@ -578,10 +578,11 @@
     const subCategories = {
         'NS': ['NS1', 'NS3', 'NS5'],
         'OS': ['OS1', 'OS2'],
+        'GS': ['D', 'E'],
         '병동': ['D', 'E', 'N']
     };
 
-    function checkKeywordMatch(text, category, subCategory) {
+   function checkKeywordMatch(text, category, subCategory) {
         if (!text) return false;
         const lowerText = text.toLowerCase();
         
@@ -593,6 +594,17 @@
             const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['os1', 'os2', 'os'];
             return targets.some(t => lowerText.includes(t));
         }
+        // 💡 [여기를 수정] GS 카테고리 소분류(D, E 등) 판별 로직 추가
+        if (category === 'GS') {
+            const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['d', 'e', 'gs'];
+            return targets.some(t => {
+                if (t === 'd' || t === 'e') {
+                    const regex = new RegExp(`(^|[^\\w가-힣])` + t + `([^\\w가-힣]|$)`, 'i');
+                    return regex.test(text);
+                }
+                return lowerText.includes(t);
+            });
+        }
         if (category === '병동') {
             const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['d', 'e', 'n', '병동'];
             return targets.some(t => {
@@ -602,9 +614,6 @@
                 }
                 return lowerText.includes(t);
             });
-        }
-        if (category === 'GS') {
-            return lowerText.includes('gs');
         }
         if (category === 'NR' || category === 'FM' || category === '임병' || category === '물치' || category === '영상') {
             return lowerText.includes(category.toLowerCase());
