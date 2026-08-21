@@ -657,7 +657,6 @@
             post.isPinned = !post.isPinned;
             localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
             
-            // 파이어스토어에 고정 상태 동기화
             if (db) {
                 db.collection("blog_posts").doc(String(id)).update({ isPinned: post.isPinned })
                   .catch(err => console.error("고정 상태 동기화 실패:", err));
@@ -1076,7 +1075,7 @@
         }
     }
 
-    // ✨ [파이어베이스 동기화 반영] 앱 실행 시 클라우드에서 최신 글 불러오기
+    // ✨ [파이어베이스 동기화 반영] 앱 실행 시 클라우드에서 최신 글 불러오기 (순서 보장형)
     async function initBlogData() {
         if (db) {
             try {
@@ -1097,7 +1096,7 @@
         renderPostList();
     }
 
-    // 앱 시작 시 클라우드 연동 초기화 실행
+    // 앱 시작 시 클라우드 데이터를 완전히 기다린 후 화면 렌더링 실행
     initBlogData();
 </script>
 </body>
