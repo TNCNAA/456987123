@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미니 블로그 (파이어베이스 동기화)</title>
+    <!-- Firebase SDK 로드 -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        .app-container {
+            width: 100%;
+            max-width: 760px;
+            height: 100vh;
+            max-height: 880px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .app-container { border-radius: 16px; }
+        }
+
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
+        .screen.active { display: flex; }
+
+        /* 상단 카테고리 가로 스크롤 탭 */
+        .category-bar {
+            display: flex;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #fff;
+        }
+        .category-tab {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            padding-bottom: 4px;
+            user-select: none;
+        }
+        .category-tab.active {
+            color: #03c75a;
+            font-weight: bold;
+            border-bottom: 2px solid #03c75a;
+        }
+
+        /* 게시판 리스트 영역 */
+        .list-area { flex: 1; padding: 16px 20px; overflow-y: auto; }
+        .board-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .board-table th { border-top: 1px solid #333; border-bottom: 1px solid #ddd; padding: 10px 8px; color: #444; background: #fafafa; text-align: left; }
+        .board-table td { border-bottom: 1px solid #f0f0f0; padding: 12px 8px; color: #333; }
+        .board-table tr:hover { background-color: #f9fbfd; cursor: pointer; }
+        .col-cat { width: 18%; color: #03c75a; font-weight: bold; }
+        .col-title { width: 57%; }
+        .col-date { width: 25%; color: #888; font-size: 13px; text-align: right; }
+
+        /* 하단 검색 및 작성 버튼 */
+        .list-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-top: 1px solid #eee;
+            background: #fff;
+        }
+        .search-input {
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            width: 220px;
+            outline: none;
+        }
+        .btn-write {
+            background: #03c75a;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 글쓰기 및 수정 화면 */
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .editor-header select { padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; outline: none; }
+        .editor-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .title-input { font-size: 20px; font-weight: bold; border: none; outline: none; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .content-box { flex: 1; outline: none; font-size: 15px; line-height: 1.6; min-height: 200px; }
+        .content-box img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+
+        /* 서식 및 하단 툴바 */
+        .toolbar-top { display: none; gap: 8px; padding: 8px 20px; background: #f8f9fa; border-top: 1px solid #eee; align-items: center; }
+        .toolbar-top button, .toolbar-top select { border: 1px solid #ddd; background: #fff; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+        .toolbar-bottom { display: flex; justify-content: space-around; padding: 12px 20px; border-top: 1px solid #eee; background: #fff; }
+        .toolbar-bottom button { background: none; border: none; font-size: 18px; cursor: pointer; }
+
+        /* 상세 조회 화면 */
+        .view-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #eee; }
+        .view-body { flex: 1; padding: 20px; overflow-y: auto; }
+        .view-meta { color: #888; font-size: 13px; margin: 8px 0 16px 0; }
+        .view-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
+        .btn-group { display: flex; gap: 8px; }
+        .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- 1. 메인 목록 화면 -->
+    <div id="listScreen" class="screen active">
+        <div class="category-bar" id="categoryBar">
+            <span class="category-tab active" onclick="setCategory('전체')">전체</span>
+            <span class="category-tab" onclick="setCategory('공지')">공지</span>
+            <span class="category-tab" onclick="setCategory('NS')">NS</span>
+            <span class="category-tab" onclick="setCategory('OS')">OS</span>
+            <span class="category-tab" onclick="setCategory('병동')">병동</span>
+            <span class="category-tab" onclick="setCategory('GS')">GS</span>
+            <span class="category-tab" onclick="setCategory('NR')">NR</span>
+            <span class="category-tab" onclick="setCategory('FM')">FM</span>
+        </div>
+
+        <div class="list-area">
+            <table class="board-table">
+                <thead>
+                    <tr>
+                        <th class="col-cat">카테고리</th>
+                        <th class="col-title">제목</th>
+                        <th class="col-date">작성일시</th>
+                    </tr>
+                </thead>
+                <tbody id="boardList"></tbody>
+            </table>
+        </div>
+
+        <div class="list-footer">
+            <input type="text" class="search-input" id="searchKeyword" placeholder="검색어 입력..." onkeyup="searchPosts()">
+            <button class="btn-write" onclick="openEditor()">글쓰기</button>
+        </div>
+    </div>
+
+    <!-- 2. 글 작성/수정 에디터 화면 -->
+    <div id="editorScreen" class="screen">
+        <header class="editor-header">
+            <span style="cursor:pointer; color:#666;" onclick="showScreen('listScreen')">취소</span>
+            <select id="editCategory">
+                <option value="공지">공지</option>
+                <option value="NS">NS</option>
+                <option value="OS">OS</option>
+                <option value="병동">병동</option>
+                <option value="GS">GS</option>
+                <option value="NR">NR</option>
+                <option value="FM">FM</option>
+            </select>
+            <button class="btn-write" onclick="savePost()">저장</button>
+        </header>
+
+        <main class="editor-body">
+            <input type="text" id="editTitle" class="title-input" placeholder="제목을 입력하세요">
+            <div id="editContent" class="content-box" contenteditable="true" placeholder="내용을 작성하세요..."></div>
+        </main>
+
+        <div id="textToolbar" class="toolbar-top">
+            <select onchange="document.execCommand('fontSize', false, this.value)">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+            <button onclick="document.execCommand('bold')"><b>B</b></button>
+            <input type="color" onchange="document.execCommand('foreColor', false, this.value)" title="글자색">
+            <input type="color" onchange="document.execCommand('backColor', false, this.value)" title="하이라이트">
+        </div>
+
+        <footer class="toolbar-bottom">
+            <button onclick="toggleToolbar()" title="서식">T</button>
+            <button onclick="document.getElementById('imageUploader').click()" title="사진 첨부">📷</button>
+            <button onclick="addLink()" title="링크">🔗</button>
+        </footer>
+        <input type="file" id="imageUploader" accept="image/*" style="display:none;" onchange="uploadImage(event)">
+    </div>
+
+    <!-- 3. 상세 조회 화면 -->
+    <div id="viewScreen" class="screen">
+        <header class="view-header">
+            <span style="cursor:pointer;" onclick="showScreen('listScreen')">← 뒤로가기</span>
+            <div class="btn-group">
+                <button class="btn-edit" onclick="startEditCurrent()">수정</button>
+                <button class="btn-delete" onclick="deleteCurrentPost()">삭제</button>
+            </div>
+        </header>
+        <div class="view-body">
+            <h2 id="viewTitle"></h2>
+            <div class="view-meta" id="viewMeta"></div>
+            <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
+            <div class="view-content" id="viewContent"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ===== Firebase 클라우드 연동 설정 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    } catch(e) {
+        console.log("Firebase 초기화 오류 발생:", e);
+    }
+
+    let posts = JSON.parse(localStorage.getItem('blog_memo_posts')) || [];
+    let currentCategory = '전체';
+    let currentViewingId = null;
+    let isEditing = false;
+
+    // 화면 전환 제어
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if (screenId === 'listScreen') renderList();
+    }
+
+    // 카테고리 필터링
+    function setCategory(cat) {
+        currentCategory = cat;
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.innerText === cat);
+        });
+        renderList();
+    }
+
+    // 목록 렌더링
+    function renderList(filteredData = null) {
+        const tbody = document.getElementById('boardList');
+        tbody.innerHTML = '';
+        
+        let data = filteredData || (currentCategory === '전체' ? posts : posts.filter(p => p.category === currentCategory));
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#999;">작성된 글/메모가 없습니다.</td></tr>`;
+            return;
+        }
+
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.onclick = () => openView(item.id);
+            tr.innerHTML = `
+                <td class="col-cat">[${item.category}]</td>
+                <td class="col-title">${item.title}</td>
+                <td class="col-date">${item.date}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 에디터 열기 (새 글 작성)
+    function openEditor() {
+        isEditing = false;
+        currentViewingId = null;
+        document.getElementById('editTitle').value = '';
+        document.getElementById('editContent').innerHTML = '';
+        showScreen('editorScreen');
+    }
+
+    // 사진 첨부 (로컬 파일 base64 변환 삽입)
+    function uploadImage(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.execCommand('insertImage', false, evt.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+        e.target.value = '';
+    }
+
+    // 저장 기능 (파이어스토어 동기화 포함)
+    function savePost() {
+        const title = document.getElementById('editTitle').value.trim();
+        const content = document.getElementById('editContent').innerHTML.trim();
+        const category = document.getElementById('editCategory').value;
+
+        if (!title) {
+            alert('제목을 입력해주세요.');
+            return;
+        }
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+        let postObj;
+        if (isEditing && currentViewingId) {
+            const idx = posts.findIndex(p => p.id === currentViewingId);
+            if (idx !== -1) {
+                posts[idx].title = title;
+                posts[idx].content = content;
+                posts[idx].category = category;
+                posts[idx].date = dateStr + ' (수정됨)';
+                postObj = posts[idx];
+            }
+        } else {
+            postObj = {
+                id: 'post_' + Date.now(),
+                category: category,
+                title: title,
+                content: content,
+                date: dateStr
+            };
+            posts.unshift(postObj);
+        }
+
+        // 로컬스토리지 저장
+        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+
+        // 파이어스토어 클라우드 저장
+        if (db) {
+            db.collection("mini_blog_posts").doc(String(postObj.id)).set(postObj)
+              .catch(err => console.error("클라우드 저장 실패:", err));
+        }
+
+        showScreen('listScreen');
+    }
+
+    // 글 상세 조회
+    function openView(id) {
+        currentViewingId = id;
+        const post = posts.find(p => p.id === id);
+        if (!post) return;
+
+        document.getElementById('viewTitle').innerText = post.title;
+        document.getElementById('viewMeta').innerText = `[${post.category}] · ${post.date}`;
+        document.getElementById('viewContent').innerHTML = post.content;
+        showScreen('viewScreen');
+    }
+
+    // 글 수정 모드 시작
+    function startEditCurrent() {
+        const post = posts.find(p => p.id === currentViewingId);
+        if (!post) return;
+
+        isEditing = true;
+        document.getElementById('editCategory').value = post.category;
+        document.getElementById('editTitle').value = post.title;
+        document.getElementById('editContent').innerHTML = post.content;
+        showScreen('editorScreen');
+    }
+
+    // 글 삭제 (파이어스토어 동기화 포함)
+    function deleteCurrentPost() {
+        if (confirm('정말 삭제하시겠습니까?')) {
+            posts = posts.filter(p => p.id !== currentViewingId);
+            localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+
+            if (db) {
+                db.collection("mini_blog_posts").doc(String(currentViewingId)).delete()
+                  .catch(err => console.error("클라우드 삭제 실패:", err));
+            }
+
+            showScreen('listScreen');
+        }
+    }
+
+    // 검색 기능
+    function searchPosts() {
+        const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+        const filtered = posts.filter(p => 
+            p.title.toLowerCase().includes(keyword) || 
+            p.content.toLowerCase().includes(keyword)
+        );
+        renderList(filtered);
+    }
+
+    // 서식 툴바 토글 및 링크 기능
+    function toggleToolbar() {
+        const bar = document.getElementById('textToolbar');
+        bar.style.display = bar.style.display === 'flex' ? 'none' : 'flex';
+    }
+    function addLink() {
+        const url = prompt('URL을 입력하세요:');
+        if (url) document.execCommand('createLink', false, url);
+    }
+
+    // 앱 실행 시 클라우드 데이터 불러오기
+    async function initBlogData() {
+        if (db) {
+            try {
+                const snapshot = await db.collection("mini_blog_posts").get();
+                if (!snapshot.empty) {
+                    let cloudPosts = [];
+                    snapshot.forEach(doc => {
+                        cloudPosts.push(doc.data());
+                    });
+                    // 최신순 정렬 (ID 뒷자리가 타임스탬프이므로 내림차순 정렬)
+                    cloudPosts.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+                    posts = cloudPosts;
+                    localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+                }
+            } catch (e) {
+                console.log("클라우드 데이터 로드 실패, 로컬 데이터 사용:", e);
+            }
+        }
+        renderList();
+    }
+
+    // 초기 실행
+    initBlogData();
+</script>
+
+</body>
+</html>
