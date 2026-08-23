@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미니 블로그 (파이어베이스 동기화)</title>
+    <title>미니 블로그 (파이어베이스 동기화 + 이미지 크기 조절)</title>
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -14,19 +14,24 @@
 
         .app-container {
             width: 100%;
-            max-width: 760px;
+            max-width: 100%;
             height: 100vh;
-            max-height: 880px;
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         @media (min-width: 768px) {
-            .app-container { border-radius: 16px; }
+            .app-container { 
+                max-width: 760px;
+                border-radius: 16px; 
+                height: 95vh;
+                max-height: 880px;
+                box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            }
+            body { background-color: #eef2f5; }
         }
 
         .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
@@ -50,9 +55,9 @@
             user-select: none;
         }
         .category-tab.active {
-            color: #03c75a;
+            color: #0253c7;
             font-weight: bold;
-            border-bottom: 2px solid #03c75a;
+            border-bottom: 2px solid #0253c7;
         }
 
         /* 게시판 리스트 영역 */
@@ -61,7 +66,7 @@
         .board-table th { border-top: 1px solid #333; border-bottom: 1px solid #ddd; padding: 10px 8px; color: #444; background: #fafafa; text-align: left; }
         .board-table td { border-bottom: 1px solid #f0f0f0; padding: 12px 8px; color: #333; }
         .board-table tr:hover { background-color: #f9fbfd; cursor: pointer; }
-        .col-cat { width: 18%; color: #03c75a; font-weight: bold; }
+        .col-cat { width: 18%; color: #0253c7; font-weight: bold; }
         .col-title { width: 57%; }
         .col-date { width: 25%; color: #888; font-size: 13px; text-align: right; }
 
@@ -83,7 +88,7 @@
             outline: none;
         }
         .btn-write {
-            background: #03c75a;
+            background: #0253c7;
             color: white;
             border: none;
             padding: 8px 18px;
@@ -102,10 +107,36 @@
             border-bottom: 1px solid #eee;
         }
         .editor-header select { padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; outline: none; }
-        .editor-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .editor-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; position: relative; }
         .title-input { font-size: 20px; font-weight: bold; border: none; outline: none; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .content-box { flex: 1; outline: none; font-size: 15px; line-height: 1.6; min-height: 200px; }
-        .content-box img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+        .content-box img { max-width: 100%; border-radius: 8px; margin: 8px 0; cursor: pointer;image-rendering: -webkit-optimize-contrast; }
+        .content-box img.selected { outline: 3px solid #0253c7; }
+
+        /* ✨ 이미지 크기 조절 플로팅 툴바 */
+        #imgResizeToolbar {
+            display: none;
+            position: absolute;
+            background: #1e293b;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            gap: 6px;
+            align-items: center;
+            font-size: 12px;
+        }
+        #imgResizeToolbar button {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #imgResizeToolbar button:hover { background: #475569; }
 
         /* 서식 및 하단 툴바 */
         .toolbar-top { display: none; gap: 8px; padding: 8px 20px; background: #f8f9fa; border-top: 1px solid #eee; align-items: center; }
@@ -176,7 +207,14 @@
         </header>
 
         <main class="editor-body">
-            <input type="text" id="editTitle" class="title-input" placeholder="제목을 입력하세요">
+            <!-- ✨ 이미지 크기 조절 팝업 플로팅 툴바 -->
+            <div id="imgResizeToolbar">
+                <span>사진크기:</span>
+                <button type="button" onclick="resizeSelectedImage(0.9)">축소(-10%)</button>
+                <button type="button" onclick="resizeSelectedImage(1.1)">확대(+10%)</button>
+            </div>
+
+            <input type="text" id="editTitle" class="title-input" placeholder="제목)">
             <div id="editContent" class="content-box" contenteditable="true" placeholder="내용을 작성하세요..."></div>
         </main>
 
@@ -198,6 +236,7 @@
             <button onclick="toggleToolbar()" title="서식">T</button>
             <button onclick="document.getElementById('imageUploader').click()" title="사진 첨부">📷</button>
             <button onclick="addLink()" title="링크">🔗</button>
+            <button onclick="insertTable()" title="표 삽입">📊</button>
         </footer>
         <input type="file" id="imageUploader" accept="image/*" style="display:none;" onchange="uploadImage(event)">
     </div>
@@ -244,12 +283,90 @@
     let currentCategory = '전체';
     let currentViewingId = null;
     let isEditing = false;
+    let selectedImage = null; // 현재 선택된 이미지 추적
 
     // 화면 전환 제어
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
         if (screenId === 'listScreen') renderList();
+        if (screenId !== 'editorScreen') hideImgResizeToolbar();
+    }
+
+    // ✨ 에디터 내 이미지 크기 조절 관련 로직
+    const editContent = document.getElementById('editContent');
+    
+    editContent.addEventListener('click', function(e) {
+        if (e.target.tagName === 'IMG') {
+            selectImage(e.target);
+        } else {
+            hideImgResizeToolbar();
+        }
+    });
+
+    function selectImage(img) {
+        document.querySelectorAll('#editContent img').forEach(i => i.classList.remove('selected'));
+        selectedImage = img;
+        selectedImage.classList.add('selected');
+
+        const toolbar = document.getElementById('imgResizeToolbar');
+        const editorBody = document.querySelector('.editor-body');
+        
+        toolbar.style.display = 'flex';
+        // 이미지 바로 위에 툴바 배치
+        const imgRect = img.getBoundingClientRect();
+        const bodyRect = editorBody.getBoundingClientRect();
+        
+        toolbar.style.top = (imgRect.top - bodyRect.top - 40 + editorBody.scrollTop) + 'px';
+        toolbar.style.left = (imgRect.left - bodyRect.left) + 'px';
+    }
+
+    function hideImgResizeToolbar() {
+        const toolbar = document.getElementById('imgResizeToolbar');
+        if (toolbar) toolbar.style.display = 'none';
+        if (selectedImage) {
+            selectedImage.classList.remove('selected');
+            selectedImage = null;
+        }
+    }
+
+    function resizeSelectedImage(ratio) {
+        if (!selectedImage) return;
+        
+        // 현재 너비 계산 (기본 max-width 혹은 style.width 기준)
+        let currentWidth = selectedImage.clientWidth;
+        if (!currentWidth || currentWidth === 0) {
+            currentWidth = selectedImage.naturalWidth || 300;
+        }
+
+        let newWidth = Math.round(currentWidth * ratio);
+        if (newWidth < 50) newWidth = 50; // 너무 작아짐 방지
+
+        selectedImage.style.width = newWidth + 'px';
+        selectedImage.style.height = 'auto'; // 비율 유지
+
+        // 툴바 위치 재조정
+        selectImage(selectedImage);
+    }
+
+    // 표 삽입 기능
+    function insertTable() {
+        const rows = prompt('표의 행(가로 줄)', '3');
+        if (!rows) return;
+        const cols = prompt('표의 열(세로 칸)', '3');
+        if (!cols) return;
+
+        let tableHtml = '<table style="width:100%; border-collapse:collapse; margin:10px 0; border:1px solid #ddd;">';
+        for (let r = 0; r < parseInt(rows); r++) {
+            tableHtml += '<tr>';
+            for (let c = 0; c < parseInt(cols); c++) {
+                tableHtml += '<td style="border:1px solid #ddd; padding:8px; min-width:40px;"></td>';
+            }
+            tableHtml += '</tr>';
+        }
+        tableHtml += '</table><p><br></p>';
+
+        document.execCommand('insertHTML', false, tableHtml);
     }
 
     // 카테고리 필터링
@@ -291,10 +408,11 @@
         currentViewingId = null;
         document.getElementById('editTitle').value = '';
         document.getElementById('editContent').innerHTML = '';
+        hideImgResizeToolbar();
         showScreen('editorScreen');
     }
 
-    // 사진 첨부 (로컬 파일 base64 변환 삽입)
+    // 사진 첨부
     function uploadImage(e) {
         const file = e.target.files[0];
         if (file) {
@@ -307,19 +425,19 @@
         e.target.value = '';
     }
 
-    // 저장 기능 (파이어스토어 동기화 포함)
+    // 저장 기능
     function savePost() {
-        const title = document.getElementById('editTitle').value.trim();
+        hideImgResizeToolbar();
+        let title = document.getElementById('editTitle').value.trim();
         const content = document.getElementById('editContent').innerHTML.trim();
         const category = document.getElementById('editCategory').value;
 
-        if (!title) {
-            alert('제목을 입력해주세요.');
-            return;
-        }
-
         const now = new Date();
-        const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        const dateStr = `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+        if (!title) {
+            title = dateStr;
+        }
 
         let postObj;
         if (isEditing && currentViewingId) {
@@ -342,10 +460,8 @@
             posts.unshift(postObj);
         }
 
-        // 로컬스토리지 저장
         localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
 
-        // 파이어스토어 클라우드 저장
         if (db) {
             db.collection("mini_blog_posts").doc(String(postObj.id)).set(postObj)
               .catch(err => console.error("클라우드 저장 실패:", err));
@@ -378,7 +494,7 @@
         showScreen('editorScreen');
     }
 
-    // 글 삭제 (파이어스토어 동기화 포함)
+    // 글 삭제
     function deleteCurrentPost() {
         if (confirm('정말 삭제하시겠습니까?')) {
             posts = posts.filter(p => p.id !== currentViewingId);
@@ -423,7 +539,6 @@
                     snapshot.forEach(doc => {
                         cloudPosts.push(doc.data());
                     });
-                    // 최신순 정렬 (ID 뒷자리가 타임스탬프이므로 내림차순 정렬)
                     cloudPosts.sort((a, b) => String(b.id).localeCompare(String(a.id)));
                     posts = cloudPosts;
                     localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
