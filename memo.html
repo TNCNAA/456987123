@@ -1062,7 +1062,7 @@
             const idx = noticePosts.findIndex(np => np.id === id);
             if (idx !== -1) {
                 noticePosts[idx].content = newContent;
-                noticePosts[idx].date = getTodayDateStr() + ' (수정됨)';
+                noticePosts[idx].date = getTodayDateStr();
                 localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
                 
                 if (db) {
@@ -1139,7 +1139,7 @@
                     posts[idx].category = category;
                     posts[idx].isSecret = isSecret;
                     posts[idx].secretPw = isSecret ? secretPw : '';
-                    posts[idx].date = dateStr + ' (수정됨)';
+                    posts[idx].date = dateStr;
                     postObj = posts[idx];
                 }
             } else {
