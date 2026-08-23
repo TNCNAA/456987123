@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미니 블로그 (파이어베이스 동기화 + 이미지 크기 조절)</title>
+    <title>미니 블로그 & 공지방 연동 시스템</title>
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -37,7 +37,7 @@
         .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
         .screen.active { display: flex; }
 
-        /* 상단 카테고리 가로 스크롤 탭 */
+        /* 상단 카테고리 탭 */
         .category-bar {
             display: flex;
             gap: 16px;
@@ -60,15 +60,125 @@
             border-bottom: 2px solid #0253c7;
         }
 
+        /* 📌 부서별 공지방 자동 연동 박스 (여백 완전 압축형) */
+        .dept-notice-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .dept-notice-header {
+            font-size: 13px;
+            font-weight: bold;
+            color: #334155;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            position: sticky;
+            top: 0;
+            background: #ffffff;
+            z-index: 1;
+        }
+        .dept-notice-scroll {
+            max-height: 120px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .dept-notice-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .dept-notice-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dept-notice-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 3px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 13px;
+            line-height: 1.35;
+            color: #334155;
+        }
+        .dept-notice-item:last-child { border-bottom: none; }
+        .dept-notice-text {
+            flex: 1;
+            white-space: pre-line;
+            margin: 0;
+            padding: 0;
+        }
+        .dept-notice-bullet {
+            color: #0253c7;
+            font-weight: bold;
+            margin-right: 4px;
+        }
+        .dept-notice-date {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            margin-top: 1px;
+        }
+
         /* 게시판 리스트 영역 */
         .list-area { flex: 1; padding: 16px 20px; overflow-y: auto; }
         .board-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .board-table th { border-top: 1px solid #333; border-bottom: 1px solid #ddd; padding: 10px 8px; color: #444; background: #fafafa; text-align: left; }
         .board-table td { border-bottom: 1px solid #f0f0f0; padding: 12px 8px; color: #333; }
         .board-table tr:hover { background-color: #f9fbfd; cursor: pointer; }
         .col-cat { width: 18%; color: #0253c7; font-weight: bold; }
         .col-title { width: 57%; }
         .col-date { width: 25%; color: #888; font-size: 13px; text-align: right; }
+
+        /* 공지방 전용 타임라인 피드 화면 */
+        .notice-container { display: flex; flex-direction: column; gap: 14px; }
+        .notice-write-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+        }
+        .btn-notice-save {
+            background: #0253c7;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            align-self: flex-start;
+        }
+        .notice-feed-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .notice-feed-content { font-size: 14px; color: #333; line-height: 1.5; white-space: pre-wrap; }
+        .notice-feed-footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 11px; color: #888; margin-top: 4px; }
+        .notice-btn { background: none; border: none; font-size: 12px; cursor: pointer; }
+        .notice-edit-btn { color: #0253c7; font-weight: bold; }
+        .notice-del-btn { color: #ff5252; }
+        
+        .notice-edit-box {
+            width: 100%;
+            min-height: 80px;
+            padding: 8px;
+            border: 1px solid #0253c7;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            margin-bottom: 6px;
+        }
 
         /* 하단 검색 및 작성 버튼 */
         .list-footer {
@@ -98,7 +208,7 @@
             cursor: pointer;
         }
 
-        /* 글쓰기 및 수정 화면 */
+        /* 에디터 화면 */
         .editor-header {
             display: flex;
             justify-content: space-between;
@@ -110,10 +220,10 @@
         .editor-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; position: relative; }
         .title-input { font-size: 20px; font-weight: bold; border: none; outline: none; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .content-box { flex: 1; outline: none; font-size: 15px; line-height: 1.6; min-height: 200px; }
-        .content-box img { max-width: 100%; border-radius: 8px; margin: 8px 0; cursor: pointer;image-rendering: -webkit-optimize-contrast; }
+        .content-box img, .view-content img, .comment-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; cursor: pointer; image-rendering: -webkit-optimize-contrast; }
         .content-box img.selected { outline: 3px solid #0253c7; }
 
-        /* ✨ 이미지 크기 조절 플로팅 툴바 */
+        /* 이미지 크기 조절 플로팅 툴바 */
         #imgResizeToolbar {
             display: none;
             position: absolute;
@@ -136,7 +246,6 @@
             cursor: pointer;
             font-weight: bold;
         }
-        #imgResizeToolbar button:hover { background: #475569; }
 
         /* 서식 및 하단 툴바 */
         .toolbar-top { display: none; gap: 8px; padding: 8px 20px; background: #f8f9fa; border-top: 1px solid #eee; align-items: center; }
@@ -148,10 +257,20 @@
         .view-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #eee; }
         .view-body { flex: 1; padding: 20px; overflow-y: auto; }
         .view-meta { color: #888; font-size: 13px; margin: 8px 0 16px 0; }
-        .view-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
         .btn-group { display: flex; gap: 8px; }
         .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+
+        /* 댓글 스타일 */
+        .comment-section { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+        .comment-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #333; }
+        .comment-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .comment-item { background: #f8f9fa; padding: 10px 14px; border-radius: 8px; border: 1px solid #eee; font-size: 14px; }
+        .comment-date { font-size: 11px; color: #888; margin-top: 4px; text-align: right; }
+        .comment-write-box { display: flex; flex-direction: column; gap: 8px; background: #f1f3f5; padding: 10px; border-radius: 8px; }
+        .comment-input { min-height: 40px; max-height: 100px; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px; outline: none; font-size: 14px; overflow-y: auto; }
+        .comment-footer { display: flex; justify-content: space-between; align-items: center; }
+        .btn-comment-submit { background: #0253c7; color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -172,30 +291,33 @@
         </div>
 
         <div class="list-area">
-            <table class="board-table">
-                <thead>
-                    <tr>
-                        <th class="col-cat">카테고리</th>
-                        <th class="col-title">제목</th>
-                        <th class="col-date">작성일시</th>
-                    </tr>
-                </thead>
+            <!-- 📌 부서별 공지방 자동 연동 박스 -->
+            <div id="deptNoticeContainer"></div>
+
+            <!-- 📝 공지 탭 전용 작성 폼 & 타임라인 피드 -->
+            <div id="noticeScreenArea" style="display:none;" class="notice-container">
+                <textarea id="noticeWriteContent" class="notice-write-area" placeholder="공지글을 작성하세요."></textarea>
+                <button class="btn-notice-save" onclick="saveNoticePost()">공지방 저장하기</button>
+                <div id="noticeFeedList"></div>
+            </div>
+
+            <!-- 📄 일반 게시판 테이블 리스트 -->
+            <table class="board-table" id="mainBoardTable">
                 <tbody id="boardList"></tbody>
             </table>
         </div>
 
-        <div class="list-footer">
+        <div class="list-footer" id="mainListFooter">
             <input type="text" class="search-input" id="searchKeyword" placeholder="검색어 입력..." onkeyup="searchPosts()">
             <button class="btn-write" onclick="openEditor()">글쓰기</button>
         </div>
     </div>
 
-    <!-- 2. 글 작성/수정 에디터 화면 -->
+    <!-- 2. 일반 글 작성/수정 에디터 화면 -->
     <div id="editorScreen" class="screen">
         <header class="editor-header">
             <span style="cursor:pointer; color:#666;" onclick="showScreen('listScreen')">취소</span>
             <select id="editCategory">
-                <option value="공지">공지</option>
                 <option value="NS">NS</option>
                 <option value="OS">OS</option>
                 <option value="병동">병동</option>
@@ -207,14 +329,12 @@
         </header>
 
         <main class="editor-body">
-            <!-- ✨ 이미지 크기 조절 팝업 플로팅 툴바 -->
             <div id="imgResizeToolbar">
-                <span>사진크기:</span>
-                <button type="button" onclick="resizeSelectedImage(0.9)">축소(-10%)</button>
-                <button type="button" onclick="resizeSelectedImage(1.1)">확대(+10%)</button>
+                <button type="button" onclick="resizeSelectedImage(0.9)">-10%</button>
+                <button type="button" onclick="resizeSelectedImage(1.1)">+10%</button>
             </div>
 
-            <input type="text" id="editTitle" class="title-input" placeholder="제목)">
+            <input type="text" id="editTitle" class="title-input" placeholder="제목을 입력하세요">
             <div id="editContent" class="content-box" contenteditable="true" placeholder="내용을 작성하세요..."></div>
         </main>
 
@@ -255,6 +375,20 @@
             <div class="view-meta" id="viewMeta"></div>
             <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
             <div class="view-content" id="viewContent"></div>
+
+            <!-- 댓글 영역 -->
+            <div class="comment-section">
+                <div class="comment-title">댓글 <span id="commentCount">0</span></div>
+                <div class="comment-list" id="commentList"></div>
+                
+                <div class="comment-write-box">
+                    <div id="commentInput" class="comment-input" contenteditable="true" placeholder="댓글을 입력하세요 (사진 Ctrl+V 가능)"></div>
+                    <div class="comment-footer">
+                        <span style="font-size:11px; color:#888;">💡 사진 복사·붙여넣기(Ctrl+V) 가능</span>
+                        <button class="btn-comment-submit" onclick="addComment()">댓글 등록</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -280,12 +414,18 @@
     }
 
     let posts = JSON.parse(localStorage.getItem('blog_memo_posts')) || [];
+    let noticePosts = JSON.parse(localStorage.getItem('timeline_notice_posts')) || [];
     let currentCategory = '전체';
     let currentViewingId = null;
     let isEditing = false;
-    let selectedImage = null; // 현재 선택된 이미지 추적
+    let selectedImage = null;
+    let editingNoticeId = null;
 
-    // 화면 전환 제어
+    function getTodayDateStr() {
+        const now = new Date();
+        return `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
@@ -293,83 +433,6 @@
         if (screenId !== 'editorScreen') hideImgResizeToolbar();
     }
 
-    // ✨ 에디터 내 이미지 크기 조절 관련 로직
-    const editContent = document.getElementById('editContent');
-    
-    editContent.addEventListener('click', function(e) {
-        if (e.target.tagName === 'IMG') {
-            selectImage(e.target);
-        } else {
-            hideImgResizeToolbar();
-        }
-    });
-
-    function selectImage(img) {
-        document.querySelectorAll('#editContent img').forEach(i => i.classList.remove('selected'));
-        selectedImage = img;
-        selectedImage.classList.add('selected');
-
-        const toolbar = document.getElementById('imgResizeToolbar');
-        const editorBody = document.querySelector('.editor-body');
-        
-        toolbar.style.display = 'flex';
-        // 이미지 바로 위에 툴바 배치
-        const imgRect = img.getBoundingClientRect();
-        const bodyRect = editorBody.getBoundingClientRect();
-        
-        toolbar.style.top = (imgRect.top - bodyRect.top - 40 + editorBody.scrollTop) + 'px';
-        toolbar.style.left = (imgRect.left - bodyRect.left) + 'px';
-    }
-
-    function hideImgResizeToolbar() {
-        const toolbar = document.getElementById('imgResizeToolbar');
-        if (toolbar) toolbar.style.display = 'none';
-        if (selectedImage) {
-            selectedImage.classList.remove('selected');
-            selectedImage = null;
-        }
-    }
-
-    function resizeSelectedImage(ratio) {
-        if (!selectedImage) return;
-        
-        // 현재 너비 계산 (기본 max-width 혹은 style.width 기준)
-        let currentWidth = selectedImage.clientWidth;
-        if (!currentWidth || currentWidth === 0) {
-            currentWidth = selectedImage.naturalWidth || 300;
-        }
-
-        let newWidth = Math.round(currentWidth * ratio);
-        if (newWidth < 50) newWidth = 50; // 너무 작아짐 방지
-
-        selectedImage.style.width = newWidth + 'px';
-        selectedImage.style.height = 'auto'; // 비율 유지
-
-        // 툴바 위치 재조정
-        selectImage(selectedImage);
-    }
-
-    // 표 삽입 기능
-    function insertTable() {
-        const rows = prompt('표의 행(가로 줄)', '3');
-        if (!rows) return;
-        const cols = prompt('표의 열(세로 칸)', '3');
-        if (!cols) return;
-
-        let tableHtml = '<table style="width:100%; border-collapse:collapse; margin:10px 0; border:1px solid #ddd;">';
-        for (let r = 0; r < parseInt(rows); r++) {
-            tableHtml += '<tr>';
-            for (let c = 0; c < parseInt(cols); c++) {
-                tableHtml += '<td style="border:1px solid #ddd; padding:8px; min-width:40px;"></td>';
-            }
-            tableHtml += '</tr>';
-        }
-        tableHtml += '</table><p><br></p>';
-
-        document.execCommand('insertHTML', false, tableHtml);
-    }
-
-    // 카테고리 필터링
     function setCategory(cat) {
         currentCategory = cat;
         document.querySelectorAll('.category-tab').forEach(tab => {
@@ -378,14 +441,112 @@
         renderList();
     }
 
-    // 목록 렌더링
-    function renderList(filteredData = null) {
-        const tbody = document.getElementById('boardList');
-        tbody.innerHTML = '';
+    function checkDeptMatch(text, dept) {
+        if (!text) return false;
+        const upper = text.toUpperCase();
+        if (dept === 'NS') return upper.includes('NS');
+        if (dept === 'OS') return upper.includes('OS');
+        if (dept === 'GS') return upper.includes('GS');
+        if (dept === '병동') return upper.includes('병동') || upper.includes('WARD');
+        if (dept === 'NR') return upper.includes('NR');
+        if (dept === 'FM') return upper.includes('FM');
+        return false;
+    }
+
+    // 빈 줄 정리 및 블록 파서 (앞뒤 개행 완전 제거)
+    function parseNoticeEntries(rawContent, noticeId, dateStr) {
+        const lines = rawContent.split('\n');
+        const knownDepts = ['NS', 'OS', 'GS', '병동', 'NR', 'FM'];
         
+        let blocks = [];
+        let currentLines = [];
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return;
+
+            const hasNewDept = knownDepts.some(dept => checkDeptMatch(trimmed, dept));
+
+            if (hasNewDept) {
+                if (currentLines.length > 0) {
+                    blocks.push({
+                        noticeId: noticeId,
+                        content: currentLines.join('\n').trim(),
+                        date: dateStr
+                    });
+                }
+                currentLines = [trimmed];
+            } else {
+                currentLines.push(trimmed);
+            }
+        });
+
+        if (currentLines.length > 0) {
+            blocks.push({
+                noticeId: noticeId,
+                content: currentLines.join('\n').trim(),
+                date: dateStr
+            });
+        }
+
+        return blocks;
+    }
+
+    function renderList(filteredData = null) {
+        const deptNoticeContainer = document.getElementById('deptNoticeContainer');
+        const noticeScreenArea = document.getElementById('noticeScreenArea');
+        const mainBoardTable = document.getElementById('mainBoardTable');
+        const mainListFooter = document.getElementById('mainListFooter');
+        const tbody = document.getElementById('boardList');
+        
+        deptNoticeContainer.innerHTML = '';
+        tbody.innerHTML = '';
+
+        if (currentCategory === '공지') {
+            noticeScreenArea.style.display = 'flex';
+            mainBoardTable.style.display = 'none';
+            mainListFooter.style.display = 'none';
+            renderNoticeFeed();
+            return;
+        }
+
+        noticeScreenArea.style.display = 'none';
+        mainBoardTable.style.display = 'table';
+        mainListFooter.style.display = 'flex';
+
+        if (currentCategory !== '전체') {
+            let matchedNotices = [];
+            noticePosts.forEach(np => {
+                const entries = parseNoticeEntries(np.content, np.id, np.date || getTodayDateStr());
+                entries.forEach(e => {
+                    if (checkDeptMatch(e.content, currentCategory)) {
+                        matchedNotices.push(e);
+                    }
+                });
+            });
+
+            if (matchedNotices.length > 0) {
+                let noticeHtml = `
+                    <div class="dept-notice-box">
+                        <div class="dept-notice-header">📌 [공지방 자동 연동] ${currentCategory} (${matchedNotices.length})</div>
+                        <div class="dept-notice-scroll">
+                `;
+                matchedNotices.forEach(m => {
+                    noticeHtml += `
+                        <div class="dept-notice-item">
+                            <div class="dept-notice-text"><span class="dept-notice-bullet">•</span>${m.content}</div>
+                            <div class="dept-notice-date">${m.date}</div>
+                        </div>
+                    `;
+                });
+                noticeHtml += `</div></div>`;
+                deptNoticeContainer.innerHTML = noticeHtml;
+            }
+        }
+
         let data = filteredData || (currentCategory === '전체' ? posts : posts.filter(p => p.category === currentCategory));
 
-        if (data.length === 0) {
+        if (data.length === 0 && deptNoticeContainer.innerHTML === '') {
             tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#999;">작성된 글/메모가 없습니다.</td></tr>`;
             return;
         }
@@ -402,38 +563,126 @@
         });
     }
 
-    // 에디터 열기 (새 글 작성)
+    function saveNoticePost() {
+        const textarea = document.getElementById('noticeWriteContent');
+        const content = textarea.value.trim();
+        if (!content) return;
+
+        const newNotice = {
+            id: 'notice_' + Date.now(),
+            content: content,
+            date: getTodayDateStr()
+        };
+
+        noticePosts.unshift(newNotice);
+        localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+
+        if (db) {
+            db.collection("mini_notice_posts").doc(String(newNotice.id)).set(newNotice)
+              .catch(err => console.error("공지 저장 실패:", err));
+        }
+
+        textarea.value = '';
+        renderNoticeFeed();
+    }
+
+    function renderNoticeFeed() {
+        const feedList = document.getElementById('noticeFeedList');
+        if (noticePosts.length === 0) {
+            feedList.innerHTML = `<div style="text-align:center; padding:30px; color:#999; font-size:13px;">등록된 공지가 없습니다.</div>`;
+            return;
+        }
+
+        feedList.innerHTML = noticePosts.map(np => {
+            if (editingNoticeId === np.id) {
+                return `
+                    <div class="notice-feed-item">
+                        <textarea id="editNoticeArea_${np.id}" class="notice-edit-box">${np.content}</textarea>
+                        <div style="display:flex; justify-content:flex-end; gap:6px;">
+                            <button class="btn-write" style="padding:4px 10px; font-size:12px; background:#64748b;" onclick="cancelEditNotice()">취소</button>
+                            <button class="btn-write" style="padding:4px 10px; font-size:12px;" onclick="saveEditNotice('${np.id}')">저장</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="notice-feed-item">
+                    <div class="notice-feed-content">${np.content}</div>
+                    <div class="notice-feed-footer">
+                        <span>${np.date}</span>
+                        <button class="notice-btn notice-edit-btn" onclick="startEditNotice('${np.id}')">수정</button>
+                        <button class="notice-btn notice-del-btn" onclick="deleteNoticePost('${np.id}')">삭제</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function startEditNotice(id) {
+        editingNoticeId = id;
+        renderNoticeFeed();
+    }
+
+    function cancelEditNotice() {
+        editingNoticeId = null;
+        renderNoticeFeed();
+    }
+
+    function saveEditNotice(id) {
+        const area = document.getElementById(`editNoticeArea_${id}`);
+        if (!area) return;
+        const newContent = area.value.trim();
+        if (!newContent) return;
+
+        const idx = noticePosts.findIndex(np => np.id === id);
+        if (idx !== -1) {
+            noticePosts[idx].content = newContent;
+            noticePosts[idx].date = getTodayDateStr() + ' (수정됨)';
+            localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+
+            if (db) {
+                db.collection("mini_notice_posts").doc(String(id)).update({
+                    content: newContent,
+                    date: noticePosts[idx].date
+                }).catch(err => console.error("공지 수정 동기화 실패:", err));
+            }
+        }
+
+        editingNoticeId = null;
+        renderNoticeFeed();
+    }
+
+    function deleteNoticePost(id) {
+        noticePosts = noticePosts.filter(np => np.id !== id);
+        localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+
+        if (db) {
+            db.collection("mini_notice_posts").doc(String(id)).delete()
+              .catch(err => console.error("공지 삭제 실패:", err));
+        }
+
+        renderNoticeFeed();
+    }
+
     function openEditor() {
         isEditing = false;
         currentViewingId = null;
         document.getElementById('editTitle').value = '';
         document.getElementById('editContent').innerHTML = '';
+        if (currentCategory !== '전체' && currentCategory !== '공지') {
+            document.getElementById('editCategory').value = currentCategory;
+        }
         hideImgResizeToolbar();
         showScreen('editorScreen');
     }
 
-    // 사진 첨부
-    function uploadImage(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                document.execCommand('insertImage', false, evt.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-        e.target.value = '';
-    }
-
-    // 저장 기능
     function savePost() {
         hideImgResizeToolbar();
         let title = document.getElementById('editTitle').value.trim();
         const content = document.getElementById('editContent').innerHTML.trim();
         const category = document.getElementById('editCategory').value;
-
-        const now = new Date();
-        const dateStr = `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        const dateStr = getTodayDateStr();
 
         if (!title) {
             title = dateStr;
@@ -455,7 +704,8 @@
                 category: category,
                 title: title,
                 content: content,
-                date: dateStr
+                date: dateStr,
+                comments: []
             };
             posts.unshift(postObj);
         }
@@ -470,7 +720,6 @@
         showScreen('listScreen');
     }
 
-    // 글 상세 조회
     function openView(id) {
         currentViewingId = id;
         const post = posts.find(p => p.id === id);
@@ -479,10 +728,69 @@
         document.getElementById('viewTitle').innerText = post.title;
         document.getElementById('viewMeta').innerText = `[${post.category}] · ${post.date}`;
         document.getElementById('viewContent').innerHTML = post.content;
+        
+        renderComments(post.comments || []);
+        document.getElementById('commentInput').innerHTML = '';
         showScreen('viewScreen');
     }
 
-    // 글 수정 모드 시작
+    function renderComments(comments) {
+        const listEl = document.getElementById('commentList');
+        document.getElementById('commentCount').innerText = comments.length;
+        
+        if (comments.length === 0) {
+            listEl.innerHTML = `<div style="color:#888; font-size:13px; text-align:center; padding:10px;">작성된 댓글이 없습니다.</div>`;
+            return;
+        }
+
+        listEl.innerHTML = comments.map((c, index) => `
+            <div class="comment-item">
+                <div class="comment-content">${c.text}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                    <span class="comment-date">${c.date}</span>
+                    <button onclick="deleteComment(${index})" style="background:none; border:none; color:#ff5252; font-size:11px; cursor:pointer;">삭제</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function addComment() {
+        const inputEl = document.getElementById('commentInput');
+        const text = inputEl.innerHTML.trim();
+        if (!text) return;
+
+        const post = posts.find(p => p.id === currentViewingId);
+        if (!post) return;
+
+        if (!post.comments) post.comments = [];
+        post.comments.push({ text: text, date: getTodayDateStr() });
+
+        inputEl.innerHTML = '';
+        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+
+        if (db) {
+            db.collection("mini_blog_posts").doc(String(post.id)).update({ comments: post.comments })
+              .catch(err => console.error("댓글 동기화 실패:", err));
+        }
+
+        renderComments(post.comments);
+    }
+
+    function deleteComment(index) {
+        const post = posts.find(p => p.id === currentViewingId);
+        if (!post || !post.comments) return;
+
+        post.comments.splice(index, 1);
+        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+
+        if (db) {
+            db.collection("mini_blog_posts").doc(String(post.id)).update({ comments: post.comments })
+              .catch(err => console.error("댓글 삭제 실패:", err));
+        }
+
+        renderComments(post.comments);
+    }
+
     function startEditCurrent() {
         const post = posts.find(p => p.id === currentViewingId);
         if (!post) return;
@@ -494,22 +802,18 @@
         showScreen('editorScreen');
     }
 
-    // 글 삭제
     function deleteCurrentPost() {
-        if (confirm('정말 삭제하시겠습니까?')) {
-            posts = posts.filter(p => p.id !== currentViewingId);
-            localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+        posts = posts.filter(p => p.id !== currentViewingId);
+        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
 
-            if (db) {
-                db.collection("mini_blog_posts").doc(String(currentViewingId)).delete()
-                  .catch(err => console.error("클라우드 삭제 실패:", err));
-            }
-
-            showScreen('listScreen');
+        if (db) {
+            db.collection("mini_blog_posts").doc(String(currentViewingId)).delete()
+              .catch(err => console.error("클라우드 삭제 실패:", err));
         }
+
+        showScreen('listScreen');
     }
 
-    // 검색 기능
     function searchPosts() {
         const keyword = document.getElementById('searchKeyword').value.toLowerCase();
         const filtered = posts.filter(p => 
@@ -519,7 +823,68 @@
         renderList(filtered);
     }
 
-    // 서식 툴바 토글 및 링크 기능
+    const editContent = document.getElementById('editContent');
+    editContent.addEventListener('click', function(e) {
+        if (e.target.tagName === 'IMG') selectImage(e.target);
+        else hideImgResizeToolbar();
+    });
+
+    function selectImage(img) {
+        document.querySelectorAll('#editContent img').forEach(i => i.classList.remove('selected'));
+        selectedImage = img;
+        selectedImage.classList.add('selected');
+        const toolbar = document.getElementById('imgResizeToolbar');
+        const editorBody = document.querySelector('.editor-body');
+        toolbar.style.display = 'flex';
+        const imgRect = img.getBoundingClientRect();
+        const bodyRect = editorBody.getBoundingClientRect();
+        toolbar.style.top = (imgRect.top - bodyRect.top - 40 + editorBody.scrollTop) + 'px';
+        toolbar.style.left = (imgRect.left - bodyRect.left) + 'px';
+    }
+
+    function hideImgResizeToolbar() {
+        const toolbar = document.getElementById('imgResizeToolbar');
+        if (toolbar) toolbar.style.display = 'none';
+        if (selectedImage) {
+            selectedImage.classList.remove('selected');
+            selectedImage = null;
+        }
+    }
+
+    function resizeSelectedImage(ratio) {
+        if (!selectedImage) return;
+        let currentWidth = selectedImage.clientWidth || selectedImage.naturalWidth || 300;
+        let newWidth = Math.max(50, Math.round(currentWidth * ratio));
+        selectedImage.style.width = newWidth + 'px';
+        selectedImage.style.height = 'auto';
+        selectImage(selectedImage);
+    }
+
+    function insertTable() {
+        const rows = prompt('표의 행(가로 줄)', '3');
+        if (!rows) return;
+        const cols = prompt('표의 열(세로 칸)', '3');
+        if (!cols) return;
+        let tableHtml = '<table style="width:100%; border-collapse:collapse; margin:10px 0; border:1px solid #ddd;">';
+        for (let r = 0; r < parseInt(rows); r++) {
+            tableHtml += '<tr>';
+            for (let c = 0; c < parseInt(cols); c++) tableHtml += '<td style="border:1px solid #ddd; padding:8px; min-width:40px;"></td>';
+            tableHtml += '</tr>';
+        }
+        tableHtml += '</table><p><br></p>';
+        document.execCommand('insertHTML', false, tableHtml);
+    }
+
+    function uploadImage(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = evt => document.execCommand('insertImage', false, evt.target.result);
+            reader.readAsDataURL(file);
+        }
+        e.target.value = '';
+    }
+
     function toggleToolbar() {
         const bar = document.getElementById('textToolbar');
         bar.style.display = bar.style.display === 'flex' ? 'none' : 'flex';
@@ -529,19 +894,24 @@
         if (url) document.execCommand('createLink', false, url);
     }
 
-    // 앱 실행 시 클라우드 데이터 불러오기
     async function initBlogData() {
         if (db) {
             try {
-                const snapshot = await db.collection("mini_blog_posts").get();
-                if (!snapshot.empty) {
+                const postSnapshot = await db.collection("mini_blog_posts").get();
+                if (!postSnapshot.empty) {
                     let cloudPosts = [];
-                    snapshot.forEach(doc => {
-                        cloudPosts.push(doc.data());
-                    });
+                    postSnapshot.forEach(doc => cloudPosts.push(doc.data()));
                     cloudPosts.sort((a, b) => String(b.id).localeCompare(String(a.id)));
                     posts = cloudPosts;
                     localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+                }
+                const noticeSnapshot = await db.collection("mini_notice_posts").get();
+                if (!noticeSnapshot.empty) {
+                    let cloudNotices = [];
+                    noticeSnapshot.forEach(doc => cloudNotices.push(doc.data()));
+                    cloudNotices.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+                    noticePosts = cloudNotices;
+                    localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
                 }
             } catch (e) {
                 console.log("클라우드 데이터 로드 실패, 로컬 데이터 사용:", e);
@@ -550,7 +920,6 @@
         renderList();
     }
 
-    // 초기 실행
     initBlogData();
 </script>
 
