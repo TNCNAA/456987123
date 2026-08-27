@@ -4,24 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MEMOY</title>
-    <!-- 네이버 외부 불펌 방지 우회 메타 태그 -->
-    <meta name="referrer" content="no-referrer">
-    
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { 
-            background-color: #eef2f5; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            min-height: 100dvh; 
-            overflow: hidden;
-        }
+        body { background-color: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; min-height: 100dvh; }
 
         .app-container {
             width: 100%;
@@ -32,12 +21,12 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         @media (min-width: 768px) {
             .app-container { 
-                max-width: 760px; 
+                max-width: 760px;
                 border-radius: 16px; 
                 height: 95vh;
                 max-height: 880px;
@@ -46,7 +35,7 @@
             body { background-color: #eef2f5; }
         }
 
-        .screen { display: none; flex-direction: column; height: 100%; width: 100%; overflow: hidden; }
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
         .screen.active { display: flex; }
 
         /* 상단 카테고리 탭 */
@@ -73,7 +62,7 @@
             border-bottom: 2px solid #0253c7;
         }
 
-        /* 부서별 공지방 자동 연동 박스 */
+        /* 📌 부서별 공지방 자동 연동 박스 */
         .dept-notice-box {
             background: #ffffff;
             border: 1px solid #cbd5e1;
@@ -104,8 +93,13 @@
             overflow-y: auto;
             padding-right: 4px;
         }
-        .dept-notice-scroll::-webkit-scrollbar { width: 4px; }
-        .dept-notice-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dept-notice-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .dept-notice-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
         .dept-notice-item {
             display: flex;
             flex-direction: column;
@@ -116,18 +110,27 @@
             color: #334155;
         }
         .dept-notice-item:last-child { border-bottom: none; }
-        .dept-notice-text { width: 100%; white-space: pre-line; word-break: break-all; margin: 0; padding: 0; }
-        .dept-notice-bullet { color: #0253c7; font-weight: bold; margin-right: 4px; }
-        .dept-notice-date { font-size: 11px; color: #94a3b8; text-align: right; margin-top: 3px; }
-
-        /* 카드형 리스트 영역 */
-        .list-area { 
-            flex: 1; 
-            padding: 12px 16px; 
-            overflow-y: auto; 
-            overflow-x: hidden;
-            scrollbar-gutter: stable;
+        .dept-notice-text {
+            width: 100%;
+            white-space: pre-line;
+            word-break: break-all;
+            margin: 0;
+            padding: 0;
         }
+        .dept-notice-bullet {
+            color: #0253c7;
+            font-weight: bold;
+            margin-right: 4px;
+        }
+        .dept-notice-date {
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: right;
+            margin-top: 3px;
+        }
+
+        /* 모바일 최적화 카드형 리스트 영역 */
+        .list-area { flex: 1; padding: 12px 16px; overflow-y: auto; }
         .post-card-list { display: flex; flex-direction: column; }
         .post-card-item {
             padding: 10px 4px;
@@ -138,10 +141,21 @@
             gap: 4px;
         }
         .post-card-item:hover { background-color: #f8fafc; }
-        .post-card-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .post-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
         .post-card-cat { color: #0253c7; font-weight: bold; }
         .post-card-date { color: #888; font-size: 11px; }
-        .post-card-title { font-size: 14px; color: #1e293b; font-weight: 500; word-break: break-all; line-height: 1.4; }
+        .post-card-title {
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 500;
+            word-break: break-all;
+            line-height: 1.4;
+        }
 
         /* 검색어 하이라이트 & 본문 미리보기 */
         .search-snippet {
@@ -155,9 +169,15 @@
             border-left: 2px solid #0253c7;
             word-break: break-all;
         }
-        .search-highlight { background-color: #fef08a; color: #854d0e; font-weight: bold; padding: 1px 2px; border-radius: 3px; }
+        .search-highlight {
+            background-color: #fef08a;
+            color: #854d0e;
+            font-weight: bold;
+            padding: 1px 2px;
+            border-radius: 3px;
+        }
 
-        /* 공지방 피드 화면 */
+        /* 공지방 전용 타임라인 피드 화면 */
         .notice-container { display: flex; flex-direction: column; gap: 12px; }
         .notice-write-area {
             width: 100%;
@@ -181,12 +201,16 @@
             font-size: 13px;
             align-self: flex-start;
         }
-        .notice-feed-item { padding: 10px 0; border-bottom: 1px solid #eee; }
+        .notice-feed-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
         .notice-feed-content { font-size: 14px; color: #333; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
         .notice-feed-footer { display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 11px; color: #888; margin-top: 4px; }
         .notice-btn { background: none; border: none; font-size: 12px; cursor: pointer; }
         .notice-edit-btn { color: #0253c7; font-weight: bold; }
         .notice-del-btn { color: #ff5252; }
+        
         .notice-edit-box {
             width: 100%;
             min-height: 80px;
@@ -200,7 +224,7 @@
             margin-bottom: 6px;
         }
 
-        /* 하단 바 */
+        /* 하단 검색 및 작성 버튼 */
         .list-footer {
             display: flex;
             justify-content: space-between;
@@ -245,29 +269,10 @@
         .editor-header select { padding: 4px 6px; border-radius: 6px; border: 1px solid #ddd; outline: none; font-size: 13px; }
         .secret-control { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #555; }
         .secret-pw-input { width: 65px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; outline: none; display: none; }
-        .editor-body { 
-            flex: 1; 
-            padding: 16px; 
-            overflow-y: auto; 
-            overflow-x: hidden;
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            position: relative; 
-            scrollbar-gutter: stable;
-        }
+        .editor-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; position: relative; }
         .title-input { font-size: 18px; font-weight: bold; border: none; outline: none; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .content-box { flex: 1; outline: none; font-size: 15px; line-height: 1.6; min-height: 180px; }
-        
-        .content-box img, .view-content img, .comment-content img { 
-            max-width: 100%; 
-            height: auto;
-            border-radius: 8px; 
-            margin: 8px 0; 
-            cursor: pointer; 
-            image-rendering: -webkit-optimize-contrast; 
-            display: block;
-        }
+        .content-box img, .view-content img, .comment-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; cursor: pointer; image-rendering: -webkit-optimize-contrast; }
         .content-box img.selected, .content-box .thumb-card.selected .thumb-img { outline: 3px solid #0253c7; }
 
         /* 썸네일 단독 이미지 스타일 */
@@ -290,13 +295,16 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             transition: transform 0.15s ease, border-color 0.15s ease;
             margin: 0 !important;
-            display: inline-block !important;
+            display: inline-block;
             pointer-events: auto;
         }
-        .thumb-card:hover .thumb-img, .thumb-img:hover { transform: scale(1.05); border-color: #0253c7; }
+        .thumb-card:hover .thumb-img, .thumb-img:hover {
+            transform: scale(1.05);
+            border-color: #0253c7;
+        }
 
-        /* 툴바 스타일 */
-        #thumbManageToolbar, #imgResizeToolbar {
+        /* 썸네일 전용 관리 툴바 */
+        #thumbManageToolbar {
             display: none;
             position: absolute;
             background: #1e293b;
@@ -309,7 +317,7 @@
             align-items: center;
             font-size: 12px;
         }
-        #thumbManageToolbar button, #imgResizeToolbar button {
+        #thumbManageToolbar button {
             background: #334155;
             color: white;
             border: none;
@@ -321,11 +329,38 @@
         }
         #thumbManageToolbar button.btn-danger { background: #ef4444; }
 
-        /* 갤러리 모달 */
+        /* 일반 이미지 크기 조절 플로팅 툴바 */
+        #imgResizeToolbar {
+            display: none;
+            position: absolute;
+            background: #1e293b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            gap: 6px;
+            align-items: center;
+            font-size: 12px;
+        }
+        #imgResizeToolbar button {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* 크게 보는 갤러리 슬라이더 팝업 모달 */
         .img-modal-overlay {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(10, 15, 29, 0.94);
             z-index: 9999;
             flex-direction: column;
@@ -335,34 +370,98 @@
             user-select: none;
             touch-action: none;
         }
-        .img-modal-topbar { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 6px; z-index: 10002; }
-        .img-modal-counter { color: #cbd5e1; font-size: 14px; font-weight: bold; letter-spacing: 1px; }
-        .img-modal-close { background: none; border: none; color: #ffffff; font-size: 32px; cursor: pointer; line-height: 1; }
-        .img-modal-viewport { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .img-modal-topbar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 6px;
+            z-index: 10002;
+        }
+        .img-modal-counter {
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .img-modal-close {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 32px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .img-modal-viewport {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
         .img-modal-viewport img {
-            max-width: 98%; max-height: 82vh; border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); object-fit: contain;
-            background: transparent; transition: transform 0.1s ease-out; transform-origin: center center; will-change: transform;
+            max-width: 98%;
+            max-height: 82vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            object-fit: contain;
+            background: transparent;
+            transition: transform 0.1s ease-out;
+            transform-origin: center center;
+            will-change: transform;
         }
+
+        /* ✨ 투명 터치 네비게이션 영역 (화살표 시각적 표시 제거하여 사진 가림 방지) */
         .modal-nav-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(30, 41, 59, 0.7); color: #ffffff; border: none;
-            width: 44px; height: 44px; border-radius: 50%; font-size: 22px;
-            cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 10001;
+            position: absolute;
+            top: 0;
+            width: 15%;
+            height: 100%;
+            background: transparent;
+            color: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 10001;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .modal-nav-prev { left: 8px; }
-        .modal-nav-next { right: 8px; }
+        .modal-nav-prev { left: 0; }
+        .modal-nav-next { right: 0; }
+
+        /* 하단 미니 썸네일 스트립 바 */
         .img-modal-strip {
-            width: 100%; display: flex; justify-content: center; align-items: center;
-            gap: 8px; overflow-x: auto; padding: 8px 4px 0 4px; z-index: 10002; max-height: 62px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 4px 0 4px;
+            z-index: 10002;
+            max-height: 62px;
         }
         .strip-thumb {
-            width: 42px; height: 42px; border-radius: 6px; object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.3); cursor: pointer; opacity: 0.5;
-            transition: all 0.2s; flex-shrink: 0; background: #fff;
+            width: 42px;
+            height: 42px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            background: #fff;
         }
-        .strip-thumb.active { border-color: #38bdf8; opacity: 1; transform: scale(1.1); }
+        .strip-thumb.active {
+            border-color: #38bdf8;
+            opacity: 1;
+            transform: scale(1.1);
+        }
 
+        /* 서식 및 하단 툴바 */
         .toolbar-top { display: none; gap: 6px; padding: 8px 16px; background: #f8f9fa; border-top: 1px solid #eee; align-items: center; flex-shrink: 0; }
         .toolbar-top button, .toolbar-top select { border: 1px solid #ddd; background: #fff; border-radius: 4px; padding: 4px 6px; cursor: pointer; font-size: 13px; }
         .toolbar-bottom { display: flex; justify-content: space-around; padding: 10px 16px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
@@ -370,18 +469,13 @@
 
         /* 상세 조회 화면 */
         .view-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eee; flex-shrink: 0; }
-        .view-body { 
-            flex: 1; 
-            padding: 16px; 
-            overflow-y: auto; 
-            overflow-x: hidden;
-            scrollbar-gutter: stable;
-        }
+        .view-body { flex: 1; padding: 16px; overflow-y: auto; }
         .view-meta { color: #888; font-size: 13px; margin: 6px 0 14px 0; }
         .btn-group { display: flex; gap: 6px; }
         .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
+        /* 댓글 스타일 */
         .comment-section { margin-top: 24px; border-top: 1px solid #eee; padding-top: 16px; }
         .comment-title { font-size: 15px; font-weight: bold; margin-bottom: 10px; color: #333; }
         .comment-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
@@ -411,12 +505,17 @@
         </div>
 
         <div class="list-area">
+            <!-- 📌 부서별 공지방 자동 연동 박스 -->
             <div id="deptNoticeContainer"></div>
+
+            <!-- 공지 탭 전용 작성 폼 & 타임라인 피드 -->
             <div id="noticeScreenArea" style="display:none;" class="notice-container">
                 <textarea id="noticeWriteContent" class="notice-write-area" placeholder="공지글을 작성하세요."></textarea>
                 <button class="btn-notice-save" onclick="saveNoticePost()">공지방 저장하기</button>
                 <div id="noticeFeedList"></div>
             </div>
+
+            <!-- 모바일 카드형 리스트 컨테이너 -->
             <div id="postCardList" class="post-card-list"></div>
         </div>
 
@@ -426,7 +525,7 @@
         </div>
     </div>
 
-    <!-- 2. 에디터 화면 -->
+    <!-- 2. 일반 글 작성/수정 에디터 화면 -->
     <div id="editorScreen" class="screen">
         <header class="editor-header">
             <span style="cursor:pointer; color:#666;" onclick="showScreen('listScreen')">취소</span>
@@ -450,12 +549,14 @@
         </header>
 
         <main class="editor-body">
+            <!-- 썸네일 전용 관리 툴바 -->
             <div id="thumbManageToolbar">
                 <button type="button" onclick="moveSelectedThumb(-1)">◀ 앞으로</button>
                 <button type="button" onclick="moveSelectedThumb(1)">뒤로 ▶</button>
                 <button type="button" class="btn-danger" onclick="deleteSelectedThumb()">🗑️ 삭제</button>
             </div>
 
+            <!-- 일반 이미지 크기 조절 툴바 -->
             <div id="imgResizeToolbar">
                 <button type="button" onclick="resizeSelectedImage(0.9)">-10%</button>
                 <button type="button" onclick="resizeSelectedImage(1.1)">+10%</button>
@@ -503,6 +604,7 @@
             <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
             <div class="view-content" id="viewContent"></div>
 
+            <!-- 댓글 영역 -->
             <div class="comment-section">
                 <div class="comment-title">댓글 <span id="commentCount">0</span></div>
                 <div class="comment-list" id="commentList"></div>
@@ -518,7 +620,7 @@
         </div>
     </div>
 
-    <!-- 4. 갤러리 슬라이더 팝업 모달 -->
+    <!-- ✨ 4. 갤러리 슬라이더 팝업 모달 (투명 터치 영역 적용) -->
     <div id="imgModalOverlay" class="img-modal-overlay" onclick="closeImageModal()">
         <div class="img-modal-topbar" onclick="event.stopPropagation()">
             <div id="imgModalCounter" class="img-modal-counter">1 / 1</div>
@@ -526,9 +628,10 @@
         </div>
 
         <div class="img-modal-viewport" id="imgModalViewport">
-            <button class="modal-nav-btn modal-nav-prev" onclick="event.stopPropagation(); showPrevGalleryImage();">‹</button>
-            <button class="modal-nav-btn modal-nav-next" onclick="event.stopPropagation(); showNextGalleryImage();">›</button>
-            <img id="imgModalTarget" src="" alt="크게보기 사진" referrerpolicy="no-referrer" onerror="this.onerror=null;">
+            <!-- 투명 터치 버튼 -->
+            <button class="modal-nav-btn modal-nav-prev" onclick="event.stopPropagation(); showPrevGalleryImage();"></button>
+            <button class="modal-nav-btn modal-nav-next" onclick="event.stopPropagation(); showNextGalleryImage();"></button>
+            <img id="imgModalTarget" src="" alt="크게보기 사진" onerror="this.onerror=null; alert('이미지를 불러올 수 없습니다.');">
         </div>
 
         <div class="img-modal-strip" id="imgModalStrip" onclick="event.stopPropagation()"></div>
@@ -537,6 +640,7 @@
 </div>
 
 <script>
+    // ===== Firebase 클라우드 연동 설정 =====
     const firebaseConfig = {
         apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
         authDomain: "tncnaaa.firebaseapp.com",
@@ -564,79 +668,94 @@
     let editingNoticeId = null;
     let currentSearchKeyword = '';
 
+    // 갤러리 슬라이더 상태 변수
     let galleryImages = [];
     let currentGalleryIndex = 0;
 
-    let scale = 1, pointX = 0, pointY = 0, startX = 0, startY = 0, initialDistance = 0, initialScale = 1, lastTapTime = 0;
+    // 핀치 줌 & 팬 상태 변수
+    let scale = 1;
+    let pointX = 0, pointY = 0;
+    let startX = 0, startY = 0;
+    let initialDistance = 0;
+    let initialScale = 1;
+    let lastTapTime = 0;
 
-    function compressImageFile(file, maxWidth = 900, quality = 0.7) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = () => {
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > maxWidth) {
-                        height = Math.round((height * maxWidth) / width);
-                        width = maxWidth;
-                    }
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', quality));
-                };
-                img.onerror = () => resolve(event.target.result);
-            };
-        });
-    }
-
+    // URL 자동 감지 및 링크 변환 함수
     function autoLinkUrls(html) {
         if (!html) return '';
-        const fullUrlRegex = /(?![^<]*>|[^<>]*<\/)(https?:\/\/[^\s<]+)/gi;
-        let replaced = html.replace(fullUrlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${url}</a>`);
         
-        const wwwRegex = /(?![^<]*>|[^<>]*<\/)(^|[^\/])(www\.[^\s<]+)/gi;
-        replaced = replaced.replace(wwwRegex, (match, prefix, url) => `${prefix}<a href="https://${url}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${url}</a>`);
-        
-        const domainRegex = /(?![^<]*>|[^<>]*<\/)(^|[\s(])([a-zA-Z0-9-]+\.(?:com|net|org|kr|co\.kr|io|me|app|site|xyz|dev)(?:\/[^\s<]*)?)/gi;
-        return replaced.replace(domainRegex, (match, prefix, domain) => `${prefix}<a href="https://${domain}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${domain}</a>`);
+        let replaced = html.replace(/(?![^<]*>|[^<>]*<\/)(https?:\/\/[^\s<]+)/gi, function(url) {
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${url}</a>`;
+        });
+
+        replaced = replaced.replace(/(?![^<]*>|[^<>]*<\/)(^|[^\/])(www\.[^\s<]+)/gi, function(match, p1, url) {
+            return `${p1}<a href="https://${url}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${url}</a>`;
+        });
+
+        const domainPattern = /(?![^<]*>|[^<>]*<\/)(^|[\s(>])([a-zA-Z0-9-]+\.(?:com|net|org|kr|co\.kr|io|me|app|site|xyz|dev)(?:\/[^\s<]*)?)/gi;
+        replaced = replaced.replace(domainPattern, function(match, p1, domain) {
+            return `${p1}<a href="https://${domain}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${domain}</a>`;
+        });
+
+        return replaced;
     }
 
-    const editContentBox = document.getElementById('editContent');
-    editContentBox.addEventListener('keydown', function(e) {
+    // 에디터 타이핑 시 스페이스바/엔터 즉시 실시간 링크 변환
+    const editBox = document.getElementById('editContent');
+    editBox.addEventListener('keyup', function(e) {
         if (e.key === ' ' || e.key === 'Enter') {
-            setTimeout(checkAndConvertCurrentTextNode, 10);
+            convertLastWordToLink();
         }
     });
 
-    function checkAndConvertCurrentTextNode() {
-        const selection = window.getSelection();
-        if (!selection || !selection.anchorNode) return;
-        let node = selection.anchorNode;
-        if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('content-box')) return;
-        if (node.nodeType !== Node.TEXT_NODE || (node.parentElement && node.parentElement.tagName === 'A')) return;
+    function convertLastWordToLink() {
+        const sel = window.getSelection();
+        if (!sel || !sel.isCollapsed || !sel.anchorNode) return;
 
-        const text = node.textContent;
-        const linkedText = autoLinkUrls(text);
-        if (linkedText !== text) {
-            const span = document.createElement('span');
-            span.innerHTML = linkedText;
-            const parent = node.parentNode;
-            if (parent) {
-                parent.replaceChild(span, node);
-                const range = document.createRange();
-                range.setStartAfter(span);
-                range.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(range);
+        let textNode = sel.anchorNode;
+        if (textNode.nodeType !== Node.TEXT_NODE) return;
+        if (textNode.parentElement && textNode.parentElement.tagName === 'A') return;
+
+        const text = textNode.textContent;
+        const offset = sel.anchorOffset;
+        
+        const textBeforeCursor = text.substring(0, offset);
+        const match = textBeforeCursor.match(/(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.(?:com|net|org|kr|co\.kr|io|me|app|site|xyz|dev)(?:\/[^\s]*)?)\s$/i);
+
+        if (match) {
+            const rawUrl = match[1];
+            let hrefUrl = rawUrl;
+            if (!hrefUrl.startsWith('http://') && !hrefUrl.startsWith('https://')) {
+                hrefUrl = 'https://' + hrefUrl;
             }
+
+            const urlStart = textBeforeCursor.lastIndexOf(rawUrl);
+            const before = text.substring(0, urlStart);
+            const after = text.substring(offset);
+
+            const parent = textNode.parentNode;
+            const beforeNode = document.createTextNode(before);
+            const linkNode = document.createElement('a');
+            linkNode.href = hrefUrl;
+            linkNode.target = '_blank';
+            linkNode.rel = 'noopener noreferrer';
+            linkNode.style.color = '#0253c7';
+            linkNode.style.textDecoration = 'underline';
+            linkNode.style.wordBreak = 'break-all';
+            linkNode.textContent = rawUrl;
+            
+            const spaceNode = document.createTextNode(' ' + after);
+
+            parent.insertBefore(beforeNode, textNode);
+            parent.insertBefore(linkNode, textNode);
+            parent.insertBefore(spaceNode, textNode);
+            parent.removeChild(textNode);
+
+            const newRange = document.createRange();
+            newRange.setStart(spaceNode, 1);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
         }
     }
 
@@ -680,16 +799,23 @@
     function parseNoticeEntries(rawContent, noticeId, dateStr) {
         const lines = rawContent.split('\n');
         const knownDepts = ['NS', 'OS', 'GS', '병동', 'NR', 'FM'];
+        
         let blocks = [];
         let currentLines = [];
 
         lines.forEach(line => {
             const trimmed = line.trim();
             if (!trimmed) return;
+
             const hasNewDept = knownDepts.some(dept => checkDeptMatch(trimmed, dept));
+
             if (hasNewDept) {
                 if (currentLines.length > 0) {
-                    blocks.push({ noticeId, content: currentLines.join('\n').trim(), date: dateStr });
+                    blocks.push({
+                        noticeId: noticeId,
+                        content: currentLines.join('\n').trim(),
+                        date: dateStr
+                    });
                 }
                 currentLines = [trimmed];
             } else {
@@ -698,15 +824,21 @@
         });
 
         if (currentLines.length > 0) {
-            blocks.push({ noticeId, content: currentLines.join('\n').trim(), date: dateStr });
+            blocks.push({
+                noticeId: noticeId,
+                content: currentLines.join('\n').trim(),
+                date: dateStr
+            });
         }
+
         return blocks;
     }
 
     function highlightText(text, keyword) {
         if (!keyword || !text) return text;
         const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>');
+        const regex = new RegExp(`(${escaped})`, 'gi');
+        return text.replace(regex, '<mark class="search-highlight">$1</mark>');
     }
 
     function extractSnippet(htmlContent, keyword, length = 35) {
@@ -714,14 +846,17 @@
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
         const plainText = (tempDiv.textContent || tempDiv.innerText || '').replace(/\s+/g, ' ').trim();
+        
         const index = plainText.toLowerCase().indexOf(keyword.toLowerCase());
         if (index === -1) return '';
 
         const start = Math.max(0, index - length);
         const end = Math.min(plainText.length, index + keyword.length + length);
+        
         let snippet = plainText.substring(start, end);
         if (start > 0) snippet = '...' + snippet;
         if (end < plainText.length) snippet = snippet + '...';
+
         return snippet;
     }
 
@@ -751,7 +886,9 @@
             noticePosts.forEach(np => {
                 const entries = parseNoticeEntries(np.content, np.id, np.date || getTodayDateStr());
                 entries.forEach(e => {
-                    if (checkDeptMatch(e.content, currentCategory)) matchedNotices.push(e);
+                    if (checkDeptMatch(e.content, currentCategory)) {
+                        matchedNotices.push(e);
+                    }
                 });
             });
 
@@ -788,6 +925,7 @@
 
             const lockIcon = item.isSecret ? '🔒 ' : '';
             const displayTitle = highlightText(item.title, currentSearchKeyword);
+            
             let snippetHtml = '';
             if (currentSearchKeyword && !item.isSecret) {
                 const rawSnippet = extractSnippet(item.content, currentSearchKeyword);
@@ -813,6 +951,7 @@
         const input = document.getElementById('searchKeyword');
         currentSearchKeyword = input.value.trim();
         const lowerKeyword = currentSearchKeyword.toLowerCase();
+
         let baseList = (currentCategory === '전체') ? posts : posts.filter(p => p.category === currentCategory);
 
         if (!lowerKeyword) {
@@ -822,10 +961,13 @@
 
         const filtered = baseList.filter(p => {
             const titleMatch = (p.title || '').toLowerCase().includes(lowerKeyword);
+            
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = p.content || '';
             const plainTextContent = (tempDiv.textContent || tempDiv.innerText || '').toLowerCase();
+            
             const contentMatch = !p.isSecret && plainTextContent.includes(lowerKeyword);
+
             return titleMatch || contentMatch;
         });
 
@@ -838,6 +980,7 @@
         if (!rawContent) return;
 
         const content = autoLinkUrls(rawContent);
+
         const newNotice = {
             id: 'notice_' + Date.now(),
             content: content,
@@ -875,6 +1018,7 @@
                     </div>
                 `;
             }
+
             return `
                 <div class="notice-feed-item">
                     <div class="notice-feed-content">${np.content}</div>
@@ -888,8 +1032,15 @@
         }).join('');
     }
 
-    function startEditNotice(id) { editingNoticeId = id; renderNoticeFeed(); }
-    function cancelEditNotice() { editingNoticeId = null; renderNoticeFeed(); }
+    function startEditNotice(id) {
+        editingNoticeId = id;
+        renderNoticeFeed();
+    }
+
+    function cancelEditNotice() {
+        editingNoticeId = null;
+        renderNoticeFeed();
+    }
 
     function saveEditNotice(id) {
         const area = document.getElementById(`editNoticeArea_${id}`);
@@ -910,6 +1061,7 @@
                 }).catch(err => console.error("공지 수정 동기화 실패:", err));
             }
         }
+
         editingNoticeId = null;
         renderNoticeFeed();
     }
@@ -917,10 +1069,12 @@
     function deleteNoticePost(id) {
         noticePosts = noticePosts.filter(np => np.id !== id);
         localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+
         if (db) {
             db.collection("mini_notice_posts").doc(String(id)).delete()
               .catch(err => console.error("공지 삭제 실패:", err));
         }
+
         renderNoticeFeed();
     }
 
@@ -994,13 +1148,9 @@
             posts.unshift(postObj);
         }
 
-        try {
-            localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
-        } catch (e) {
-            console.warn("LocalStorage 용량 한계 도달:", e);
-        }
+        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
 
-        if (db && postObj) {
+        if (db) {
             db.collection("mini_blog_posts").doc(String(postObj.id)).set(postObj)
               .catch(err => console.error("클라우드 저장 실패:", err));
         }
@@ -1064,6 +1214,7 @@
         if (!rawText) return;
 
         const text = autoLinkUrls(rawText);
+
         const post = posts.find(p => p.id === currentViewingId);
         if (!post) return;
 
@@ -1116,6 +1267,7 @@
         document.getElementById('editIsSecret').checked = !!post.isSecret;
         document.getElementById('editSecretPw').value = post.secretPw || '';
         toggleSecretPwInput();
+        
         showScreen('editorScreen');
     }
 
@@ -1143,6 +1295,7 @@
         showScreen('listScreen');
     }
 
+    // 에디터 클릭 이벤트
     const editContent = document.getElementById('editContent');
     editContent.addEventListener('click', function(e) {
         const thumbCard = e.target.closest('.thumb-card');
@@ -1250,11 +1403,12 @@
         document.execCommand('insertHTML', false, tableHtml);
     }
 
-    async function uploadImage(e) {
+    function uploadImage(e) {
         const file = e.target.files[0];
         if (file) {
-            const compressedDataUrl = await compressImageFile(file, 900, 0.7);
-            document.execCommand('insertHTML', false, `<img src="${compressedDataUrl}" referrerpolicy="no-referrer" alt="사진">`);
+            const reader = new FileReader();
+            reader.onload = evt => document.execCommand('insertImage', false, evt.target.result);
+            reader.readAsDataURL(file);
         }
         e.target.value = '';
     }
@@ -1264,24 +1418,20 @@
         bar.style.display = bar.style.display === 'flex' ? 'none' : 'flex';
     }
 
-    // ✨ 네이버 블로그 URL 전처리 및 no-referrer 적용
     function addLink() {
         const url = prompt('표시할 이미지 URL 주소를 입력하세요:');
         if (!url) return;
-        let cleanUrl = url.trim();
 
-        // 네이버 블로그 뷰어 주소일 경우 원본 경로 형태로 변환
-        if (cleanUrl.includes('blogfiles.naver.net') || cleanUrl.includes('postfiles.pstatic.net')) {
-            cleanUrl = cleanUrl.replace(/[\?&]type=[^&]+/, '');
-        }
-
-        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" referrerpolicy="no-referrer" alt="썸네일" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
+        const cleanUrl = url.trim();
+        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" alt="썸네일" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
         document.execCommand('insertHTML', false, cardHtml);
     }
 
     function handleThumbClick(el) {
         const img = el.querySelector('img') || el;
-        if (img && img.src) openImageModal(img.src);
+        if (img && img.src) {
+            openImageModal(img.src);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1297,18 +1447,23 @@
         }
     });
 
+    // 갤러리 슬라이더 팝업 모달 제어 함수
     function openImageModal(imgUrl) {
         if (!imgUrl) return;
+
         const viewContentEl = document.getElementById('viewContent');
         galleryImages = [];
         if (viewContentEl) {
             const allImgs = viewContentEl.querySelectorAll('img');
             allImgs.forEach(img => {
-                if (img.src && !galleryImages.includes(img.src)) galleryImages.push(img.src);
+                if (img.src && !galleryImages.includes(img.src)) {
+                    galleryImages.push(img.src);
+                }
             });
         }
 
         if (galleryImages.length === 0) galleryImages = [imgUrl];
+
         currentGalleryIndex = galleryImages.indexOf(imgUrl);
         if (currentGalleryIndex === -1) {
             galleryImages.push(imgUrl);
@@ -1328,7 +1483,7 @@
         }
         strip.style.display = 'flex';
         strip.innerHTML = galleryImages.map((src, idx) => `
-            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" referrerpolicy="no-referrer" onclick="selectGalleryIndex(${idx})">
+            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" onclick="selectGalleryIndex(${idx})">
         `).join('');
     }
 
@@ -1356,8 +1511,8 @@
             prevBtn.style.display = 'none';
             nextBtn.style.display = 'none';
         } else {
-            prevBtn.style.display = 'flex';
-            nextBtn.style.display = 'flex';
+            prevBtn.style.display = 'block';
+            nextBtn.style.display = 'block';
         }
 
         document.querySelectorAll('.strip-thumb').forEach((thumb, idx) => {
@@ -1389,7 +1544,9 @@
     const targetImg = document.getElementById('imgModalTarget');
 
     function resetZoom() {
-        scale = 1; pointX = 0; pointY = 0;
+        scale = 1;
+        pointX = 0;
+        pointY = 0;
         if (targetImg) targetImg.style.transform = `translate(0px, 0px) scale(1)`;
     }
 
@@ -1434,7 +1591,9 @@
     }, { passive: false });
 
     viewport.addEventListener('touchend', function(e) {
-        if (scale <= 1) resetZoom();
+        if (scale <= 1) {
+            resetZoom();
+        }
     });
 
     document.addEventListener('keydown', function(e) {
