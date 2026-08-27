@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- ✨ 네이버/다음 등 외부 블로그 이미지 403 차단 방지 -->
+    <meta name="referrer" content="no-referrer">
     <title>MEMOY</title>
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -10,18 +12,29 @@
     
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; min-height: 100dvh; }
+        
+        /* ✨ 1. 이중 스크롤 방지: body 고정 */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #eef2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
 
         .app-container {
             width: 100%;
             max-width: 100%;
-            height: 100vh;
+            height: 100%;
             height: 100dvh;
             background-color: #ffffff;
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow-x: hidden;
+            overflow: hidden; /* 이중 스크롤 차단 */
         }
 
         @media (min-width: 768px) {
@@ -32,10 +45,9 @@
                 max-height: 880px;
                 box-shadow: 0 8px 30px rgba(0,0,0,0.12);
             }
-            body { background-color: #eef2f5; }
         }
 
-        .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; overflow: hidden; }
         .screen.active { display: flex; }
 
         /* 상단 카테고리 탭 */
@@ -48,6 +60,7 @@
             white-space: nowrap;
             background: #fff;
             flex-shrink: 0;
+            -webkit-overflow-scrolling: touch;
         }
         .category-tab {
             font-size: 14px;
@@ -62,7 +75,7 @@
             border-bottom: 2px solid #0253c7;
         }
 
-        /* 📌 부서별 공지방 자동 연동 박스 */
+        /* 부서별 공지방 자동 연동 박스 */
         .dept-notice-box {
             background: #ffffff;
             border: 1px solid #cbd5e1;
@@ -93,13 +106,6 @@
             overflow-y: auto;
             padding-right: 4px;
         }
-        .dept-notice-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .dept-notice-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
         .dept-notice-item {
             display: flex;
             flex-direction: column;
@@ -129,8 +135,13 @@
             margin-top: 3px;
         }
 
-        /* 모바일 최적화 카드형 리스트 영역 */
-        .list-area { flex: 1; padding: 12px 16px; overflow-y: auto; }
+        /* 목록 영역 단일 스크롤 */
+        .list-area { 
+            flex: 1; 
+            padding: 12px 16px; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
         .post-card-list { display: flex; flex-direction: column; }
         .post-card-item {
             padding: 10px 4px;
@@ -157,7 +168,6 @@
             line-height: 1.4;
         }
 
-        /* 검색어 하이라이트 & 본문 미리보기 */
         .search-snippet {
             font-size: 12px;
             color: #64748b;
@@ -177,7 +187,7 @@
             border-radius: 3px;
         }
 
-        /* 공지방 전용 타임라인 피드 화면 */
+        /* 공지방 피드 */
         .notice-container { display: flex; flex-direction: column; gap: 12px; }
         .notice-write-area {
             width: 100%;
@@ -224,7 +234,7 @@
             margin-bottom: 6px;
         }
 
-        /* 하단 검색 및 작성 버튼 */
+        /* 하단 바 */
         .list-footer {
             display: flex;
             justify-content: space-between;
@@ -269,7 +279,7 @@
         .editor-header select { padding: 4px 6px; border-radius: 6px; border: 1px solid #ddd; outline: none; font-size: 13px; }
         .secret-control { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #555; }
         .secret-pw-input { width: 65px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; outline: none; display: none; }
-        .editor-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; position: relative; }
+        .editor-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; position: relative; -webkit-overflow-scrolling: touch; }
         .title-input { font-size: 18px; font-weight: bold; border: none; outline: none; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .content-box { flex: 1; outline: none; font-size: 15px; line-height: 1.6; min-height: 180px; }
         .content-box img, .view-content img, .comment-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; cursor: pointer; image-rendering: -webkit-optimize-contrast; }
@@ -353,6 +363,21 @@
             font-weight: bold;
         }
 
+        /* ✨ 1. 상세 조회 화면: 단일 스크롤 최적화 */
+        .view-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eee; flex-shrink: 0; background: #fff; }
+        .view-body { 
+            flex: 1; 
+            padding: 16px; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; /* 부드러운 단일 터치 스크롤 */
+        }
+        .view-meta { color: #888; font-size: 13px; margin: 6px 0 14px 0; }
+        .view-content { font-size: 15px; line-height: 1.6; word-break: break-all; }
+        .btn-group { display: flex; gap: 6px; }
+        .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+
         /* 크게 보는 갤러리 슬라이더 팝업 모달 */
         .img-modal-overlay {
             display: none;
@@ -414,7 +439,7 @@
             will-change: transform;
         }
 
-        /* ✨ 투명 터치 네비게이션 영역 (화살표 시각적 표시 제거하여 사진 가림 방지) */
+        /* 투명 터치 네비게이션 영역 */
         .modal-nav-btn {
             position: absolute;
             top: 0;
@@ -467,14 +492,6 @@
         .toolbar-bottom { display: flex; justify-content: space-around; padding: 10px 16px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
         .toolbar-bottom button { background: none; border: none; font-size: 18px; cursor: pointer; }
 
-        /* 상세 조회 화면 */
-        .view-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eee; flex-shrink: 0; }
-        .view-body { flex: 1; padding: 16px; overflow-y: auto; }
-        .view-meta { color: #888; font-size: 13px; margin: 6px 0 14px 0; }
-        .btn-group { display: flex; gap: 6px; }
-        .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-
         /* 댓글 스타일 */
         .comment-section { margin-top: 24px; border-top: 1px solid #eee; padding-top: 16px; }
         .comment-title { font-size: 15px; font-weight: bold; margin-bottom: 10px; color: #333; }
@@ -505,17 +522,14 @@
         </div>
 
         <div class="list-area">
-            <!-- 📌 부서별 공지방 자동 연동 박스 -->
             <div id="deptNoticeContainer"></div>
 
-            <!-- 공지 탭 전용 작성 폼 & 타임라인 피드 -->
             <div id="noticeScreenArea" style="display:none;" class="notice-container">
                 <textarea id="noticeWriteContent" class="notice-write-area" placeholder="공지글을 작성하세요."></textarea>
                 <button class="btn-notice-save" onclick="saveNoticePost()">공지방 저장하기</button>
                 <div id="noticeFeedList"></div>
             </div>
 
-            <!-- 모바일 카드형 리스트 컨테이너 -->
             <div id="postCardList" class="post-card-list"></div>
         </div>
 
@@ -549,14 +563,12 @@
         </header>
 
         <main class="editor-body">
-            <!-- 썸네일 전용 관리 툴바 -->
             <div id="thumbManageToolbar">
                 <button type="button" onclick="moveSelectedThumb(-1)">◀ 앞으로</button>
                 <button type="button" onclick="moveSelectedThumb(1)">뒤로 ▶</button>
                 <button type="button" class="btn-danger" onclick="deleteSelectedThumb()">🗑️ 삭제</button>
             </div>
 
-            <!-- 일반 이미지 크기 조절 툴바 -->
             <div id="imgResizeToolbar">
                 <button type="button" onclick="resizeSelectedImage(0.9)">-10%</button>
                 <button type="button" onclick="resizeSelectedImage(1.1)">+10%</button>
@@ -598,7 +610,7 @@
                 <button class="btn-delete" onclick="deleteCurrentPost()">삭제</button>
             </div>
         </header>
-        <div class="view-body">
+        <div class="view-body" id="viewBodyContainer">
             <h2 id="viewTitle"></h2>
             <div class="view-meta" id="viewMeta"></div>
             <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
@@ -620,7 +632,7 @@
         </div>
     </div>
 
-    <!-- ✨ 4. 갤러리 슬라이더 팝업 모달 (투명 터치 영역 적용) -->
+    <!-- 4. 갤러리 슬라이더 팝업 모달 -->
     <div id="imgModalOverlay" class="img-modal-overlay" onclick="closeImageModal()">
         <div class="img-modal-topbar" onclick="event.stopPropagation()">
             <div id="imgModalCounter" class="img-modal-counter">1 / 1</div>
@@ -628,10 +640,9 @@
         </div>
 
         <div class="img-modal-viewport" id="imgModalViewport">
-            <!-- 투명 터치 버튼 -->
             <button class="modal-nav-btn modal-nav-prev" onclick="event.stopPropagation(); showPrevGalleryImage();"></button>
             <button class="modal-nav-btn modal-nav-next" onclick="event.stopPropagation(); showNextGalleryImage();"></button>
-            <img id="imgModalTarget" src="" alt="크게보기 사진" onerror="this.onerror=null; alert('이미지를 불러올 수 없습니다.');">
+            <img id="imgModalTarget" src="" alt="크게보기 사진" referrerpolicy="no-referrer" onerror="this.onerror=null; alert('이미지를 불러올 수 없습니다.');">
         </div>
 
         <div class="img-modal-strip" id="imgModalStrip" onclick="event.stopPropagation()"></div>
@@ -772,6 +783,9 @@
             hideImgResizeToolbar();
             hideThumbManageToolbar();
         }
+        // 화면 전환 시 스크롤 최상단으로 리셋
+        const viewBody = document.getElementById('viewBodyContainer');
+        if (viewBody) viewBody.scrollTop = 0;
     }
 
     function setCategory(cat) {
@@ -1295,7 +1309,6 @@
         showScreen('listScreen');
     }
 
-    // 에디터 클릭 이벤트
     const editContent = document.getElementById('editContent');
     editContent.addEventListener('click', function(e) {
         const thumbCard = e.target.closest('.thumb-card');
@@ -1418,12 +1431,13 @@
         bar.style.display = bar.style.display === 'flex' ? 'none' : 'flex';
     }
 
+    // ✨ 2. 외부 블로그 사진 차단 우회 삽입 (referrerpolicy="no-referrer")
     function addLink() {
         const url = prompt('표시할 이미지 URL 주소를 입력하세요:');
         if (!url) return;
 
         const cleanUrl = url.trim();
-        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" alt="썸네일" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
+        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" alt="썸네일" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
         document.execCommand('insertHTML', false, cardHtml);
     }
 
@@ -1483,7 +1497,7 @@
         }
         strip.style.display = 'flex';
         strip.innerHTML = galleryImages.map((src, idx) => `
-            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" onclick="selectGalleryIndex(${idx})">
+            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" referrerpolicy="no-referrer" onclick="selectGalleryIndex(${idx})">
         `).join('');
     }
 
