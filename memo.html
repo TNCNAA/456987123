@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MEMOY</title>
+    <!-- 네이버 외부 불펌 방지 우회 메타 태그 -->
     <meta name="referrer" content="no-referrer">
+    
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -18,7 +20,7 @@
             align-items: center; 
             min-height: 100vh; 
             min-height: 100dvh; 
-            overflow: hidden; /* 바깥쪽 전체 스크롤 완전 차단 */
+            overflow: hidden;
         }
 
         .app-container {
@@ -30,7 +32,7 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow: hidden; /* 이중 스크롤 발생 방지 */
+            overflow: hidden;
         }
 
         @media (min-width: 768px) {
@@ -124,7 +126,7 @@
             padding: 12px 16px; 
             overflow-y: auto; 
             overflow-x: hidden;
-            scrollbar-gutter: stable; /* 스크롤바가 생겨도 폭이 흔들리지 않도록 고정 */
+            scrollbar-gutter: stable;
         }
         .post-card-list { display: flex; flex-direction: column; }
         .post-card-item {
@@ -257,7 +259,6 @@
         .title-input { font-size: 18px; font-weight: bold; border: none; outline: none; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         .content-box { flex: 1; outline: none; font-size: 15px; line-height: 1.6; min-height: 180px; }
         
-        /* 이미지 로딩 시 레이아웃 흔들림 방지 */
         .content-box img, .view-content img, .comment-content img { 
             max-width: 100%; 
             height: auto;
@@ -265,7 +266,7 @@
             margin: 8px 0; 
             cursor: pointer; 
             image-rendering: -webkit-optimize-contrast; 
-            display: block; /* 인라인 여백 흔들림 방지 */
+            display: block;
         }
         .content-box img.selected, .content-box .thumb-card.selected .thumb-img { outline: 3px solid #0253c7; }
 
@@ -367,14 +368,14 @@
         .toolbar-bottom { display: flex; justify-content: space-around; padding: 10px 16px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
         .toolbar-bottom button { background: none; border: none; font-size: 18px; cursor: pointer; }
 
-        /* 상세 조회 화면: 안정적인 스크롤 컨테이너 */
+        /* 상세 조회 화면 */
         .view-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eee; flex-shrink: 0; }
         .view-body { 
             flex: 1; 
             padding: 16px; 
             overflow-y: auto; 
             overflow-x: hidden;
-            scrollbar-gutter: stable; /* 스크롤바 생성 시 폭 흔들림 차단 */
+            scrollbar-gutter: stable;
         }
         .view-meta { color: #888; font-size: 13px; margin: 6px 0 14px 0; }
         .btn-group { display: flex; gap: 6px; }
@@ -527,7 +528,7 @@
         <div class="img-modal-viewport" id="imgModalViewport">
             <button class="modal-nav-btn modal-nav-prev" onclick="event.stopPropagation(); showPrevGalleryImage();">‹</button>
             <button class="modal-nav-btn modal-nav-next" onclick="event.stopPropagation(); showNextGalleryImage();">›</button>
-            <img id="imgModalTarget" src="" alt="크게보기 사진" onerror="this.onerror=null;">
+            <img id="imgModalTarget" src="" alt="크게보기 사진" referrerpolicy="no-referrer" onerror="this.onerror=null;">
         </div>
 
         <div class="img-modal-strip" id="imgModalStrip" onclick="event.stopPropagation()"></div>
@@ -1253,7 +1254,7 @@
         const file = e.target.files[0];
         if (file) {
             const compressedDataUrl = await compressImageFile(file, 900, 0.7);
-            document.execCommand('insertImage', false, compressedDataUrl);
+            document.execCommand('insertHTML', false, `<img src="${compressedDataUrl}" referrerpolicy="no-referrer" alt="사진">`);
         }
         e.target.value = '';
     }
@@ -1263,11 +1264,18 @@
         bar.style.display = bar.style.display === 'flex' ? 'none' : 'flex';
     }
 
+    // ✨ 네이버 블로그 URL 전처리 및 no-referrer 적용
     function addLink() {
         const url = prompt('표시할 이미지 URL 주소를 입력하세요:');
         if (!url) return;
-        const cleanUrl = url.trim();
-        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" alt="썸네일" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
+        let cleanUrl = url.trim();
+
+        // 네이버 블로그 뷰어 주소일 경우 원본 경로 형태로 변환
+        if (cleanUrl.includes('blogfiles.naver.net') || cleanUrl.includes('postfiles.pstatic.net')) {
+            cleanUrl = cleanUrl.replace(/[\?&]type=[^&]+/, '');
+        }
+
+        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" referrerpolicy="no-referrer" alt="썸네일" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
         document.execCommand('insertHTML', false, cardHtml);
     }
 
@@ -1320,7 +1328,7 @@
         }
         strip.style.display = 'flex';
         strip.innerHTML = galleryImages.map((src, idx) => `
-            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" onclick="selectGalleryIndex(${idx})">
+            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" referrerpolicy="no-referrer" onclick="selectGalleryIndex(${idx})">
         `).join('');
     }
 
