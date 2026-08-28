@@ -444,7 +444,7 @@
         .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
-        /* ✨ 사진/링크 갤러리 모음 화면 스타일 */
+        /* 사진/링크 갤러리 모음 화면 스타일 */
         .links-screen-body {
             flex: 1;
             padding: 12px;
@@ -452,7 +452,6 @@
             -webkit-overflow-scrolling: touch;
         }
         
-        /* 갤러리 그리드 레이아웃 */
         .photo-gallery-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -525,7 +524,6 @@
             align-items: center;
         }
 
-        /* 일반 텍스트 링크 카드 */
         .text-link-card {
             grid-column: 1 / -1;
             background: #f8fafc;
@@ -650,8 +648,10 @@
             transform: scale(1.1);
         }
 
+        /* 서식 및 하단 툴바 */
         .toolbar-top { display: none; gap: 6px; padding: 8px 16px; background: #f8f9fa; border-top: 1px solid #eee; align-items: center; flex-shrink: 0; }
         .toolbar-top button, .toolbar-top select { border: 1px solid #ddd; background: #fff; border-radius: 4px; padding: 4px 6px; cursor: pointer; font-size: 13px; }
+        .toolbar-top input[type="color"] { border: 1px solid #ddd; background: #fff; border-radius: 4px; width: 30px; height: 26px; padding: 1px; cursor: pointer; }
         .toolbar-bottom { display: flex; justify-content: space-around; padding: 10px 16px; border-top: 1px solid #eee; background: #fff; flex-shrink: 0; }
         .toolbar-bottom button { background: none; border: none; font-size: 18px; cursor: pointer; }
 
@@ -695,7 +695,6 @@
             <div id="postCardList" class="post-card-list"></div>
         </div>
 
-        <!-- 하단 바: 검색창 + 📷 사진/링크 모음 버튼 + 글쓰기 버튼 -->
         <div class="list-footer" id="mainListFooter">
             <input type="text" class="search-input" id="searchKeyword" placeholder="제목+내용 검색..." onkeyup="searchPosts()">
             <button class="btn-link-collector" onclick="openLinkCollector()" title="글에 등록된 전체 사진/링크 모아보기">📷 사진모음</button>
@@ -742,8 +741,9 @@
             <div id="editContent" class="content-box" contenteditable="true" placeholder="내용을 작성하세요..."></div>
         </main>
 
+        <!-- ✨ 글자색 & 하이라이트 복원 적용 툴바 -->
         <div id="textToolbar" class="toolbar-top">
-            <select onchange="document.execCommand('fontSize', false, this.value)">
+            <select onchange="restoreSelection(); document.execCommand('fontSize', false, this.value)">
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3" selected>3</option>
@@ -751,9 +751,9 @@
                 <option value="5">5</option>
                 <option value="6">6</option>
             </select>
-            <button onclick="document.execCommand('bold')"><b>B</b></button>
-            <input type="color" onchange="document.execCommand('foreColor', false, this.value)" title="글자색">
-            <input type="color" onchange="document.execCommand('backColor', false, this.value)" title="하이라이트">
+            <button onmousedown="event.preventDefault();" onclick="restoreSelection(); document.execCommand('bold')"><b>B</b></button>
+            <input type="color" id="textColorPicker" onmousedown="saveSelection()" onchange="applyTextColor(this.value)" title="글자색">
+            <input type="color" id="hiliteColorPicker" onmousedown="saveSelection()" onchange="applyHiliteColor(this.value)" title="하이라이트">
         </div>
 
         <footer class="toolbar-bottom">
@@ -796,7 +796,7 @@
         </div>
     </div>
 
-    <!-- ✨ 4. 사진 및 링크 갤러리 모음 전용 화면 -->
+    <!-- 4. 사진 및 링크 갤러리 모음 전용 화면 -->
     <div id="linkCollectorScreen" class="screen">
         <header class="view-header">
             <span style="cursor:pointer;" onclick="showScreen('listScreen')">← 뒤로가기</span>
@@ -865,6 +865,43 @@
     let initialDistance = 0;
     let initialScale = 1;
     let lastTapTime = 0;
+
+    // ✨ 선택 영역 보존 및 글자색/하이라이트 완벽 적용 함수
+    let savedRange = null;
+
+    function saveSelection() {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+            savedRange = sel.getRangeAt(0);
+        }
+    }
+
+    function restoreSelection() {
+        if (savedRange) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+        }
+    }
+
+    function applyTextColor(color) {
+        restoreSelection();
+        document.execCommand('foreColor', false, color);
+    }
+
+    function applyHiliteColor(color) {
+        restoreSelection();
+        if (!document.execCommand('hiliteColor', false, color)) {
+            document.execCommand('backColor', false, color);
+        }
+    }
+
+    document.addEventListener('selectionchange', function() {
+        const activeEl = document.activeElement;
+        if (activeEl && activeEl.id === 'editContent') {
+            saveSelection();
+        }
+    });
 
     function autoLinkUrls(html) {
         if (!html) return '';
@@ -1481,7 +1518,6 @@
         showScreen('listScreen');
     }
 
-    // ✨ [전면 개편] 사진 썸네일 갤러리 뷰 추출 및 렌더링 함수
     function openLinkCollector() {
         allExtractedLinks = [];
         document.getElementById('linkSearchInput').value = '';
@@ -1492,12 +1528,10 @@
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = p.content || '';
 
-            // 1. 모든 본문 이미지 및 썸네일 사진 추출
             const allImages = tempDiv.querySelectorAll('img');
             allImages.forEach(img => {
                 const src = img.getAttribute('src');
                 if (src && (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:image'))) {
-                    // 중복 사진 방지
                     if (!allExtractedLinks.some(item => item.url === src && item.postId === p.id)) {
                         allExtractedLinks.push({
                             url: src,
@@ -1511,7 +1545,6 @@
                 }
             });
 
-            // 2. 일반 웹사이트 텍스트 링크 추출 (이미지가 아닌 순수 링크)
             const anchorTags = tempDiv.querySelectorAll('a');
             anchorTags.forEach(a => {
                 const href = a.getAttribute('href');
@@ -1546,7 +1579,6 @@
 
         itemList.forEach(item => {
             if (item.isImage) {
-                // 사진 카드 형태 (이미지 썸네일 표시)
                 html += `
                     <div class="gallery-card">
                         <div class="gallery-thumb-wrap" onclick="openImageModal('${item.url}')" title="크게 보기">
@@ -1562,7 +1594,6 @@
                     </div>
                 `;
             } else {
-                // 일반 웹 링크 카드 형태
                 html += `
                     <div class="text-link-card">
                         <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="text-link-url">🔗 ${item.url} ↗</a>
@@ -1758,7 +1789,6 @@
                 }
             });
         } else {
-            // 사진 모음 화면에서 열었을 경우 전체 추출 사진 목록 연동
             galleryImages = allExtractedLinks.filter(i => i.isImage).map(i => i.url);
         }
 
