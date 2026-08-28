@@ -281,7 +281,11 @@
             white-space: nowrap;
         }
 
-        /* 에디터 화면 */
+        /* ✨ 에디터 화면 (이중 스크롤 방지 수정) */
+        #editorScreen {
+            height: 100%;
+            overflow: hidden;
+        }
         .editor-header {
             display: flex;
             justify-content: space-between;
@@ -290,6 +294,7 @@
             border-bottom: 1px solid #eee;
             gap: 8px;
             flex-shrink: 0;
+            background: #fff;
         }
         .editor-header select { padding: 4px 6px; border-radius: 6px; border: 1px solid #ddd; outline: none; font-size: 13px; }
         .secret-control { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #555; }
@@ -315,10 +320,24 @@
             border-bottom: 1px solid #eee; 
             padding-bottom: 8px;
             width: 100%;
+            flex-shrink: 0;
         }
 
-        .content-box, .view-content { 
+        .content-box { 
             flex: 1; 
+            outline: none; 
+            font-size: 15px; 
+            line-height: 1.6; 
+            min-height: 250px; 
+            height: auto;
+            overflow: visible; /* 내부 자체 스크롤 제거 */
+            width: 100%;
+            max-width: 100%;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        .view-content {
             outline: none; 
             font-size: 15px; 
             line-height: 1.6; 
@@ -741,7 +760,6 @@
             <div id="editContent" class="content-box" contenteditable="true" placeholder="내용을 작성하세요..."></div>
         </main>
 
-        <!-- ✨ 글자색 & 하이라이트 복원 적용 툴바 -->
         <div id="textToolbar" class="toolbar-top">
             <select onchange="restoreSelection(); document.execCommand('fontSize', false, this.value)">
                 <option value="1">1</option>
@@ -866,7 +884,6 @@
     let initialScale = 1;
     let lastTapTime = 0;
 
-    // ✨ 선택 영역 보존 및 글자색/하이라이트 완벽 적용 함수
     let savedRange = null;
 
     function saveSelection() {
@@ -1624,7 +1641,6 @@
         renderCollectedLinks(filtered);
     }
 
-    // 에디터 클릭 이벤트
     const editContent = document.getElementById('editContent');
     editContent.addEventListener('click', function(e) {
         const thumbCard = e.target.closest('.thumb-card');
