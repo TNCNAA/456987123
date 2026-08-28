@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 네이버/다음 등 외부 블로그 이미지 403 차단 방지 -->
+    <!-- 외부 블로그 이미지 403 차단 방지 -->
     <meta name="referrer" content="no-referrer">
     <title>MEMOY</title>
     <!-- Firebase SDK 로드 -->
@@ -281,11 +281,8 @@
             white-space: nowrap;
         }
 
-        /* ✨ 에디터 화면 (이중 스크롤 방지 수정) */
-        #editorScreen {
-            height: 100%;
-            overflow: hidden;
-        }
+        /* 에디터 화면 */
+        #editorScreen { height: 100%; overflow: hidden; }
         .editor-header {
             display: flex;
             justify-content: space-between;
@@ -330,7 +327,7 @@
             line-height: 1.6; 
             min-height: 250px; 
             height: auto;
-            overflow: visible; /* 내부 자체 스크롤 제거 */
+            overflow: visible;
             width: 100%;
             max-width: 100%;
             word-break: break-all;
@@ -358,18 +355,161 @@
             image-rendering: -webkit-optimize-contrast; 
         }
 
+        .content-box hr, .view-content hr { max-width: 100%; }
+        .content-box img.selected, .content-box .thumb-card.selected .thumb-img { outline: 3px solid #0253c7; }
+
+        /* ✨ 표 기본 및 루틴/요약표 스타일 */
         .content-box table, .view-content table {
             width: 100% !important;
             max-width: 100% !important;
             table-layout: fixed;
+            border-collapse: collapse;
+            margin: 10px 0;
             word-break: break-all;
         }
-
-        .content-box hr, .view-content hr {
-            max-width: 100%;
+        .content-box table td, .view-content table td,
+        .content-box table th, .view-content table th {
+            outline: none;
+            word-break: break-all;
+            vertical-align: middle;
         }
 
-        .content-box img.selected, .content-box .thumb-card.selected .thumb-img { outline: 3px solid #0253c7; }
+        /* 루틴 체크 뱃지 & 리셋 버튼 */
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .status-badge.standby {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+        .status-badge.done {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+        }
+
+        .btn-routine-reset {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            user-select: none;
+        }
+        .btn-routine-reset:hover { background: #e2e8f0; color: #0f172a; }
+
+        /* ✨ 아코디언 서식 3종 스타일 (1.모던카드, 2.미니멀라인, 4.소프트태그) */
+        .content-box details, .view-content details {
+            margin: 8px 0;
+            width: 100%;
+        }
+
+        /* 1. 모던 카드형 */
+        .acc-card {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            overflow: hidden !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .acc-card > summary {
+            padding: 8px 12px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            color: #1e293b !important;
+            cursor: pointer !important;
+            background: #f8fafc !important;
+            user-select: none;
+            outline: none;
+        }
+        .acc-card[open] > summary {
+            border-bottom: 1px solid #e2e8f0 !important;
+            background: #eff6ff !important;
+            color: #0253c7 !important;
+        }
+        .acc-card > .acc-content {
+            padding: 10px 12px !important;
+            font-size: 12.5px !important;
+            color: #334155 !important;
+            line-height: 1.5 !important;
+        }
+
+        /* 2. 미니멀 라인형 */
+        .acc-line {
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 4px 0 !important;
+        }
+        .acc-line > summary {
+            font-size: 13px !important;
+            font-weight: bold !important;
+            color: #475569 !important;
+            cursor: pointer !important;
+            outline: none;
+            user-select: none;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .acc-line > summary::-webkit-details-marker { display: none; }
+        .acc-line > summary::before {
+            content: "▶";
+            font-size: 9px;
+            color: #94a3b8;
+            transition: transform 0.2s ease;
+        }
+        .acc-line[open] > summary::before {
+            transform: rotate(90deg);
+            color: #0253c7;
+        }
+        .acc-line[open] > summary { color: #0253c7 !important; }
+        .acc-line > .acc-content {
+            padding: 6px 0 4px 14px !important;
+            font-size: 12.5px !important;
+            color: #64748b !important;
+            line-height: 1.5 !important;
+        }
+
+        /* 4. 소프트 태그형 */
+        .acc-soft {
+            border: 1px solid #e0e7ff !important;
+            border-radius: 6px !important;
+            background: #f5f7ff !important;
+            overflow: hidden !important;
+        }
+        .acc-soft > summary {
+            padding: 7px 10px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #3730a3 !important;
+            cursor: pointer !important;
+            outline: none;
+            user-select: none;
+        }
+        .acc-soft[open] > summary {
+            border-bottom: 1px solid #e0e7ff !important;
+            background: #eef2ff !important;
+        }
+        .acc-soft > .acc-content {
+            padding: 8px 10px !important;
+            font-size: 12px !important;
+            color: #4338ca !important;
+            background: #ffffff !important;
+        }
 
         /* 썸네일 단독 이미지 스타일 */
         .thumb-card {
@@ -399,55 +539,36 @@
             border-color: #0253c7;
         }
 
-        /* 썸네일 전용 관리 툴바 */
-        #thumbManageToolbar {
+        /* 플로팅 조작 툴바 모음 */
+        #thumbManageToolbar, #imgResizeToolbar, #tableManageToolbar {
             display: none;
             position: absolute;
             background: #1e293b;
             color: white;
             padding: 4px 8px;
             border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 1000;
-            gap: 6px;
+            gap: 4px;
             align-items: center;
-            font-size: 12px;
+            font-size: 11px;
+            white-space: nowrap;
         }
-        #thumbManageToolbar button {
+        #thumbManageToolbar button, #imgResizeToolbar button, #tableManageToolbar button {
             background: #334155;
             color: white;
             border: none;
-            padding: 4px 8px;
+            padding: 4px 7px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
             font-size: 11px;
+            transition: background 0.15s;
         }
-        #thumbManageToolbar button.btn-danger { background: #ef4444; }
-
-        /* 일반 이미지 크기 조절 플로팅 툴바 */
-        #imgResizeToolbar {
-            display: none;
-            position: absolute;
-            background: #1e293b;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            z-index: 1000;
-            gap: 6px;
-            align-items: center;
-            font-size: 12px;
-        }
-        #imgResizeToolbar button {
-            background: #334155;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        #thumbManageToolbar button:hover, #imgResizeToolbar button:hover, #tableManageToolbar button:hover { background: #475569; }
+        #thumbManageToolbar button.btn-danger, #tableManageToolbar button.btn-danger { background: #ef4444; }
+        #thumbManageToolbar button.btn-danger:hover, #tableManageToolbar button.btn-danger:hover { background: #dc2626; }
+        .toolbar-divider { color: #475569; margin: 0 2px; }
 
         /* 상세 조회 화면 */
         .view-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eee; flex-shrink: 0; background: #fff; }
@@ -463,7 +584,7 @@
         .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
-        /* 사진/링크 갤러리 모음 화면 스타일 */
+        /* 사진/링크 갤러리 모음 화면 */
         .links-screen-body {
             flex: 1;
             padding: 12px;
@@ -561,7 +682,7 @@
             text-decoration: underline;
         }
 
-        /* 크게 보는 갤러리 슬라이더 팝업 모달 */
+        /* 갤러리 슬라이더 팝업 모달 */
         .img-modal-overlay {
             display: none;
             position: fixed;
@@ -745,15 +866,29 @@
         </header>
 
         <main class="editor-body">
+            <!-- 썸네일 플로팅 툴바 -->
             <div id="thumbManageToolbar">
                 <button type="button" onclick="moveSelectedThumb(-1)">◀ 앞으로</button>
                 <button type="button" onclick="moveSelectedThumb(1)">뒤로 ▶</button>
                 <button type="button" class="btn-danger" onclick="deleteSelectedThumb()">🗑️ 삭제</button>
             </div>
 
+            <!-- 이미지 플로팅 툴바 -->
             <div id="imgResizeToolbar">
                 <button type="button" onclick="resizeSelectedImage(0.9)">-10%</button>
                 <button type="button" onclick="resizeSelectedImage(1.1)">+10%</button>
+            </div>
+
+            <!-- 표 플로팅 툴바 -->
+            <div id="tableManageToolbar">
+                <span style="color:#94a3b8; font-weight:bold;">현재칸너비:</span>
+                <button type="button" onclick="resizeCurrentCol(-15)">-15px</button>
+                <button type="button" onclick="resizeCurrentCol(15)">+15px</button>
+                <span class="toolbar-divider">|</span>
+                <button type="button" onclick="addTableRowBelow()">+행</button>
+                <button type="button" onclick="addTableColRight()">+열</button>
+                <button type="button" class="btn-danger" onclick="deleteCurrentTableRow()">-행</button>
+                <button type="button" class="btn-danger" onclick="deleteCurrentTable()">표삭제</button>
             </div>
 
             <input type="text" id="editTitle" class="title-input" placeholder="제목을 입력하세요">
@@ -778,7 +913,8 @@
             <button onclick="toggleToolbar()" title="서식">T</button>
             <button onclick="document.getElementById('imageUploader').click()" title="사진 첨부">📷</button>
             <button onclick="addLink()" title="썸네일 사진 삽입">🔗</button>
-            <button onclick="insertTable()" title="표 삽입">📊</button>
+            <button onclick="insertAccordionModal()" title="아코디언 서식 삽입 (3종)">📁</button>
+            <button onclick="insertTableModal()" title="표 삽입 (2종)">📊</button>
         </footer>
         <input type="file" id="imageUploader" accept="image/*" style="display:none;" onchange="uploadImage(event)">
     </div>
@@ -860,7 +996,7 @@
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
     } catch(e) {
-        console.log("Firebase 초기화 오류 발생:", e);
+        console.log("Firebase 초기화 오류:", e);
     }
 
     let posts = JSON.parse(localStorage.getItem('blog_memo_posts')) || [];
@@ -874,23 +1010,18 @@
     let currentSearchKeyword = '';
     let allExtractedLinks = [];
 
+    let currentActiveTable = null;
+    let currentActiveCell = null;
+
     let galleryImages = [];
     let currentGalleryIndex = 0;
 
-    let scale = 1;
-    let pointX = 0, pointY = 0;
-    let startX = 0, startY = 0;
-    let initialDistance = 0;
-    let initialScale = 1;
-    let lastTapTime = 0;
-
+    let scale = 1, pointX = 0, pointY = 0, startX = 0, startY = 0, initialDistance = 0, initialScale = 1, lastTapTime = 0;
     let savedRange = null;
 
     function saveSelection() {
         const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-            savedRange = sel.getRangeAt(0);
-        }
+        if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0);
     }
 
     function restoreSelection() {
@@ -915,58 +1046,44 @@
 
     document.addEventListener('selectionchange', function() {
         const activeEl = document.activeElement;
-        if (activeEl && activeEl.id === 'editContent') {
-            saveSelection();
-        }
+        if (activeEl && activeEl.id === 'editContent') saveSelection();
     });
 
     function autoLinkUrls(html) {
         if (!html) return '';
-        
         let replaced = html.replace(/(?![^<]*>|[^<>]*<\/)(https?:\/\/[^\s<]+)/gi, function(url) {
             return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${url}</a>`;
         });
-
         replaced = replaced.replace(/(?![^<]*>|[^<>]*<\/)(^|[^\/])(www\.[^\s<]+)/gi, function(match, p1, url) {
             return `${p1}<a href="https://${url}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${url}</a>`;
         });
-
         const domainPattern = /(?![^<]*>|[^<>]*<\/)(^|[\s(>])([a-zA-Z0-9-]+\.(?:com|net|org|kr|co\.kr|io|me|app|site|xyz|dev)(?:\/[^\s<]*)?)/gi;
         replaced = replaced.replace(domainPattern, function(match, p1, domain) {
             return `${p1}<a href="https://${domain}" target="_blank" rel="noopener noreferrer" style="color:#0253c7; text-decoration:underline; word-break:break-all;">${domain}</a>`;
         });
-
         return replaced;
     }
 
     const editBox = document.getElementById('editContent');
     editBox.addEventListener('keyup', function(e) {
-        if (e.key === ' ' || e.key === 'Enter') {
-            convertLastWordToLink();
-        }
+        if (e.key === ' ' || e.key === 'Enter') convertLastWordToLink();
     });
 
     function convertLastWordToLink() {
         const sel = window.getSelection();
         if (!sel || !sel.isCollapsed || !sel.anchorNode) return;
-
         let textNode = sel.anchorNode;
         if (textNode.nodeType !== Node.TEXT_NODE) return;
         if (textNode.parentElement && textNode.parentElement.tagName === 'A') return;
 
         const text = textNode.textContent;
         const offset = sel.anchorOffset;
-        
         const textBeforeCursor = text.substring(0, offset);
         const match = textBeforeCursor.match(/(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.(?:com|net|org|kr|co\.kr|io|me|app|site|xyz|dev)(?:\/[^\s]*)?)\s$/i);
 
         if (match) {
             const rawUrl = match[1];
-            let hrefUrl = rawUrl;
-            if (!hrefUrl.startsWith('http://') && !hrefUrl.startsWith('https://')) {
-                hrefUrl = 'https://' + hrefUrl;
-            }
-
+            let hrefUrl = rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl;
             const urlStart = textBeforeCursor.lastIndexOf(rawUrl);
             const before = text.substring(0, urlStart);
             const after = text.substring(offset);
@@ -983,7 +1100,6 @@
             linkNode.textContent = rawUrl;
             
             const spaceNode = document.createTextNode(' ' + after);
-
             parent.insertBefore(beforeNode, textNode);
             parent.insertBefore(linkNode, textNode);
             parent.insertBefore(spaceNode, textNode);
@@ -1009,6 +1125,7 @@
         if (screenId !== 'editorScreen') {
             hideImgResizeToolbar();
             hideThumbManageToolbar();
+            hideTableToolbar();
         }
         const viewBody = document.getElementById('viewBodyContainer');
         if (viewBody) viewBody.scrollTop = 0;
@@ -1039,23 +1156,15 @@
     function parseNoticeEntries(rawContent, noticeId, dateStr) {
         const lines = rawContent.split('\n');
         const knownDepts = ['NS', 'OS', 'GS', '병동', 'NR', 'FM'];
-        
-        let blocks = [];
-        let currentLines = [];
+        let blocks = [], currentLines = [];
 
         lines.forEach(line => {
             const trimmed = line.trim();
             if (!trimmed) return;
-
             const hasNewDept = knownDepts.some(dept => checkDeptMatch(trimmed, dept));
-
             if (hasNewDept) {
                 if (currentLines.length > 0) {
-                    blocks.push({
-                        noticeId: noticeId,
-                        content: currentLines.join('\n').trim(),
-                        date: dateStr
-                    });
+                    blocks.push({ noticeId: noticeId, content: currentLines.join('\n').trim(), date: dateStr });
                 }
                 currentLines = [trimmed];
             } else {
@@ -1064,21 +1173,15 @@
         });
 
         if (currentLines.length > 0) {
-            blocks.push({
-                noticeId: noticeId,
-                content: currentLines.join('\n').trim(),
-                date: dateStr
-            });
+            blocks.push({ noticeId: noticeId, content: currentLines.join('\n').trim(), date: dateStr });
         }
-
         return blocks;
     }
 
     function highlightText(text, keyword) {
         if (!keyword || !text) return text;
         const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${escaped})`, 'gi');
-        return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+        return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>');
     }
 
     function extractSnippet(htmlContent, keyword, length = 35) {
@@ -1086,17 +1189,14 @@
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlContent;
         const plainText = (tempDiv.textContent || tempDiv.innerText || '').replace(/\s+/g, ' ').trim();
-        
         const index = plainText.toLowerCase().indexOf(keyword.toLowerCase());
         if (index === -1) return '';
 
         const start = Math.max(0, index - length);
         const end = Math.min(plainText.length, index + keyword.length + length);
-        
         let snippet = plainText.substring(start, end);
         if (start > 0) snippet = '...' + snippet;
         if (end < plainText.length) snippet = snippet + '...';
-
         return snippet;
     }
 
@@ -1126,9 +1226,7 @@
             noticePosts.forEach(np => {
                 const entries = parseNoticeEntries(np.content, np.id, np.date || getTodayDateStr());
                 entries.forEach(e => {
-                    if (checkDeptMatch(e.content, currentCategory)) {
-                        matchedNotices.push(e);
-                    }
+                    if (checkDeptMatch(e.content, currentCategory)) matchedNotices.push(e);
                 });
             });
 
@@ -1201,13 +1299,10 @@
 
         const filtered = baseList.filter(p => {
             const titleMatch = (p.title || '').toLowerCase().includes(lowerKeyword);
-            
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = p.content || '';
             const plainTextContent = (tempDiv.textContent || tempDiv.innerText || '').toLowerCase();
-            
             const contentMatch = !p.isSecret && plainTextContent.includes(lowerKeyword);
-
             return titleMatch || contentMatch;
         });
 
@@ -1220,7 +1315,6 @@
         if (!rawContent) return;
 
         const content = autoLinkUrls(rawContent);
-
         const newNotice = {
             id: 'notice_' + Date.now(),
             content: content,
@@ -1228,7 +1322,7 @@
         };
 
         noticePosts.unshift(newNotice);
-        localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+        safeLocalSave('timeline_notice_posts', noticePosts);
 
         if (db) {
             db.collection("mini_notice_posts").doc(String(newNotice.id)).set(newNotice)
@@ -1258,7 +1352,6 @@
                     </div>
                 `;
             }
-
             return `
                 <div class="notice-feed-item">
                     <div class="notice-feed-content">${np.content}</div>
@@ -1272,15 +1365,8 @@
         }).join('');
     }
 
-    function startEditNotice(id) {
-        editingNoticeId = id;
-        renderNoticeFeed();
-    }
-
-    function cancelEditNotice() {
-        editingNoticeId = null;
-        renderNoticeFeed();
-    }
+    function startEditNotice(id) { editingNoticeId = id; renderNoticeFeed(); }
+    function cancelEditNotice() { editingNoticeId = null; renderNoticeFeed(); }
 
     function saveEditNotice(id) {
         const area = document.getElementById(`editNoticeArea_${id}`);
@@ -1292,29 +1378,27 @@
         if (idx !== -1) {
             noticePosts[idx].content = newContent;
             noticePosts[idx].date = getTodayDateStr();
-            localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+            safeLocalSave('timeline_notice_posts', noticePosts);
 
             if (db) {
                 db.collection("mini_notice_posts").doc(String(id)).update({
                     content: newContent,
                     date: noticePosts[idx].date
-                }).catch(err => console.error("공지 수정 동기화 실패:", err));
+                }).catch(err => console.error("공지 수정 실패:", err));
             }
         }
-
         editingNoticeId = null;
         renderNoticeFeed();
     }
 
     function deleteNoticePost(id) {
         noticePosts = noticePosts.filter(np => np.id !== id);
-        localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+        safeLocalSave('timeline_notice_posts', noticePosts);
 
         if (db) {
             db.collection("mini_notice_posts").doc(String(id)).delete()
               .catch(err => console.error("공지 삭제 실패:", err));
         }
-
         renderNoticeFeed();
     }
 
@@ -1339,12 +1423,15 @@
         }
         hideImgResizeToolbar();
         hideThumbManageToolbar();
+        hideTableToolbar();
         showScreen('editorScreen');
     }
 
     function savePost() {
         hideImgResizeToolbar();
         hideThumbManageToolbar();
+        hideTableToolbar();
+
         let title = document.getElementById('editTitle').value.trim();
         const rawContent = document.getElementById('editContent').innerHTML.trim();
         const content = autoLinkUrls(rawContent);
@@ -1357,10 +1444,7 @@
             alert('비밀번호를 입력해주세요.');
             return;
         }
-
-        if (!title) {
-            title = dateStr;
-        }
+        if (!title) title = dateStr;
 
         let postObj;
         if (isEditing && currentViewingId) {
@@ -1388,7 +1472,7 @@
             posts.unshift(postObj);
         }
 
-        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+        safeLocalSave('blog_memo_posts', posts);
 
         if (db) {
             db.collection("mini_blog_posts").doc(String(postObj.id)).set(postObj)
@@ -1454,7 +1538,6 @@
         if (!rawText) return;
 
         const text = autoLinkUrls(rawText);
-
         const post = posts.find(p => p.id === currentViewingId);
         if (!post) return;
 
@@ -1462,13 +1545,12 @@
         post.comments.push({ text: text, date: getTodayDateStr() });
 
         inputEl.innerHTML = '';
-        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+        safeLocalSave('blog_memo_posts', posts);
 
         if (db) {
             db.collection("mini_blog_posts").doc(String(post.id)).update({ comments: post.comments })
               .catch(err => console.error("댓글 동기화 실패:", err));
         }
-
         renderComments(post.comments);
     }
 
@@ -1477,13 +1559,12 @@
         if (!post || !post.comments) return;
 
         post.comments.splice(index, 1);
-        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+        safeLocalSave('blog_memo_posts', posts);
 
         if (db) {
             db.collection("mini_blog_posts").doc(String(post.id)).update({ comments: post.comments })
               .catch(err => console.error("댓글 삭제 실패:", err));
         }
-
         renderComments(post.comments);
     }
 
@@ -1507,7 +1588,6 @@
         document.getElementById('editIsSecret').checked = !!post.isSecret;
         document.getElementById('editSecretPw').value = post.secretPw || '';
         toggleSecretPwInput();
-        
         showScreen('editorScreen');
     }
 
@@ -1525,13 +1605,12 @@
         }
 
         posts = posts.filter(p => p.id !== currentViewingId);
-        localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+        safeLocalSave('blog_memo_posts', posts);
 
         if (db) {
             db.collection("mini_blog_posts").doc(String(currentViewingId)).delete()
               .catch(err => console.error("클라우드 삭제 실패:", err));
         }
-
         showScreen('listScreen');
     }
 
@@ -1541,7 +1620,6 @@
 
         posts.forEach(p => {
             if (p.isSecret) return;
-
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = p.content || '';
 
@@ -1593,13 +1671,12 @@
         }
 
         let html = `<div class="photo-gallery-grid">`;
-
         itemList.forEach(item => {
             if (item.isImage) {
                 html += `
                     <div class="gallery-card">
                         <div class="gallery-thumb-wrap" onclick="openImageModal('${item.url}')" title="크게 보기">
-                            <img class="gallery-thumb-img" src="${item.url}" alt="${item.postTitle}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/120?text=IMG'">
+                            <img class="gallery-thumb-img" src="${item.url}" loading="lazy" alt="${item.postTitle}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/120?text=IMG'">
                         </div>
                         <div class="gallery-info">
                             <span class="gallery-title" onclick="openViewWithSecret('${item.postId}')" title="해당 글로 이동">${item.postTitle}</span>
@@ -1622,7 +1699,6 @@
                 `;
             }
         });
-
         html += `</div>`;
         container.innerHTML = html;
     }
@@ -1641,25 +1717,80 @@
         renderCollectedLinks(filtered);
     }
 
-    const editContent = document.getElementById('editContent');
-    editContent.addEventListener('click', function(e) {
+    /* ✨ 에디터 및 본문 클릭 이벤트 (루틴 토글 + 표/이미지/썸네일 툴바) */
+    document.addEventListener('click', function(e) {
+        // 루틴 대기/완료 토글 처리
+        if (e.target.classList.contains('status-badge')) {
+            toggleStatusBadge(e.target);
+            return;
+        }
+        // 루틴 리셋 버튼 처리
+        if (e.target.classList.contains('btn-routine-reset')) {
+            resetRoutineTable(e.target);
+            return;
+        }
+
+        const editContent = document.getElementById('editContent');
+        if (!editContent || !editContent.contains(e.target)) return;
+
+        // 1. 썸네일 카드 선택
         const thumbCard = e.target.closest('.thumb-card');
         if (thumbCard) {
             hideImgResizeToolbar();
+            hideTableToolbar();
             selectThumbCard(thumbCard);
             return;
         }
 
+        // 2. 일반 이미지 선택
         if (e.target.tagName === 'IMG' && !e.target.classList.contains('thumb-img')) {
             hideThumbManageToolbar();
+            hideTableToolbar();
             selectImage(e.target);
             return;
         }
 
+        // 3. 표 셀 선택
+        const cell = e.target.closest('td, th');
+        const table = e.target.closest('table');
+        if (table && cell) {
+            hideImgResizeToolbar();
+            hideThumbManageToolbar();
+            currentActiveTable = table;
+            currentActiveCell = cell;
+            showTableToolbar(cell);
+            return;
+        }
+
+        if (!e.target.closest('#tableManageToolbar')) hideTableToolbar();
         hideImgResizeToolbar();
         hideThumbManageToolbar();
     });
 
+    /* ✨ 루틴 뱃지 토글 및 리셋 로직 */
+    function toggleStatusBadge(badge) {
+        if (badge.classList.contains('standby')) {
+            badge.classList.remove('standby');
+            badge.classList.add('done');
+            badge.innerText = '완료';
+        } else {
+            badge.classList.remove('done');
+            badge.classList.add('standby');
+            badge.innerText = '대기';
+        }
+    }
+
+    function resetRoutineTable(btn) {
+        const table = btn.closest('table');
+        if (!table) return;
+        table.querySelectorAll('.status-badge').forEach(b => {
+            b.classList.remove('done');
+            b.classList.add('standby');
+            b.innerText = '대기';
+        });
+    }
+
+    /* ✨ 썸네일 플로팅 툴바 */
     function selectThumbCard(card) {
         document.querySelectorAll('#editContent .thumb-card').forEach(c => c.classList.remove('selected'));
         selectedThumbCard = card;
@@ -1702,6 +1833,7 @@
         hideThumbManageToolbar();
     }
 
+    /* ✨ 이미지 플로팅 툴바 */
     function selectImage(img) {
         document.querySelectorAll('#editContent img').forEach(i => i.classList.remove('selected'));
         selectedImage = img;
@@ -1733,19 +1865,197 @@
         selectImage(selectedImage);
     }
 
-    function insertTable() {
-        const rows = prompt('표의 행(가로 줄)', '3');
-        if (!rows) return;
-        const cols = prompt('표의 열(세로 칸)', '3');
-        if (!cols) return;
-        let tableHtml = '<table style="width:100%; border-collapse:collapse; margin:10px 0; border:1px solid #ddd;">';
-        for (let r = 0; r < parseInt(rows); r++) {
-            tableHtml += '<tr>';
-            for (let c = 0; c < parseInt(cols); c++) tableHtml += '<td style="border:1px solid #ddd; padding:8px; min-width:40px;"></td>';
-            tableHtml += '</tr>';
+    /* ✨ 표 플로팅 조작 툴바 및 한 칸(열) 너비 조절 */
+    function showTableToolbar(cell) {
+        const toolbar = document.getElementById('tableManageToolbar');
+        const editorBody = document.querySelector('.editor-body');
+        toolbar.style.display = 'flex';
+
+        const cellRect = cell.getBoundingClientRect();
+        const bodyRect = editorBody.getBoundingClientRect();
+        toolbar.style.top = (cellRect.top - bodyRect.top - 38 + editorBody.scrollTop) + 'px';
+        toolbar.style.left = Math.max(10, (cellRect.left - bodyRect.left)) + 'px';
+    }
+
+    function hideTableToolbar() {
+        const toolbar = document.getElementById('tableManageToolbar');
+        if (toolbar) toolbar.style.display = 'none';
+    }
+
+    function resizeCurrentCol(diff) {
+        if (!currentActiveTable || !currentActiveCell) return;
+        const colIdx = currentActiveCell.cellIndex;
+        let newWidth = Math.max(40, currentActiveCell.offsetWidth + diff);
+
+        const colgroup = currentActiveTable.querySelector('colgroup');
+        if (colgroup && colgroup.children[colIdx]) {
+            colgroup.children[colIdx].style.width = newWidth + 'px';
+        } else {
+            currentActiveTable.querySelectorAll('tr').forEach(r => {
+                if (r.children[colIdx]) r.children[colIdx].style.width = newWidth + 'px';
+            });
         }
-        tableHtml += '</table><p><br></p>';
+        if (currentActiveCell) showTableToolbar(currentActiveCell);
+    }
+
+    function addTableRowBelow() {
+        if (!currentActiveCell) return;
+        const row = currentActiveCell.closest('tr');
+        const isRoutine = currentActiveTable.classList.contains('routine-table');
+        const newRow = row.cloneNode(true);
+        
+        newRow.querySelectorAll('td, th').forEach((c, idx) => {
+            if (isRoutine && idx === 0) {
+                c.innerHTML = '<span class="status-badge standby" contenteditable="false">대기</span>';
+            } else {
+                c.innerHTML = '<br>';
+            }
+        });
+        row.parentNode.insertBefore(newRow, row.nextSibling);
+    }
+
+    function addTableColRight() {
+        if (!currentActiveTable || !currentActiveCell) return;
+        const colIndex = currentActiveCell.cellIndex;
+        const colgroup = currentActiveTable.querySelector('colgroup');
+        if (colgroup) {
+            const newCol = document.createElement('col');
+            newCol.style.width = '100px';
+            colgroup.appendChild(newCol);
+        }
+
+        currentActiveTable.querySelectorAll('tr').forEach(r => {
+            const targetCell = r.children[colIndex];
+            if (targetCell) {
+                const newCell = document.createElement(targetCell.tagName);
+                newCell.style.cssText = targetCell.style.cssText;
+                newCell.style.width = '100px';
+                newCell.innerHTML = '<br>';
+                r.insertBefore(newCell, targetCell.nextSibling);
+            }
+        });
+    }
+
+    function deleteCurrentTableRow() {
+        if (!currentActiveCell) return;
+        const row = currentActiveCell.closest('tr');
+        const table = row.closest('table');
+        if (table.querySelectorAll('tr').length > 1) {
+            row.remove();
+            hideTableToolbar();
+        } else {
+            table.remove();
+            hideTableToolbar();
+        }
+    }
+
+    function deleteCurrentTable() {
+        if (!currentActiveTable) return;
+        currentActiveTable.remove();
+        hideTableToolbar();
+    }
+
+    /* ✨ 표 2종 선택 삽입 함수 */
+    function insertTableModal() {
+        const choice = prompt("삽입할 표 번호를 선택하세요:\n1. 2x2 루틴 업무 체크표 (대기/완료 토글 + 리셋)\n2. 2열 키-값 요약표 (항목명 | 상세내용)", "1");
+        if (!choice) return;
+
+        let tableHtml = '';
+        if (choice === "2") {
+            tableHtml = `
+                <table style="width:100%; border-collapse:collapse; margin:10px 0; border:1px solid #e2e8f0; font-size:13px; table-layout:fixed;">
+                    <colgroup>
+                        <col style="width: 120px;">
+                        <col style="width: auto;">
+                    </colgroup>
+                    <tbody>
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                            <td style="background:#f1f5f9; padding:8px 12px; font-weight:bold; color:#334155; border-right:1px solid #e2e8f0;">항목명</td>
+                            <td style="padding:8px 12px; color:#1e293b;">내용 입력</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #e2e8f0;">
+                            <td style="background:#f1f5f9; padding:8px 12px; font-weight:bold; color:#334155; border-right:1px solid #e2e8f0;">상세 정보</td>
+                            <td style="padding:8px 12px; color:#1e293b;">내용 입력</td>
+                        </tr>
+                    </tbody>
+                </table><p><br></p>
+            `;
+        } else {
+            tableHtml = `
+                <table class="routine-table" style="width:100%; border-collapse:collapse; margin:10px 0; border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; font-size:13px; table-layout:fixed;">
+                    <colgroup>
+                        <col style="width: 85px;">
+                        <col style="width: auto;">
+                    </colgroup>
+                    <thead>
+                        <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; color:#475569;">
+                            <th style="padding:8px 6px; text-align:center;">
+                                <button type="button" class="btn-routine-reset" contenteditable="false">🔄 리셋</button>
+                            </th>
+                            <th style="padding:8px 10px; text-align:left;">루틴 업무 항목</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:8px 6px; text-align:center;">
+                                <span class="status-badge standby" contenteditable="false">대기</span>
+                            </td>
+                            <td style="padding:8px 10px; color:#1e293b; font-weight:500;">루틴 항목 1 입력</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:8px 6px; text-align:center;">
+                                <span class="status-badge standby" contenteditable="false">대기</span>
+                            </td>
+                            <td style="padding:8px 10px; color:#1e293b; font-weight:500;">루틴 항목 2 입력</td>
+                        </tr>
+                    </tbody>
+                </table><p><br></p>
+            `;
+        }
+
+        document.getElementById('editContent').focus();
         document.execCommand('insertHTML', false, tableHtml);
+    }
+
+    /* ✨ 아코디언 서식 3종 선택 삽입 함수 */
+    function insertAccordionModal() {
+        const choice = prompt("삽입할 아코디언 번호를 선택하세요:\n1. 모던 카드형 (박스 테두리)\n2. 미니멀 라인형 (노션 심플선)\n3. 소프트 태그형 (연보라/블루 톤)", "1");
+        if (!choice) return;
+
+        let defaultTitle = "상세 내용 확인";
+        if (choice === "1") defaultTitle = "📌 상세 안내";
+        else if (choice === "2") defaultTitle = "매뉴얼 요약";
+        else if (choice === "3") defaultTitle = "🏷️ 참고 사항";
+
+        const title = prompt("접기 제목을 입력하세요:", defaultTitle);
+        if (!title) return;
+
+        let accHtml = '';
+        if (choice === "2") {
+            accHtml = `
+                <details class="acc-line" open>
+                    <summary>${title}</summary>
+                    <div class="acc-content"><p>내용</p></div>
+                </details><p><br></p>
+            `;
+        } else if (choice === "3") {
+            accHtml = `
+                <details class="acc-soft" open>
+                    <summary>${title}</summary>
+                    <div class="acc-content"><p>내용</p></div>
+                </details><p><br></p>
+            `;
+        } else {
+            accHtml = `
+                <details class="acc-card" open>
+                    <summary>${title}</summary>
+                    <div class="acc-content"><p>내용</p></div>
+                </details><p><br></p>
+            `;
+        }
+
+        document.getElementById('editContent').focus();
+        document.execCommand('insertHTML', false, accHtml);
     }
 
     function uploadImage(e) {
@@ -1768,15 +2078,13 @@
         if (!url) return;
 
         const cleanUrl = url.trim();
-        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" alt="썸네일" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
+        const cardHtml = `<span class="thumb-card" onclick="handleThumbClick(this)"><img class="thumb-img" src="${cleanUrl}" loading="lazy" alt="썸네일" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/54?text=IMG'"></span>&nbsp;`;
         document.execCommand('insertHTML', false, cardHtml);
     }
 
     function handleThumbClick(el) {
         const img = el.querySelector('img') || el;
-        if (img && img.src) {
-            openImageModal(img.src);
-        }
+        if (img && img.src) openImageModal(img.src);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -1794,15 +2102,12 @@
 
     function openImageModal(imgUrl) {
         if (!imgUrl) return;
-
         const viewContentEl = document.getElementById('viewContent');
         galleryImages = [];
         if (viewContentEl && document.getElementById('viewScreen').classList.contains('active')) {
             const allImgs = viewContentEl.querySelectorAll('img');
             allImgs.forEach(img => {
-                if (img.src && !galleryImages.includes(img.src)) {
-                    galleryImages.push(img.src);
-                }
+                if (img.src && !galleryImages.includes(img.src)) galleryImages.push(img.src);
             });
         } else {
             galleryImages = allExtractedLinks.filter(i => i.isImage).map(i => i.url);
@@ -1829,7 +2134,7 @@
         }
         strip.style.display = 'flex';
         strip.innerHTML = galleryImages.map((src, idx) => `
-            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" referrerpolicy="no-referrer" onclick="selectGalleryIndex(${idx})">
+            <img class="strip-thumb ${idx === currentGalleryIndex ? 'active' : ''}" src="${src}" loading="lazy" referrerpolicy="no-referrer" onclick="selectGalleryIndex(${idx})">
         `).join('');
     }
 
@@ -1890,9 +2195,7 @@
     const targetImg = document.getElementById('imgModalTarget');
 
     function resetZoom() {
-        scale = 1;
-        pointX = 0;
-        pointY = 0;
+        scale = 1; pointX = 0; pointY = 0;
         if (targetImg) targetImg.style.transform = `translate(0px, 0px) scale(1)`;
     }
 
@@ -1907,7 +2210,6 @@
         } else if (e.touches.length === 1) {
             startX = e.touches[0].pageX - pointX;
             startY = e.touches[0].pageY - pointY;
-
             const now = Date.now();
             if (now - lastTapTime < 300) {
                 if (scale > 1) resetZoom();
@@ -1937,9 +2239,7 @@
     }, { passive: false });
 
     viewport.addEventListener('touchend', function(e) {
-        if (scale <= 1) {
-            resetZoom();
-        }
+        if (scale <= 1) resetZoom();
     });
 
     document.addEventListener('keydown', function(e) {
@@ -1951,27 +2251,51 @@
         }
     });
 
+    function safeLocalSave(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch(e) {
+            console.warn("LocalStorage 용량 초과로 저장을 생략합니다:", e);
+        }
+    }
+
     async function initBlogData() {
         if (db) {
             try {
-                const postSnapshot = await db.collection("mini_blog_posts").get();
+                const postSnapshot = await db.collection("mini_blog_posts")
+                                             .orderBy("id", "desc")
+                                             .limit(60)
+                                             .get();
                 if (!postSnapshot.empty) {
                     let cloudPosts = [];
                     postSnapshot.forEach(doc => cloudPosts.push(doc.data()));
-                    cloudPosts.sort((a, b) => String(b.id).localeCompare(String(a.id)));
                     posts = cloudPosts;
-                    localStorage.setItem('blog_memo_posts', JSON.stringify(posts));
+                    safeLocalSave('blog_memo_posts', posts);
                 }
-                const noticeSnapshot = await db.collection("mini_notice_posts").get();
+
+                const noticeSnapshot = await db.collection("mini_notice_posts")
+                                               .orderBy("id", "desc")
+                                               .limit(30)
+                                               .get();
                 if (!noticeSnapshot.empty) {
                     let cloudNotices = [];
                     noticeSnapshot.forEach(doc => cloudNotices.push(doc.data()));
-                    cloudNotices.sort((a, b) => String(b.id).localeCompare(String(a.id)));
                     noticePosts = cloudNotices;
-                    localStorage.setItem('timeline_notice_posts', JSON.stringify(noticePosts));
+                    safeLocalSave('timeline_notice_posts', noticePosts);
                 }
             } catch (e) {
-                console.log("클라우드 데이터 로드 실패, 로컬 데이터 사용:", e);
+                console.log("정렬 로드 예외 발생, 기본 로드 수행:", e);
+                try {
+                    const fallbackPosts = await db.collection("mini_blog_posts").limit(60).get();
+                    if (!fallbackPosts.empty) {
+                        let cloudPosts = [];
+                        fallbackPosts.forEach(doc => cloudPosts.push(doc.data()));
+                        cloudPosts.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+                        posts = cloudPosts;
+                    }
+                } catch(err) {
+                    console.log("로컬 데이터 전환:", err);
+                }
             }
         }
         renderList();
