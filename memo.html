@@ -233,33 +233,49 @@
             margin-bottom: 6px;
         }
 
-        /* 하단 바 */
+        /* ✨ 하단 바 (검색 + 링크모음 버튼 + 글쓰기 버튼) */
         .list-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border-top: 1px solid #eee;
             background: #fff;
             flex-shrink: 0;
-            gap: 8px;
+            gap: 6px;
         }
         .search-input {
             flex: 1;
-            max-width: 220px;
+            min-width: 0;
             border: 1px solid #ddd;
             border-radius: 20px;
             padding: 6px 12px;
             font-size: 13px;
             outline: none;
         }
+        .btn-link-collector {
+            background: #eff6ff;
+            color: #0253c7;
+            border: 1px solid #bfdbfe;
+            padding: 7px 11px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            transition: background 0.15s;
+        }
+        .btn-link-collector:hover { background: #dbeafe; }
         .btn-write {
             background: #0253c7;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             white-space: nowrap;
@@ -301,7 +317,6 @@
             width: 100%;
         }
 
-        /* ✨ 오른쪽 잘림 방지 스타일 */
         .content-box, .view-content { 
             flex: 1; 
             outline: none; 
@@ -421,13 +436,68 @@
             flex: 1; 
             padding: 16px; 
             overflow-y: auto; 
-            overflow-x: hidden;
+            overflow-x: hidden; 
             -webkit-overflow-scrolling: touch; 
         }
         .view-meta { color: #888; font-size: 13px; margin: 6px 0 14px 0; }
         .btn-group { display: flex; gap: 6px; }
         .btn-edit { background: #35baf6; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-delete { background: #ff5252; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+
+        /* ✨ 링크 모음 화면 스타일 */
+        .links-screen-body {
+            flex: 1;
+            padding: 14px 16px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .link-card-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+        .link-card-item:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+        .link-url-text {
+            font-size: 13px;
+            font-weight: bold;
+            color: #0253c7;
+            word-break: break-all;
+            text-decoration: underline;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .link-origin-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #64748b;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 5px;
+            margin-top: 2px;
+        }
+        .link-origin-title {
+            color: #334155;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: underline;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%;
+        }
 
         /* 크게 보는 갤러리 슬라이더 팝업 모달 */
         .img-modal-overlay {
@@ -580,8 +650,10 @@
             <div id="postCardList" class="post-card-list"></div>
         </div>
 
+        <!-- ✨ 하단 바: 검색창 + 링크모음 버튼 + 글쓰기 버튼 -->
         <div class="list-footer" id="mainListFooter">
             <input type="text" class="search-input" id="searchKeyword" placeholder="제목+내용 검색..." onkeyup="searchPosts()">
+            <button class="btn-link-collector" onclick="openLinkCollector()" title="글에 등록된 전체 링크 모아보기">🔗 링크</button>
             <button class="btn-write" onclick="openEditor()">글쓰기</button>
         </div>
     </div>
@@ -679,7 +751,20 @@
         </div>
     </div>
 
-    <!-- 4. 갤러리 슬라이더 팝업 모달 -->
+    <!-- ✨ 4. 링크 모음 전용 화면 -->
+    <div id="linkCollectorScreen" class="screen">
+        <header class="view-header">
+            <span style="cursor:pointer;" onclick="showScreen('listScreen')">← 뒤로가기</span>
+            <span style="font-weight:bold; font-size:15px; color:#1e293b;">🔗 전체 링크 모음</span>
+            <span style="width:50px;"></span>
+        </header>
+        <div style="padding:10px 16px; border-bottom:1px solid #eee; background:#fff;">
+            <input type="text" class="search-input" id="linkSearchInput" style="width:100%; max-width:100%;" placeholder="링크 주소 또는 글 제목 검색..." onkeyup="filterCollectedLinks()">
+        </div>
+        <div class="links-screen-body" id="collectedLinksContainer"></div>
+    </div>
+
+    <!-- 5. 갤러리 슬라이더 팝업 모달 -->
     <div id="imgModalOverlay" class="img-modal-overlay" onclick="closeImageModal()">
         <div class="img-modal-topbar" onclick="event.stopPropagation()">
             <div id="imgModalCounter" class="img-modal-counter">1 / 1</div>
@@ -724,6 +809,7 @@
     let selectedThumbCard = null;
     let editingNoticeId = null;
     let currentSearchKeyword = '';
+    let allExtractedLinks = [];
 
     let galleryImages = [];
     let currentGalleryIndex = 0;
@@ -1350,6 +1436,89 @@
         showScreen('listScreen');
     }
 
+    // ✨ 링크 모음 열기 및 추출 함수
+    function openLinkCollector() {
+        allExtractedLinks = [];
+        const container = document.getElementById('collectedLinksContainer');
+        document.getElementById('linkSearchInput').value = '';
+
+        posts.forEach(p => {
+            if (p.isSecret) return; // 비밀글은 링크 추출 제외
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = p.content || '';
+
+            // <a> 태그 속 링크 추출
+            const anchorTags = tempDiv.querySelectorAll('a');
+            anchorTags.forEach(a => {
+                const href = a.getAttribute('href');
+                if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+                    allExtractedLinks.push({
+                        url: href,
+                        postId: p.id,
+                        postTitle: p.title || '제목 없음',
+                        category: p.category,
+                        date: p.date
+                    });
+                }
+            });
+
+            // 썸네일 이미지 링크(src) 추출
+            const thumbImgs = tempDiv.querySelectorAll('.thumb-img');
+            thumbImgs.forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && (src.startsWith('http://') || src.startsWith('https://'))) {
+                    allExtractedLinks.push({
+                        url: src,
+                        postId: p.id,
+                        postTitle: `📷 ${p.title || '사진 첨부 글'}`,
+                        category: p.category,
+                        date: p.date,
+                        isImage: true
+                    });
+                }
+            });
+        });
+
+        renderCollectedLinks(allExtractedLinks);
+        showScreen('linkCollectorScreen');
+    }
+
+    function renderCollectedLinks(linkList) {
+        const container = document.getElementById('collectedLinksContainer');
+        if (linkList.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:40px; color:#94a3b8; font-size:13px;">등록된 링크가 없습니다.</div>`;
+            return;
+        }
+
+        container.innerHTML = linkList.map(item => `
+            <div class="link-card-item">
+                <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="link-url-text">
+                    ${item.isImage ? '🖼️' : '🔗'} ${item.url} ↗
+                </a>
+                <div class="link-origin-info">
+                    <span class="link-origin-title" onclick="openViewWithSecret('${item.postId}')" title="해당 글로 바로 이동">
+                        [${item.category}] ${item.postTitle}
+                    </span>
+                    <span>${item.date}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function filterCollectedLinks() {
+        const query = document.getElementById('linkSearchInput').value.trim().toLowerCase();
+        if (!query) {
+            renderCollectedLinks(allExtractedLinks);
+            return;
+        }
+        const filtered = allExtractedLinks.filter(item => 
+            item.url.toLowerCase().includes(query) || item.postTitle.toLowerCase().includes(query)
+        );
+        renderCollectedLinks(filtered);
+    }
+
+    // 에디터 클릭 이벤트
     const editContent = document.getElementById('editContent');
     editContent.addEventListener('click', function(e) {
         const thumbCard = e.target.closest('.thumb-card');
