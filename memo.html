@@ -399,7 +399,7 @@
             border-right: none !important;
         }
 
-        /* 대기/완료 뱃지 & 리셋 (타이트하게 조정) */
+        /* 대기/완료 뱃지 & 리셋 */
         .status-badge {
             display: inline-block;
             padding: 3px 6px;
@@ -440,51 +440,46 @@
         }
         .btn-routine-reset:hover { background: #e2e8f0; color: #0f172a; }
 
-        /* 아코디언 서식 */
+        /* 아코디언 기본 서식 */
         .content-box details, .view-content details {
             margin: 3px 0;
             width: 100%;
         }
 
         .acc-card {
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            background: #ffffff !important;
-            overflow: hidden !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
         .acc-card > summary {
-            padding: 8px 12px !important;
-            font-weight: 600 !important;
-            font-size: 13px !important;
-            color: #1e293b !important;
-            cursor: pointer !important;
-            background: #f8fafc !important;
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #1e293b;
+            cursor: pointer;
+            background: #f8fafc;
             user-select: none;
             outline: none;
         }
-        .acc-card[open] > summary {
-            border-bottom: 1px solid #e2e8f0 !important;
-            background: #eff6ff !important;
-            color: #0253c7 !important;
-        }
         .acc-card > .acc-content {
-            padding: 10px 12px !important;
-            font-size: 13px !important;
-            color: #334155 !important;
-            line-height: 1.5 !important;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.5;
             min-height: 28px;
         }
 
         .acc-line {
-            border-bottom: 1px solid #e2e8f0 !important;
-            padding: 3px 0 !important;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 3px 0;
         }
         .acc-line > summary {
-            font-size: 13px !important;
-            font-weight: bold !important;
-            color: #475569 !important;
-            cursor: pointer !important;
+            font-size: 13px;
+            font-weight: bold;
+            color: #475569;
+            cursor: pointer;
             outline: none;
             user-select: none;
             list-style: none;
@@ -501,17 +496,17 @@
         }
         .acc-line[open] > summary::before {
             transform: rotate(90deg);
-            color: #0253c7;
+            color: inherit;
         }
-        .acc-line[open] > summary { color: #0253c7 !important; }
         .acc-line > .acc-content {
-            padding: 4px 0 4px 14px !important;
-            font-size: 13px !important;
-            color: #64748b !important;
-            line-height: 1.5 !important;
+            padding: 4px 0 4px 14px;
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5;
             min-height: 28px;
         }
 
+        /* 🏷️ 태그형 오리지널 고유 서식 */
         .acc-soft {
             border: 1px solid #e0e7ff !important;
             border-radius: 6px !important;
@@ -601,6 +596,7 @@
         #thumbManageToolbar button.btn-danger:hover, #tableManageToolbar button.btn-danger:hover { background: #dc2626; }
         .toolbar-divider { color: #475569; margin: 0 2px; }
 
+        /* 커스텀 피커 모달 */
         .picker-modal-overlay {
             display: none;
             position: fixed;
@@ -618,7 +614,7 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
         }
         .picker-options {
             display: flex;
@@ -662,6 +658,38 @@
             outline: none;
         }
         .picker-input:focus { border-color: #0253c7; }
+
+        /* 컬러 팔레트 선택 바 */
+        .color-palette-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .color-chip {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s, border-color 0.15s;
+            flex-shrink: 0;
+        }
+        .color-chip:hover { transform: scale(1.15); }
+        .color-chip.selected {
+            border-color: #0f172a;
+            transform: scale(1.18);
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+        }
+        .custom-color-input {
+            width: 26px;
+            height: 26px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 1px;
+            cursor: pointer;
+            background: #fff;
+        }
 
         .picker-btns {
             display: flex;
@@ -987,12 +1015,11 @@
 
             <!-- 표 플로팅 툴바 -->
             <div id="tableManageToolbar">
-                <span style="color:#94a3b8; font-weight:bold;">칸너비:</span>
-                <button type="button" onclick="resizeCurrentCellWidth(-15)">-15px</button>
-                <button type="button" onclick="resizeCurrentCellWidth(15)">+15px</button>
+                <button type="button" onclick="resizeCurrentCellWidth(-15)">-</button>
+                <button type="button" onclick="resizeCurrentCellWidth(15)">+</button>
                 <span class="toolbar-divider">|</span>
                 <button type="button" onclick="addTableRowBelow()">+줄</button>
-                <button type="button" onclick="splitCurrentCellRight()">칸분할</button>
+                <button type="button" onclick="splitCurrentCellRight()">+칸</button>
                 <button type="button" class="btn-danger" onclick="deleteCurrentTableRow()">-줄</button>
                 <button type="button" class="btn-danger" onclick="deleteCurrentCell()">-칸</button>
                 <span class="toolbar-divider">|</span>
@@ -1090,12 +1117,26 @@
 
 </div>
 
-<!-- 이모지 선택 커스텀 모달 팝업 -->
+<!-- 이모지 & 컬러 선택 커스텀 모달 팝업 -->
 <div id="customPickerModal" class="picker-modal-overlay">
     <div class="picker-modal">
         <div id="pickerOptionsList" class="picker-options"></div>
         
-        <div class="picker-input-wrap">
+        <!-- 아코디언 테마 컬러 지정 바 -->
+        <div id="pickerColorWrap" class="picker-input-wrap">
+            <label>포인트 컬러 선택</label>
+            <div class="color-palette-bar">
+                <span class="color-chip selected" style="background:#0253c7;" onclick="selectThemeColor(this, '#0253c7')" title="블루"></span>
+                <span class="color-chip" style="background:#059669;" onclick="selectThemeColor(this, '#059669')" title="에메랄드"></span>
+                <span class="color-chip" style="background:#dc2626;" onclick="selectThemeColor(this, '#dc2626')" title="레드"></span>
+                <span class="color-chip" style="background:#7c3aed;" onclick="selectThemeColor(this, '#7c3aed')" title="퍼플"></span>
+                <span class="color-chip" style="background:#ea580c;" onclick="selectThemeColor(this, '#ea580c')" title="오렌지"></span>
+                <span class="color-chip" style="background:#475569;" onclick="selectThemeColor(this, '#475569')" title="슬레이트"></span>
+                <input type="color" id="customAccordionColor" class="custom-color-input" value="#0253c7" onchange="selectCustomColor(this.value)" title="직접 선택">
+            </div>
+        </div>
+
+        <div id="pickerTitleWrap" class="picker-input-wrap">
             <label id="pickerInputLabel">접기 제목 입력</label>
             <input type="text" id="pickerTitleInput" class="picker-input" placeholder="제목을 입력하세요">
         </div>
@@ -1147,6 +1188,7 @@
 
     let activePickerType = null;
     let selectedPickerValue = "1";
+    let selectedAccordionColor = "#0253c7";
 
     document.addEventListener('DOMContentLoaded', function() {
         renderList();
@@ -2474,11 +2516,13 @@
         selectedPickerValue = "1";
         const modal = document.getElementById('customPickerModal');
         const listEl = document.getElementById('pickerOptionsList');
-        const inputWrap = document.querySelector('.picker-input-wrap');
+        const colorWrap = document.getElementById('pickerColorWrap');
+        const titleWrap = document.getElementById('pickerTitleWrap');
         const inputEl = document.getElementById('pickerTitleInput');
 
         if (type === 'table') {
-            inputWrap.style.display = "none";
+            colorWrap.style.display = "none";
+            titleWrap.style.display = "none";
             listEl.innerHTML = `
                 <div class="picker-option-card selected" onclick="selectPickerOption(this, '1')">
                     <span class="picker-emoji">📋</span>
@@ -2490,12 +2534,13 @@
                 </div>
             `;
         } else {
-            inputWrap.style.display = "flex";
+            colorWrap.style.display = "flex";
+            titleWrap.style.display = "flex";
             inputEl.value = "📌 메뉴얼";
             listEl.innerHTML = `
                 <div class="picker-option-card selected" onclick="selectPickerOption(this, '1')">
                     <span class="picker-emoji">📦</span>
-                    <span class="picker-text">메뉴얼</span>
+                    <span class="picker-text">메뉴얼 (카드형)</span>
                 </div>
                 <div class="picker-option-card" onclick="selectPickerOption(this, '2')">
                     <span class="picker-emoji">📄</span>
@@ -2516,6 +2561,24 @@
         document.querySelectorAll('.picker-option-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         selectedPickerValue = val;
+
+        // 태그형(3) 선택 시에는 컬러 팔레트를 자동으로 숨겨 혼선을 방지
+        const colorWrap = document.getElementById('pickerColorWrap');
+        if (colorWrap) {
+            colorWrap.style.display = (val === "3") ? "none" : "flex";
+        }
+    }
+
+    function selectThemeColor(chipEl, colorHex) {
+        document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+        if (chipEl) chipEl.classList.add('selected');
+        selectedAccordionColor = colorHex;
+        document.getElementById('customAccordionColor').value = colorHex;
+    }
+
+    function selectCustomColor(colorHex) {
+        document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+        selectedAccordionColor = colorHex;
     }
 
     function closeCustomPicker() {
@@ -2532,7 +2595,7 @@
         if (activePickerType === 'table') {
             insertTableHtml(selectedPickerValue);
         } else {
-            insertAccordionHtml(selectedPickerValue, title);
+            insertAccordionHtml(selectedPickerValue, title, selectedAccordionColor);
         }
     }
 
@@ -2588,7 +2651,14 @@
         if (firstCell) focusCell(firstCell);
     }
 
-    function insertAccordionHtml(choice, title) {
+    function hexToRgba(hex, alpha) {
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+    }
+
+    function insertAccordionHtml(choice, title, themeColor = "#0253c7") {
         const sel = window.getSelection();
         const editBox = document.getElementById('editContent');
 
@@ -2599,9 +2669,6 @@
         }
 
         const detailsEl = document.createElement('details');
-        detailsEl.className = choice === "2" ? "acc-line" : (choice === "3" ? "acc-soft" : "acc-card");
-        detailsEl.open = true;
-
         const summaryEl = document.createElement('summary');
         summaryEl.textContent = title;
 
@@ -2609,6 +2676,27 @@
         contentEl.className = 'acc-content';
         contentEl.innerHTML = '<p><br></p>';
 
+        const lightBg = hexToRgba(themeColor, 0.08);
+        const borderTint = hexToRgba(themeColor, 0.28);
+
+        if (choice === "2") {
+            // 라인형
+            detailsEl.className = "acc-line";
+            detailsEl.style.borderBottomColor = borderTint;
+            summaryEl.style.color = themeColor;
+        } else if (choice === "3") {
+            // 🏷️ 태그형: 컬러 덮어쓰기 없이 순수 CSS 오리지널 서식 적용
+            detailsEl.className = "acc-soft";
+        } else {
+            // 카드형 (기본 메뉴얼)
+            detailsEl.className = "acc-card";
+            detailsEl.style.borderColor = borderTint;
+            summaryEl.style.color = themeColor;
+            summaryEl.style.background = lightBg;
+            summaryEl.style.borderBottom = `1px solid ${borderTint}`;
+        }
+
+        detailsEl.open = true;
         detailsEl.appendChild(summaryEl);
         detailsEl.appendChild(contentEl);
 
