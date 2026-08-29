@@ -1047,7 +1047,7 @@
         <footer class="toolbar-bottom">
             <button onclick="toggleToolbar()" title="서식">T</button>
             <button onclick="document.getElementById('imageUploader').click()" title="사진 첨부">📷</button>
-            <button onclick="addLink()" title="썸네일 사진 삽입">🔗</button>
+            <button onclick="addLink()" title="URL 링크 삽입">🔗</button>
             <button onclick="openCustomPicker('accordion')" title="아코디언 서식 삽입 (3종)">📁</button>
             <button onclick="openCustomPicker('table')" title="표 삽입 (2종)">📊</button>
             <button onclick="insertHorizontalRule()" title="구분선 삽입">➖</button>
@@ -1934,9 +1934,19 @@
         renderCollectedLinks(filtered);
     }
 
+    /* ===== 사진 크게보기 / 갤러리 슬라이더 팝업 모달 ===== */
     function openImageModal(index) {
         if (!galleryImages || galleryImages.length === 0) return;
         currentGalleryIndex = Math.max(0, Math.min(index, galleryImages.length - 1));
+        renderGalleryModal();
+        document.getElementById('imgModalOverlay').style.display = 'flex';
+    }
+
+    function openSingleImageModal(imgSrc) {
+        if (!imgSrc) return;
+        // 단일 이미지 또는 현재 컨텍스트에 맞는 이미지로 모달 열기
+        galleryImages = [{ url: imgSrc, postTitle: '사진 확대보기', isImage: true }];
+        currentGalleryIndex = 0;
         renderGalleryModal();
         document.getElementById('imgModalOverlay').style.display = 'flex';
     }
@@ -1955,12 +1965,17 @@
         resetImageZoom();
 
         const strip = document.getElementById('imgModalStrip');
-        strip.innerHTML = galleryImages.map((g, i) => `
-            <img class="strip-thumb ${i === currentGalleryIndex ? 'active' : ''}" src="${g.url}" referrerpolicy="no-referrer" onclick="event.stopPropagation(); jumpToGalleryImage(${i});">
-        `).join('');
+        if (galleryImages.length > 1) {
+            strip.style.display = 'flex';
+            strip.innerHTML = galleryImages.map((g, i) => `
+                <img class="strip-thumb ${i === currentGalleryIndex ? 'active' : ''}" src="${g.url}" referrerpolicy="no-referrer" onclick="event.stopPropagation(); jumpToGalleryImage(${i});">
+            `).join('');
 
-        const activeThumb = strip.querySelector('.strip-thumb.active');
-        if (activeThumb) activeThumb.scrollIntoView({ inline: 'center', block: 'nearest' });
+            const activeThumb = strip.querySelector('.strip-thumb.active');
+            if (activeThumb) activeThumb.scrollIntoView({ inline: 'center', block: 'nearest' });
+        } else {
+            strip.style.display = 'none';
+        }
     }
 
     function jumpToGalleryImage(index) {
@@ -2136,21 +2151,27 @@
         event.target.value = '';
     }
 
+    /* 🔗 URL 링크 삽입: 깔끔하게 웹사이트 주소만 입력받아 링크로 생성 */
     function addLink() {
-        const imgUrl = prompt('썸네일로 삽입할 이미지 URL을 입력하세요:');
-        if (!imgUrl) return;
-        const linkUrl = prompt('클릭 시 이동할 링크 주소를 입력하세요 (취소 시 이미지 URL로 이동):', imgUrl) || imgUrl;
+        const rawUrl = prompt('삽입할 웹사이트 주소(URL)를 입력하세요:');
+        if (!rawUrl || !rawUrl.trim()) return;
 
-        const card = document.createElement('span');
-        card.className = 'thumb-card';
-        card.setAttribute('contenteditable', 'false');
-        card.setAttribute('data-href', linkUrl);
-        card.innerHTML = `<img class="thumb-img" src="${imgUrl}" referrerpolicy="no-referrer" onerror="this.src='https://via.placeholder.com/54?text=X'">`;
+        let url = rawUrl.trim();
+        let hrefUrl = url.startsWith('http://') || url.startsWith('https://') ? url : 'https://' + url;
 
-        insertNodeAtCursor(card);
+        const a = document.createElement('a');
+        a.href = hrefUrl;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.style.color = '#0253c7';
+        a.style.textDecoration = 'underline';
+        a.style.wordBreak = 'break-all';
+        a.textContent = url;
+
+        insertNodeAtCursor(a);
 
         const spaceNode = document.createTextNode('\u00A0');
-        card.after(spaceNode);
+        a.after(spaceNode);
 
         const sel = window.getSelection();
         const newRange = document.createRange();
@@ -2159,15 +2180,6 @@
         sel.removeAllRanges();
         sel.addRange(newRange);
     }
-
-    document.addEventListener('click', function(e) {
-        const card = e.target.closest('.thumb-card');
-        if (!card) return;
-        const editContentEl = document.getElementById('editContent');
-        if (editContentEl && editContentEl.contains(card)) return;
-        const href = card.getAttribute('data-href');
-        if (href) window.open(href, '_blank', 'noopener,noreferrer');
-    });
 
     function insertHorizontalRule() {
         saveSelection();
@@ -2200,7 +2212,33 @@
         p.focus();
     }
 
+    /* 본문/댓글/공지 이미지 및 버튼 클릭 이벤트 통합 리스너 */
     document.addEventListener('click', function(e) {
+        // 1. 상세조회 본문 / 댓글 / 공지방 내 이미지 클릭 시 크게보기 모달 실행
+        if (e.target.tagName === 'IMG' && !e.target.closest('#editorScreen') && !e.target.closest('#imgModalOverlay')) {
+            const imgSrc = e.target.getAttribute('src');
+            if (imgSrc) {
+                // 본문에 있는 모든 이미지를 모아서 슬라이더로 연결
+                const container = e.target.closest('.view-content, .comment-list, .dept-notice-scroll, .notice-feed-item');
+                if (container) {
+                    const imgs = Array.from(container.querySelectorAll('img')).map(img => ({
+                        url: img.getAttribute('src'),
+                        postTitle: '사진 확대보기',
+                        isImage: true
+                    }));
+                    const clickedIndex = imgs.findIndex(item => item.url === imgSrc);
+                    if (imgs.length > 0 && clickedIndex !== -1) {
+                        galleryImages = imgs;
+                        openImageModal(clickedIndex);
+                        return;
+                    }
+                }
+                openSingleImageModal(imgSrc);
+                return;
+            }
+        }
+
+        // 2. 뱃지 토글
         const badge = e.target.closest('.status-badge');
         if (badge) {
             e.preventDefault();
@@ -2209,6 +2247,7 @@
             return;
         }
 
+        // 3. 루틴 표 리셋
         const resetBtn = e.target.closest('.btn-routine-reset');
         if (resetBtn) {
             e.preventDefault();
@@ -2217,6 +2256,7 @@
             return;
         }
 
+        // 4. 에디터 내부 전용 플로팅 조작 툴바
         const editContent = document.getElementById('editContent');
         if (!editContent || !editContent.contains(e.target)) return;
 
@@ -2562,7 +2602,6 @@
         card.classList.add('selected');
         selectedPickerValue = val;
 
-        // 태그형(3) 선택 시에는 컬러 팔레트를 자동으로 숨겨 혼선을 방지
         const colorWrap = document.getElementById('pickerColorWrap');
         if (colorWrap) {
             colorWrap.style.display = (val === "3") ? "none" : "flex";
@@ -2680,15 +2719,12 @@
         const borderTint = hexToRgba(themeColor, 0.28);
 
         if (choice === "2") {
-            // 라인형
             detailsEl.className = "acc-line";
             detailsEl.style.borderBottomColor = borderTint;
             summaryEl.style.color = themeColor;
         } else if (choice === "3") {
-            // 🏷️ 태그형: 컬러 덮어쓰기 없이 순수 CSS 오리지널 서식 적용
             detailsEl.className = "acc-soft";
         } else {
-            // 카드형 (기본 메뉴얼)
             detailsEl.className = "acc-card";
             detailsEl.style.borderColor = borderTint;
             summaryEl.style.color = themeColor;
