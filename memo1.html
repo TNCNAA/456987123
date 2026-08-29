@@ -1186,7 +1186,6 @@
     let activePickerType = null;
     let selectedPickerValue = "1";
 
-    // 앱 최초 로드 시 데이터 동기화 및 초기 렌더링 수행
     document.addEventListener('DOMContentLoaded', function() {
         renderList();
 
@@ -2383,7 +2382,7 @@
         if (toolbar) toolbar.style.display = 'none';
     }
 
-    // 칸분할 셀 너비 조절 오류 수정 완료된 함수
+    // 수정 완료된 픽셀 기반 분할 셀 리사이징 함수
     function resizeCurrentCellWidth(diff) {
         if (!currentActiveCell) return;
         
@@ -2392,23 +2391,36 @@
             const row = currentActiveCell.closest('tr');
             const cells = Array.from(row.children);
             if (cells.length > 1) {
-                const totalWidth = nestedTable.offsetWidth || 300;
-                let currentW = currentActiveCell.offsetWidth;
-                let newW = Math.max(30, Math.min(totalWidth - 30, currentW + diff));
-                let newPct = Math.round((newW / totalWidth) * 100);
+                const currentIndex = cells.indexOf(currentActiveCell);
+                let widths = cells.map(c => c.getBoundingClientRect().width);
+                let targetSiblingIndex = (currentIndex < cells.length - 1) ? currentIndex + 1 : currentIndex - 1;
                 
-                currentActiveCell.style.width = newPct + '%';
-                const sibling = currentActiveCell.nextElementSibling || currentActiveCell.previousElementSibling;
-                if (sibling) {
-                    sibling.style.width = (100 - newPct) + '%';
+                let minW = 35;
+                let actualDiff = diff;
+                
+                if (widths[currentIndex] + actualDiff < minW) {
+                    actualDiff = minW - widths[currentIndex];
                 }
+                if (widths[targetSiblingIndex] - actualDiff < minW) {
+                    actualDiff = widths[targetSiblingIndex] - minW;
+                }
+                
+                widths[currentIndex] += actualDiff;
+                widths[targetSiblingIndex] -= actualDiff;
+                
+                const totalW = widths.reduce((a, b) => a + b, 0);
+                cells.forEach((cell, idx) => {
+                    const pct = ((widths[idx] / totalW) * 100).toFixed(2);
+                    cell.style.width = pct + '%';
+                });
+                
                 showTableToolbar(currentActiveCell);
                 return;
             }
         }
 
         const currentWidth = currentActiveCell.offsetWidth;
-        const newWidth = Math.max(30, currentWidth + diff);
+        const newWidth = Math.max(35, currentWidth + diff);
         currentActiveCell.style.width = newWidth + 'px';
         currentActiveCell.removeAttribute('width');
         showTableToolbar(currentActiveCell);
