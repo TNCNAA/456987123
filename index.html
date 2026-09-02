@@ -14,7 +14,6 @@
         const firebaseConfig = {
             apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
             authDomain: "tncnaaa.firebaseapp.com",
-            databaseURL: "https://tncnaaa-default-rtdb.firebaseio.com",
             projectId: "tncnaaa",
             storageBucket: "tncnaaa.firebasestorage.app",
             messagingSenderId: "822557545187",
@@ -94,12 +93,7 @@
             }
         };
     </script>
-@media (max-width: 768px) {
-    body {
-        align-items: flex-start; /* 👈 위쪽 정렬로 변경 */
-        padding-top: 40px;      /* 👈 원하는 만큼 위쪽 여백 조절 (숫자가 작을수록 더 위로 올라감) */
-    }
-}
+
     <style>
         :root {
             --bg-color: #fff9f5;
@@ -212,6 +206,14 @@
 
         .settings-area { margin-top: 25px; border-top: 2px dashed #eee; padding-top: 15px; text-align: center; }
         .pwd-change-btn { background: none; border: none; color: #888; font-family: 'NanumSquareRound', sans-serif; font-size: 0.85rem; cursor: pointer; text-decoration: underline; }
+
+        /* 📱 모바일 전용: 상단 정렬 및 위쪽 여백 조정 */
+        @media (max-width: 768px) {
+            body {
+                align-items: flex-start;
+                padding-top: 40px; /* 숫자를 줄이면 더 위로 올라갑니다 (예: 25px, 15px) */
+            }
+        }
     </style>
 </head>
 <body>
