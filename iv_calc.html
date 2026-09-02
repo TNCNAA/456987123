@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>임상 수액 계산기 (cc / gtt / 초당 방울)</title>
+    <title>수액 계산기</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -144,7 +144,7 @@
     <div class="container">
         <div class="header-area">
             <h2>
-                💧 스마트 수액 계산기 
+                💧수액 계산기 
                 <span style="font-size: 1rem;">
                     <a href="index.html" style="text-decoration: none;" title="메인으로 가기">🏠</a>
                 </span>
@@ -164,7 +164,8 @@
         <div class="calc-group">
             <label for="ivDropFactor">3. 수액 세트 종류 (방울수 계수)</label>
             <select id="ivDropFactor">
-                <option value="20">성인 일반 수액세트 (20 gtt/cc)</option>
+                <option value="20" selected>성인 일반 수액세트 (20 gtt/cc)</option>
+                <option value="15">성인 수액세트 일부 (15 gtt/cc)</option>
                 <option value="10">수혈 세트 또는 일부 (10 gtt/cc)</option>
                 <option value="60">소아용 미세 수액세트 (60 gtt/cc)</option>
             </select>
@@ -208,7 +209,6 @@
             const ccHr = volume / hours;
 
             // 2. 분당 방울수 (gtt/min) = (총 용량(mL) × 방울계수) / (남은 시간(시간) × 60분)
-            // 또는 (cc/hr × 방울계수) / 60
             const gttMin = (ccHr * dropFactor) / 60;
 
             // 3. 몇 초에 한 방울 = 60초 / 분당 방울수
