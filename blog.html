@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>미니 블로그</title>
-    <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     
@@ -77,6 +76,136 @@
         }
         .img-preview { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
 
+        /* ===== 📊 표 & 📁 아코디언 스타일 (memo.html 이식) ===== */
+        .editor-area table, .view-content table, .detail-content-box table {
+            width: 100% !important;
+            max-width: 100% !important;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin: 8px 0;
+            word-break: break-all;
+        }
+        .editor-area table td, .view-content table td, .detail-content-box table td,
+        .editor-area table th, .view-content table th, .detail-content-box table th {
+            outline: none;
+            word-break: break-all;
+            vertical-align: middle;
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            min-width: 25px;
+            color: #191919;
+            background: #ffffff;
+        }
+        table.nested-split-table {
+            margin: 0 !important;
+            border: none !important;
+            width: 100% !important;
+            height: 100%;
+            table-layout: fixed;
+        }
+        table.nested-split-table td {
+            border: none !important;
+            border-right: 1px solid #cbd5e1 !important;
+            padding: 6px 8px !important;
+        }
+        table.nested-split-table td:last-child { border-right: none !important; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .status-badge.standby { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .status-badge.done { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+
+        .btn-routine-reset {
+            background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;
+            padding: 2px 4px; border-radius: 4px; font-size: 10.5px; cursor: pointer; font-weight: bold;
+        }
+        .btn-routine-reset:hover { background: #e2e8f0; color: #0f172a; }
+
+        /* 아코디언 서식 */
+        .editor-area details, .view-content details, .detail-content-box details { margin: 6px 0; width: 100%; color: #191919; }
+        .acc-card { border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .acc-card > summary { padding: 8px 12px; font-weight: 600; font-size: 13px; color: #1e293b; cursor: pointer; background: #f8fafc; outline: none; }
+        .acc-card > .acc-content { padding: 10px 12px; font-size: 13px; color: #334155; line-height: 1.5; min-height: 28px; }
+
+        .acc-line { border-bottom: 1px solid #e2e8f0; padding: 3px 0; }
+        .acc-line > summary { font-size: 13px; font-weight: bold; color: #475569; cursor: pointer; outline: none; list-style: none; display: flex; align-items: center; gap: 5px; }
+        .acc-line > summary::-webkit-details-marker { display: none; }
+        .acc-line > summary::before { content: "▶"; font-size: 9px; color: #94a3b8; transition: transform 0.2s ease; }
+        .acc-line[open] > summary::before { transform: rotate(90deg); color: inherit; }
+        .acc-line > .acc-content { padding: 4px 0 4px 14px; font-size: 13px; color: #64748b; line-height: 1.5; min-height: 28px; }
+
+        .acc-soft { border: 1px solid #e0e7ff !important; border-radius: 6px !important; background: #f5f7ff !important; overflow: hidden !important; }
+        .acc-soft > summary { padding: 7px 10px !important; font-size: 12.5px !important; font-weight: 600 !important; color: #3730a3 !important; cursor: pointer !important; outline: none; }
+        .acc-soft[open] > summary { border-bottom: 1px solid #e0e7ff !important; background: #eef2ff !important; }
+        .acc-soft > .acc-content { padding: 8px 10px !important; font-size: 13px !important; color: #4338ca !important; background: #ffffff !important; min-height: 28px; }
+
+        /* 표 및 이미지 조작 플로팅 툴바 */
+        #imgResizeToolbar, #tableManageToolbar {
+            display: none;
+            position: absolute;
+            background: #1e293b;
+            color: white;
+            padding: 6px 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+            z-index: 1000;
+            gap: 4px;
+            align-items: center;
+            font-size: 11px;
+        }
+        #imgResizeToolbar button, #tableManageToolbar button {
+            background: #334155; color: white; border: none; padding: 5px 8px;
+            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; white-space: nowrap;
+        }
+        #imgResizeToolbar button:hover, #tableManageToolbar button:hover { background: #475569; }
+        #tableManageToolbar button.btn-danger { background: #ef4444; }
+        #tableManageToolbar button.btn-danger:hover { background: #dc2626; }
+        .toolbar-divider { color: #475569; margin: 0 2px; }
+
+        /* 커스텀 피커 모달 */
+        .picker-modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); z-index: 9999; justify-content: center; align-items: center;
+        }
+        .picker-modal {
+            background: #fff; width: 340px; border-radius: 12px; padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 12px; color: #191919;
+        }
+        .picker-options { display: flex; flex-direction: column; gap: 8px; }
+        .picker-option-card {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; background: #f8fafc;
+        }
+        .picker-option-card:hover { background: #eff6ff; border-color: #0253c7; }
+        .picker-option-card.selected { background: #eff6ff; border-color: #0253c7; box-shadow: 0 0 0 2px rgba(2,83,199,0.15); }
+        .picker-emoji { font-size: 20px; }
+        .picker-text { font-size: 13px; font-weight: 600; color: #334155; }
+        
+        .picker-input-wrap { display: flex; flex-direction: column; gap: 4px; }
+        .picker-input-wrap label { font-size: 11px; font-weight: bold; color: #64748b; }
+        .picker-input { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
+        
+        .color-palette-bar { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+        .color-chip {
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; flex-shrink: 0;
+        }
+        .color-chip.selected { border-color: #0f172a; transform: scale(1.18); box-shadow: 0 0 0 2px rgba(0,0,0,0.2); }
+        .custom-color-input { width: 26px; height: 26px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 1px; cursor: pointer; background: #fff; }
+
+        .picker-btns { display: flex; gap: 6px; margin-top: 4px; }
+        .picker-btn { flex: 1; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; border: none; }
+        .picker-btn.cancel { background: #f1f5f9; color: #64748b; }
+        .picker-btn.confirm { background: #0253c7; color: #fff; }
+        /* ========================================================== */
+
         .post-list { display: flex; flex-direction: column; gap: 0; }
         .post-card { 
             position: relative; 
@@ -107,17 +236,17 @@
         .post-card.pinned .corner-pin { opacity: 1; }
 
         .post-detail-view { background: var(--bg); padding: 10px 0; }
-.detail-content-box { 
-    background: #f8fafc; 
-    color: #191919; 
-    padding: 15px; 
-    border: 1px solid var(--border);
-    border-radius: 6px; 
-    margin: 15px 0; 
-    line-height: 1.6; 
-    font-size: 0.95rem;
-    white-space: pre-wrap; /* 👈 작성할 때의 줄바꿈과 공백을 똑같이 유지해 줌 */
-}
+        .detail-content-box { 
+            background: #f8fafc; 
+            color: #191919; 
+            padding: 15px; 
+            border: 1px solid var(--border);
+            border-radius: 6px; 
+            margin: 15px 0; 
+            line-height: 1.6; 
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+        }
         .comment-item { background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; color: white; }
         .comment-date { font-size: 0.7rem; color: var(--text-sub); text-align: right; }
 
@@ -161,7 +290,6 @@
 <a href="index.html" class="btn-main" style="background:#64748b; display:inline-block; margin-bottom:10px; color:white;">🏠 메인</a>
 
 <div class="blog-container">
-    <!-- 상단 카테고리 필터 바 -->
     <div id="viewListHeader" class="toolbar-sticky">
         <div class="toolbar-top-row">
             <div class="cat-btn-group" id="categoryButtonGroup">
@@ -185,10 +313,8 @@
         <div id="subCatBar" class="sub-cat-bar"></div>
     </div>
 
-    <!-- 1. 글 목록 화면 -->
     <div id="viewList" class="post-list"></div>
 
-    <!-- 1-1. 공지방 타임라인 화면 -->
     <div id="viewNotice" class="notice-container">
         <div class="notice-write-section">
             <textarea id="noticeWriteContent" class="notice-editor-area" placeholder="공지 내용을 입력하세요..."></textarea>
@@ -200,7 +326,6 @@
         </div>
     </div>
 
-    <!-- 2. 글쓰기 / 수정 에디터 화면 -->
     <div id="viewWrite" style="display:none;">
         <div class="write-sticky-header">
             <div style="padding:8px 0; display:flex; justify-content:flex-end; gap:6px; border-bottom:1px solid var(--border); margin-bottom:8px;">
@@ -234,7 +359,6 @@
                     <option value="7">20</option>
                 </select>
 
-                <!-- 글자색 인라인 버튼 -->
                 <span style="font-size:0.75rem;color:var(--text-sub);">A색:</span>
                 <button type="button" class="color-dot-btn" style="background:#191919;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#191919')" title="검정"></button>
                 <button type="button" class="color-dot-btn" style="background:#ef4444;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#ef4444')" title="빨강"></button>
@@ -245,7 +369,6 @@
                 <button type="button" class="color-dot-btn" style="background:#a855f7;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#a855f7')" title="보라"></button>
                 <button type="button" class="color-dot-btn" style="background:#ec4899;" onmousedown="saveSelection();event.preventDefault();applyTextColor('#ec4899')" title="분홍"></button>
 
-                <!-- 형광펜 인라인 버튼 -->
                 <span style="font-size:0.75rem;color:var(--text-sub);">🖍:</span>
                 <button type="button" class="color-dot-btn" style="background:#fef08a;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#fef08a')" title="노랑 형광"></button>
                 <button type="button" class="color-dot-btn" style="background:#bbf7d0;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#bbf7d0')" title="초록 형광"></button>
@@ -255,19 +378,58 @@
                 <button type="button" class="color-dot-btn" style="background:#ddd6fe;" onmousedown="saveSelection();event.preventDefault();applyHiliteColor('#ddd6fe')" title="보라 형광"></button>
                 <button type="button" class="color-dot-btn" style="background:#334155;border:1px solid #94a3b8;color:#f87171;font-size:0.7rem;font-weight:bold;" onmousedown="saveSelection();event.preventDefault();removeHighlight()" title="형광펜 제거">✕</button>
 
-                <!-- 🚨 박스 버튼 -->
                 <button type="button" class="tool-btn" onclick="applyBoxColor()" style="background:#f87171; color:white;">🚨 박스</button>
                 <button type="button" class="tool-btn" style="background:#a78bfa; color:#0f172a;" onclick="convertPostBadgesInEditor()" title="태그를 뱃지로 변환">🪄 뱃지</button>
+
+                <button type="button" class="tool-btn" style="background:#0284c7; color:white;" onclick="openCustomPicker('table')">📊 표</button>
+                <button type="button" class="tool-btn" style="background:#7c3aed; color:white;" onclick="openCustomPicker('accordion')">📁 접기</button>
             </div>
         </div>
 
         <div id="writeContent" class="editor-area" contenteditable="true" spellcheck="false" placeholder="내용을 입력하세요..."></div>
     </div>
 
-    <!-- 3. 상세 보기 화면 -->
     <div id="viewDetail" style="display:none;" class="post-detail-view">
         <div id="postDetailContainer"></div>
     </div>
+</div>
+
+<div id="customPickerModal" class="picker-modal-overlay">
+    <div class="picker-modal">
+        <div id="pickerOptionsList" class="picker-options"></div>
+        <div id="pickerColorWrap" class="picker-input-wrap">
+            <label>포인트 컬러 선택</label>
+            <div class="color-palette-bar">
+                <span class="color-chip selected" style="background:#0253c7;" onclick="selectThemeColor(this, '#0253c7')"></span>
+                <span class="color-chip" style="background:#059669;" onclick="selectThemeColor(this, '#059669')"></span>
+                <span class="color-chip" style="background:#dc2626;" onclick="selectThemeColor(this, '#dc2626')"></span>
+                <span class="color-chip" style="background:#7c3aed;" onclick="selectThemeColor(this, '#7c3aed')"></span>
+                <span class="color-chip" style="background:#ea580c;" onclick="selectThemeColor(this, '#ea580c')"></span>
+                <span class="color-chip" style="background:#475569;" onclick="selectThemeColor(this, '#475569')"></span>
+                <input type="color" id="customAccordionColor" class="custom-color-input" value="#0253c7" onchange="selectCustomColor(this.value)">
+            </div>
+        </div>
+        <div id="pickerTitleWrap" class="picker-input-wrap">
+            <label id="pickerInputLabel">접기 제목 입력</label>
+            <input type="text" id="pickerTitleInput" class="picker-input" placeholder="제목을 입력하세요">
+        </div>
+        <div class="picker-btns">
+            <button class="picker-btn cancel" onclick="closeCustomPicker()">취소</button>
+            <button class="picker-btn confirm" onclick="confirmCustomPicker()">삽입</button>
+        </div>
+    </div>
+</div>
+
+<div id="tableManageToolbar">
+    <button type="button" onclick="resizeCurrentCellWidth(-15)">-</button>
+    <button type="button" onclick="resizeCurrentCellWidth(15)">+</button>
+    <span class="toolbar-divider">|</span>
+    <button type="button" onclick="addTableRowBelow()">+줄</button>
+    <button type="button" onclick="splitCurrentCellRight()">+칸</button>
+    <button type="button" class="btn-danger" onclick="deleteCurrentTableRow()">-줄</button>
+    <button type="button" class="btn-danger" onclick="deleteCurrentCell()">-칸</button>
+    <span class="toolbar-divider">|</span>
+    <button type="button" class="btn-danger" onclick="deleteCurrentTable()">표삭제</button>
 </div>
 
 <script>
@@ -297,10 +459,11 @@
     let undoStack = [];
     let savedRange = null;
 
-    let editorColors = {
-        text: '#191919',
-        hilite: '#fef08a'
-    };
+    let activePickerType = null;
+    let selectedPickerValue = "1";
+    let selectedAccordionColor = "#0253c7";
+    let currentActiveTable = null;
+    let currentActiveCell = null;
 
     const editor = document.getElementById('writeContent');
 
@@ -357,17 +520,6 @@
         span.style[styleProp] = colorValue;
 
         const contents = range.extractContents();
-
-        contents.querySelectorAll('span[style]').forEach(sp => {
-            sp.style[styleProp] = '';
-            const s = (sp.getAttribute('style') || '').replace(/[\s;]/g, '');
-            if (s === '') {
-                const p = sp.parentNode;
-                while (sp.firstChild) p.insertBefore(sp.firstChild, sp);
-                p.removeChild(sp);
-            }
-        });
-
         span.appendChild(contents);
         range.insertNode(span);
 
@@ -381,44 +533,24 @@
         saveUndoState();
     }
 
-    function applyTextColor(colorValue) {
-        applyColorToRange('color', colorValue);
-    }
-
-    function applyHiliteColor(colorValue) {
-        applyColorToRange('backgroundColor', colorValue);
-    }
+    function applyTextColor(colorValue) { applyColorToRange('color', colorValue); }
+    function applyHiliteColor(colorValue) { applyColorToRange('backgroundColor', colorValue); }
 
     function removeHighlight() {
         editor.focus();
         restoreSelection();
         const sel = window.getSelection();
         if (!sel.rangeCount) return;
-
         const range = sel.getRangeAt(0);
         let container = range.commonAncestorContainer;
-        if (container.nodeType === Node.TEXT_NODE) {
-            container = container.parentNode;
-        }
+        if (container.nodeType === Node.TEXT_NODE) container = container.parentNode;
 
         const spans = container.querySelectorAll ? container.querySelectorAll('span') : [];
         spans.forEach(span => {
             if (sel.containsNode(span, true) && !span.classList.contains('tag-badge')) {
                 span.style.backgroundColor = '';
-                if (!span.style.color && !span.style.fontWeight && !span.style.border && !span.style.fontSize) {
-                    const parent = span.parentNode;
-                    while (span.firstChild) {
-                        parent.insertBefore(span.firstChild, span);
-                    }
-                    parent.removeChild(span);
-                }
             }
         });
-
-        if (container.tagName === 'SPAN' && !container.classList.contains('tag-badge') && container !== editor) {
-            container.style.backgroundColor = '';
-        }
-
         saveSelection();
         saveUndoState();
     }
@@ -428,17 +560,272 @@
         saveUndoState();
     });
 
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key.toLowerCase() === 'z') {
-            const activeWriteTab = document.getElementById('viewWrite');
-            if (activeWriteTab && activeWriteTab.style.display !== 'none' && undoStack.length > 1) {
-                e.preventDefault();
-                undoStack.pop();
-                editor.innerHTML = undoStack[undoStack.length - 1];
-                saveSelection();
-            }
+    // ===== 📊 표 & 📁 아코디언 삽입 로직 (memo.html 이식) =====
+    function openCustomPicker(type) {
+        saveSelection();
+        activePickerType = type;
+        selectedPickerValue = "1";
+        const modal = document.getElementById('customPickerModal');
+        const listEl = document.getElementById('pickerOptionsList');
+        const colorWrap = document.getElementById('pickerColorWrap');
+        const titleWrap = document.getElementById('pickerTitleWrap');
+        const inputEl = document.getElementById('pickerTitleInput');
+
+        if (type === 'table') {
+            colorWrap.style.display = "none";
+            titleWrap.style.display = "none";
+            listEl.innerHTML = `
+                <div class="picker-option-card selected" onclick="selectPickerOption(this, '1')">
+                    <span class="picker-emoji">📋</span>
+                    <span class="picker-text">대기/완료 루틴 표</span>
+                </div>
+                <div class="picker-option-card" onclick="selectPickerOption(this, '2')">
+                    <span class="picker-emoji">📑</span>
+                    <span class="picker-text">심플 2열 표</span>
+                </div>
+            `;
+        } else {
+            colorWrap.style.display = "flex";
+            titleWrap.style.display = "flex";
+            inputEl.value = "📌 접기 제목";
+            listEl.innerHTML = `
+                <div class="picker-option-card selected" onclick="selectPickerOption(this, '1')">
+                    <span class="picker-emoji">📦</span>
+                    <span class="picker-text">카드형 아코디언</span>
+                </div>
+                <div class="picker-option-card" onclick="selectPickerOption(this, '2')">
+                    <span class="picker-emoji">📄</span>
+                    <span class="picker-text">라인형 아코디언</span>
+                </div>
+                <div class="picker-option-card" onclick="selectPickerOption(this, '3')">
+                    <span class="picker-emoji">🏷️</span>
+                    <span class="picker-text">태그형 아코디언</span>
+                </div>
+            `;
         }
+        modal.style.display = 'flex';
+        if (type !== 'table') inputEl.focus();
+    }
+
+    function selectPickerOption(card, val) {
+        document.querySelectorAll('.picker-option-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedPickerValue = val;
+        const colorWrap = document.getElementById('pickerColorWrap');
+        if (colorWrap) colorWrap.style.display = (val === "3") ? "none" : "flex";
+    }
+
+    function selectThemeColor(chipEl, colorHex) {
+        document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+        if (chipEl) chipEl.classList.add('selected');
+        selectedAccordionColor = colorHex;
+        document.getElementById('customAccordionColor').value = colorHex;
+    }
+
+    function selectCustomColor(colorHex) {
+        document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+        selectedAccordionColor = colorHex;
+    }
+
+    function closeCustomPicker() {
+        document.getElementById('customPickerModal').style.display = 'none';
+    }
+
+    function confirmCustomPicker() {
+        const title = document.getElementById('pickerTitleInput').value.trim() || '📌 접기 제목';
+        closeCustomPicker();
+        editor.focus();
+        restoreSelection();
+
+        if (activePickerType === 'table') {
+            insertTableHtml(selectedPickerValue);
+        } else {
+            insertAccordionHtml(selectedPickerValue, title, selectedAccordionColor);
+        }
+        saveUndoState();
+    }
+
+    function insertTableHtml(choice) {
+        const sel = window.getSelection();
+        let tableEl = document.createElement('table');
+        tableEl.style.cssText = "width:100%; border-collapse:collapse; margin:8px 0; table-layout:fixed; font-size:13px;";
+
+        if (choice === "2") {
+            tableEl.innerHTML = `
+                <tbody>
+                    <tr><td style="background:#f1f5f9; font-weight:bold; width:100px;"><br></td><td><br></td></tr>
+                    <tr><td style="background:#f1f5f9; font-weight:bold; width:100px;"><br></td><td><br></td></tr>
+                </tbody>
+            `;
+        } else {
+            tableEl.className = "routine-table";
+            tableEl.innerHTML = `
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="text-align:center; width:58px; padding:6px 2px;"><button type="button" class="btn-routine-reset" contenteditable="false" onclick="resetRoutineTable(this)">🔄리셋</button></th>
+                        <th style="text-align:left;"><br></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align:center; width:58px; padding:6px 2px;"><span class="status-badge standby" contenteditable="false" onclick="toggleStatusBadge(this)">대기</span></td>
+                        <td><br></td>
+                    </tr>
+                </tbody>
+            `;
+        }
+
+        let range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+        if (range && editor.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+            range.insertNode(tableEl);
+        } else {
+            editor.appendChild(tableEl);
+        }
+    }
+
+    function hexToRgba(hex, alpha) {
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+    }
+
+    function insertAccordionHtml(choice, title, themeColor = "#0253c7") {
+        const sel = window.getSelection();
+        const detailsEl = document.createElement('details');
+        const summaryEl = document.createElement('summary');
+        summaryEl.textContent = title;
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'acc-content';
+        contentEl.innerHTML = '<p><br></p>';
+
+        const lightBg = hexToRgba(themeColor, 0.08);
+        const borderTint = hexToRgba(themeColor, 0.28);
+
+        if (choice === "2") {
+            detailsEl.className = "acc-line";
+            detailsEl.style.borderBottomColor = borderTint;
+            summaryEl.style.color = themeColor;
+        } else if (choice === "3") {
+            detailsEl.className = "acc-soft";
+        } else {
+            detailsEl.className = "acc-card";
+            detailsEl.style.borderColor = borderTint;
+            summaryEl.style.color = themeColor;
+            summaryEl.style.background = lightBg;
+            summaryEl.style.borderBottom = `1px solid ${borderTint}`;
+        }
+
+        detailsEl.open = true;
+        detailsEl.appendChild(summaryEl);
+        detailsEl.appendChild(contentEl);
+
+        let range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+        if (range && editor.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+            range.insertNode(detailsEl);
+        } else {
+            editor.appendChild(detailsEl);
+        }
+    }
+
+    function toggleStatusBadge(badge) {
+        if (badge.classList.contains('standby')) {
+            badge.classList.remove('standby'); badge.classList.add('done'); badge.innerText = '완료';
+        } else {
+            badge.classList.remove('done'); badge.classList.add('standby'); badge.innerText = '대기';
+        }
+    }
+
+    function resetRoutineTable(btn) {
+        const table = btn.closest('table');
+        if (!table) return;
+        table.querySelectorAll('.status-badge').forEach(b => {
+            b.classList.remove('done'); b.classList.add('standby'); b.innerText = '대기';
+        });
+    }
+
+    // 표 셀 선택 및 플로팅 툴바 연동
+    editor.addEventListener('click', function(e) {
+        const cell = e.target.closest('td, th');
+        const table = e.target.closest('table');
+        if (table && cell) {
+            currentActiveTable = table;
+            currentActiveCell = cell;
+            showTableToolbar(cell);
+            return;
+        }
+        if (!e.target.closest('#tableManageToolbar')) hideTableToolbar();
     });
+
+    function showTableToolbar(cell) {
+        const toolbar = document.getElementById('tableManageToolbar');
+        toolbar.style.display = 'flex';
+        const rect = cell.getBoundingClientRect();
+        toolbar.style.top = (rect.top + window.scrollY - 35) + 'px';
+        toolbar.style.left = (rect.left + window.scrollX) + 'px';
+    }
+
+    function hideTableToolbar() {
+        const toolbar = document.getElementById('tableManageToolbar');
+        if (toolbar) toolbar.style.display = 'none';
+    }
+
+    function resizeCurrentCellWidth(diff) {
+        if (!currentActiveCell) return;
+        currentActiveCell.style.width = Math.max(25, currentActiveCell.offsetWidth + diff) + 'px';
+        showTableToolbar(currentActiveCell);
+    }
+
+    function addTableRowBelow() {
+        if (!currentActiveCell) return;
+        const row = currentActiveCell.closest('tr');
+        const newRow = row.cloneNode(true);
+        newRow.querySelectorAll('td, th').forEach(c => c.innerHTML = '<br>');
+        row.parentNode.insertBefore(newRow, row.nextSibling);
+        saveUndoState();
+    }
+
+    function splitCurrentCellRight() {
+        if (!currentActiveCell) return;
+        const orig = currentActiveCell.innerHTML;
+        currentActiveCell.innerHTML = `
+            <table class="nested-split-table" style="width:100%; border-collapse:collapse;">
+                <tbody>
+                    <tr>
+                        <td style="width:50%;">${orig || '<br>'}</td>
+                        <td style="width:50%;"><br></td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        showTableToolbar(currentActiveCell);
+        saveUndoState();
+    }
+
+    function deleteCurrentCell() {
+        if (!currentActiveCell) return;
+        currentActiveCell.remove();
+        hideTableToolbar();
+        saveUndoState();
+    }
+
+    function deleteCurrentTableRow() {
+        if (!currentActiveCell) return;
+        currentActiveCell.closest('tr').remove();
+        hideTableToolbar();
+        saveUndoState();
+    }
+
+    function deleteCurrentTable() {
+        if (!currentActiveTable) return;
+        currentActiveTable.remove();
+        hideTableToolbar();
+        saveUndoState();
+    }
+    // ==========================================================
 
     function setupPasteImage(element) {
         element.addEventListener('paste', function(e) {
@@ -459,9 +846,7 @@
                         } else {
                             element.appendChild(img);
                         }
-                        if (element === editor) {
-                            saveUndoState();
-                        }
+                        if (element === editor) saveUndoState();
                     };
                     reader.readAsDataURL(blob);
                     e.preventDefault();
@@ -474,24 +859,13 @@
     setupPasteImage(editor);
 
     function escapeHTML(value) {
-        return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     function sanitizeHTML(html) {
         const temp = document.createElement('div');
         temp.innerHTML = html;
         temp.querySelectorAll('script, iframe, object, embed').forEach(el => el.remove());
-        temp.querySelectorAll('*').forEach(el => {
-            [...el.attributes].forEach(attr => {
-                if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
-                if (['href', 'src'].includes(attr.name.toLowerCase()) && attr.value.trim().toLowerCase().startsWith('javascript:')) el.removeAttribute(attr.name);
-            });
-        });
         return temp.innerHTML;
     }
 
@@ -506,8 +880,8 @@
         };
 
         const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null, false);
-        let node;
         let textNodes = [];
+        let node;
         while(node = walker.nextNode()) textNodes.push(node);
 
         textNodes.forEach(textNode => {
@@ -526,13 +900,11 @@
                     html = html.replace(regex, `$1<span class="tag-badge tag-${key.toLowerCase()}" data-tag="$2">$2</span>`);
                 });
                 tempDiv.innerHTML = html;
-                
                 const frag = document.createDocumentFragment();
                 while(tempDiv.firstChild) frag.appendChild(tempDiv.firstChild);
                 textNode.parentNode.replaceChild(frag, textNode);
             }
         });
-
         saveUndoState();
     }
 
@@ -540,11 +912,6 @@
         if(e.target.classList.contains('tag-badge')) {
             const tagText = e.target.getAttribute('data-tag') || e.target.innerText;
             e.target.replaceWith(document.createTextNode(tagText));
-        }
-        else if(e.target.tagName === 'SPAN' && e.target.style.backgroundColor && !e.target.classList.contains('tag-badge')) {
-            const parent = e.target.parentNode;
-            while (e.target.firstChild) parent.insertBefore(e.target.firstChild, e.target);
-            parent.removeChild(e.target);
         }
     });
 
@@ -565,7 +932,6 @@
         span.style.margin = '2px 0';
         span.appendChild(range.extractContents());
         range.insertNode(span);
-        
         saveSelection();
         saveUndoState();
     }
@@ -577,7 +943,6 @@
         document.getElementById('viewListHeader').style.display = (tab === 'list' || tab === 'notice') ? 'flex' : 'none';
         document.getElementById('viewWrite').style.display = tab === 'write' ? 'block' : 'none';
         document.getElementById('viewDetail').style.display = tab === 'detail' ? 'block' : 'none';
-        
         window.scrollTo(0, 0);
 
         if(tab === 'list') renderPostList();
@@ -591,7 +956,7 @@
         '병동': ['D', 'E', 'N']
     };
 
-   function checkKeywordMatch(text, category, subCategory) {
+    function checkKeywordMatch(text, category, subCategory) {
         if (!text) return false;
         const lowerText = text.toLowerCase();
         
@@ -603,7 +968,6 @@
             const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['os1', 'os2', 'os'];
             return targets.some(t => lowerText.includes(t));
         }
-        // 💡 [여기를 수정] GS 카테고리 소분류(D, E 등) 판별 로직 추가
         if (category === 'GS') {
             const targets = subCategory && subCategory !== '전체' ? [subCategory.toLowerCase()] : ['d', 'e', 'gs'];
             return targets.some(t => {
@@ -653,11 +1017,8 @@
             subBar.innerHTML = '';
         }
 
-        if (cat === '공지') {
-            switchBlogTab('notice');
-        } else {
-            switchBlogTab('list');
-        }
+        if (cat === '공지') switchBlogTab('notice');
+        else switchBlogTab('list');
     }
 
     function filterBySub(sub) {
@@ -674,11 +1035,7 @@
         if (post) {
             post.isPinned = !post.isPinned;
             localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-            
-            if (db) {
-                db.collection("blog_posts").doc(String(id)).update({ isPinned: post.isPinned })
-                  .catch(err => console.error("고정 상태 동기화 실패:", err));
-            }
+            if (db) db.collection("blog_posts").doc(String(id)).update({ isPinned: post.isPinned }).catch(err => console.error(err));
             renderPostList();
         }
     }
@@ -695,9 +1052,7 @@
                 entries.forEach(entry => {
                     if (currentCategoryFilter === '기타') {
                         const hasAnyMainKeyword = allMainCategories.some(mainCat => checkKeywordMatch(entry.content, mainCat, '전체'));
-                        if (!hasAnyMainKeyword) {
-                            matchedNotices.push({ content: entry.content, date: entry.date });
-                        }
+                        if (!hasAnyMainKeyword) matchedNotices.push({ content: entry.content, date: entry.date });
                     } else {
                         if (checkKeywordMatch(entry.content, currentCategoryFilter, currentSubFilter)) {
                             matchedNotices.push({ content: entry.content, date: entry.date });
@@ -710,7 +1065,6 @@
         if (currentCategoryFilter !== '전체' && matchedNotices.length > 0) {
             const noticeBox = document.createElement('div');
             noticeBox.className = 'dept-notice-box';
-            
             let headerTitle = currentSubFilter !== '전체' ? currentSubFilter : currentCategoryFilter;
             let noticeHtml = `<div class="dept-notice-header">📌 [공지방 연동] ${headerTitle} </div>`;
             matchedNotices.forEach(n => {
@@ -753,7 +1107,7 @@
         filtered.forEach(p => {
             const card = document.createElement('div');
             card.className = `post-card ${p.isPinned ? 'pinned' : ''}`;
-            card.onclick = () => openPostDetail(p.id);
+            card.onclick = () => openViewWithSecret(p.id);
 
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = p.content;
@@ -763,13 +1117,11 @@
                 <div class="corner-pin" onclick="togglePin('${p.id}', event)" title="${p.isPinned ? '고정 해제' : '상단 고정'}">
                     ${p.isPinned ? '📌' : '📍'}
                 </div>
-
                 <div class="post-card-header">
                     <span class="post-category">${p.category}</span>
                 </div>
                 <div class="post-title">${escapeHTML(p.title)}</div>
                 <div class="post-snippet">${escapeHTML(snippetText)}</div>
-                
                 <div class="post-footer">
                     <span class="post-date">${p.date}</span>
                 </div>
@@ -778,12 +1130,19 @@
         });
     }
 
+    function openViewWithSecret(id) {
+        const post = blogPosts.find(p => p.id === id);
+        if(!post) return;
+        if(post.isSecret) {
+            const pw = prompt("🔒 비밀글입니다. 비밀번호를 입력하세요:");
+            if(pw !== post.secretPw) { alert("비밀번호가 틀렸습니다."); return; }
+        }
+        openPostDetail(id);
+    }
+
     function getTodayDateStr() {
         const d = new Date();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const yyyy = d.getFullYear();
-        return `${mm}/${dd}/${yyyy}`;
+        return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
     }
 
     function parseContentToEntries(rawContent, postId, fallbackDate = null) {
@@ -791,11 +1150,7 @@
         let matches = [...rawContent.matchAll(regex)];
 
         if (matches.length === 0) {
-            return [{
-                postId: postId,
-                date: fallbackDate || getTodayDateStr(),
-                content: rawContent.trim()
-            }];
+            return [{ postId: postId, date: fallbackDate || getTodayDateStr(), content: rawContent.trim() }];
         }
 
         let entries = [];
@@ -806,16 +1161,12 @@
 
             let parts = rawDateStr.split(/[-./]/);
             if (parts.length === 3) {
-                if (parts[0].length === 4) {
-                    dateStr = `${parts[1]}/${parts[2]}/${parts[0]}`;
-                } else {
-                    dateStr = `${parts[0]}/${parts[1]}/${parts[2]}`;
-                }
+                if (parts[0].length === 4) dateStr = `${parts[1]}/${parts[2]}/${parts[0]}`;
+                else dateStr = `${parts[0]}/${parts[1]}/${parts[2]}`;
             }
             
             let matchStart = currentDateMatch.index;
             let matchEnd = currentDateMatch.index + currentDateMatch[0].length;
-            
             let prevEnd = (i === 0) ? 0 : (matches[i - 1].index + matches[i - 1][0].length);
             let nextStart = (i < matches.length - 1) ? matches[i + 1].index : rawContent.length;
 
@@ -823,44 +1174,24 @@
             let precedingText = rawContent.substring(prevEnd, matchStart).trim();
             let followingText = rawContent.substring(matchEnd, nextStart).trim();
 
-            if (precedingText && !followingText) {
-                textStr = precedingText;
-            } else {
+            if (precedingText && !followingText) textStr = precedingText;
+            else {
                 textStr = followingText;
                 if (!textStr && precedingText) textStr = precedingText;
             }
 
             textStr = textStr.replace(/^[\r\n]+/, '').replace(/[\r\n]+$/, '');
-
-            if (textStr) {
-                entries.push({
-                    postId: postId,
-                    date: dateStr,
-                    content: textStr
-                });
-            }
+            if (textStr) entries.push({ postId: postId, date: dateStr, content: textStr });
         }
-
-        if (entries.length === 0) {
-            entries.push({
-                postId: postId,
-                date: fallbackDate || getTodayDateStr(),
-                content: rawContent.trim()
-            });
-        }
-
         return entries;
     }
 
     function saveNoticePost() {
         const content = document.getElementById('noticeWriteContent').value.trim();
         if(!content) { alert('내용을 입력해주세요.'); return; }
-
-        const newPostId = Date.now();
-        const newPost = { id: newPostId, content: content, createdAt: new Date().toISOString() };
+        const newPost = { id: Date.now(), content: content, createdAt: new Date().toISOString() };
         timelinePosts.unshift(newPost);
         localStorage.setItem('timeline_posts_v3', JSON.stringify(timelinePosts));
-
         document.getElementById('noticeWriteContent').value = '';
         renderNoticeFeed();
         alert('공지가 저장되었습니다!');
@@ -873,14 +1204,11 @@
             feedContainer.innerHTML = `<p style="color:var(--text-sub); text-align:center; padding:20px;">작성된 공지가 없습니다.</p>`;
             return;
         }
-
         let allEntries = [];
         timelinePosts.forEach(p => {
             const fallbackDate = p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US') : getTodayDateStr();
-            let entries = parseContentToEntries(p.content, p.id, fallbackDate);
-            allEntries.push(...entries);
+            allEntries.push(...parseContentToEntries(p.content, p.id, fallbackDate));
         });
-
         allEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         feedContainer.innerHTML = allEntries.map(entry => `
@@ -922,42 +1250,25 @@
         switchBlogTab('write');
     }
 
-    // ✨ [파이어베이스 동기화 반영] 글 저장 함수
     function savePostData() {
         const title = document.getElementById('writeTitle').value.trim();
         const category = document.getElementById('writeCategory').value;
         const content = editor.innerHTML.trim();
 
-        if (!title || !content) {
-            alert('제목과 내용을 모두 입력해주세요.');
-            return;
-        }
+        if (!title || !content) { alert('제목과 내용을 모두 입력해주세요.'); return; }
 
-        const d = new Date();
-        const todayFormatted = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
-
+        const todayFormatted = getTodayDateStr();
         let postObj;
         if (editingPostId) {
             const post = blogPosts.find(p => p.id === editingPostId);
-            if (post) { 
-                post.title = title; 
-                post.category = category; 
-                post.content = content; 
-                postObj = post; 
-            }
+            if (post) { post.title = title; post.category = category; post.content = content; postObj = post; }
         } else {
             postObj = { id: 'post_'+Date.now(), category, title, content, date: todayFormatted, comments: [], isPinned: false };
             blogPosts.unshift(postObj);
         }
 
-        // 로컬스토리지 저장
         localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-
-        // 파이어스토어 클라우드 저장
-        if (db) {
-            db.collection("blog_posts").doc(String(postObj.id)).set(postObj)
-              .catch(err => console.error("클라우드 저장 실패:", err));
-        }
+        if (db) db.collection("blog_posts").doc(String(postObj.id)).set(postObj).catch(err => console.error(err));
 
         editingPostId = null;
         switchBlogTab('list');
@@ -966,7 +1277,6 @@
     function openPostDetail(id) {
         const p = blogPosts.find(p => p.id === id);
         if(!p) return;
-        
         const comments = p.comments || [];
 
         document.getElementById('postDetailContainer').innerHTML = `
@@ -977,30 +1287,24 @@
                     <button class="btn-main" style="background:#f87171; color:#0f172a;" onclick="deletePost('${p.id}')">삭제</button>
                 </div>
             </div>
-
             <h2 style="color:white; margin-bottom:4px;">${escapeHTML(p.title)}</h2>
             <small style="color:var(--text-sub);">카테고리: ${p.category} | 작성일: ${p.date}</small>
-            
-            <div class="detail-content-box">${p.content}</div>
+            <div class="detail-content-box view-content">${p.content}</div>
             
             <hr style="margin:15px 0; border:0; border-top:1px solid var(--border);">
             <h4 style="color:white;">댓글 (${comments.length})</h4>
             <div style="margin:10px 0;" id="commentListContainer">
                 ${comments.length === 0 ? '<p style="font-size:0.8rem; color:#888;">댓글이 없습니다.</p>' : ''}
                 ${comments.map((c, index) => `
-                    <div class="comment-item" id="comment-${p.id}-${index}">
+                    <div class="comment-item">
                         <div id="comment-text-${p.id}-${index}">${sanitizeHTML(c.text)}</div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
                             <span class="comment-date">🕒 ${c.date}</span>
-                            <div style="display:flex; gap:4px;">
-                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#0284c7; color:#0f172a;" onclick="editComment('${p.id}', ${index})">수정</button>
-                                <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#f87171; color:#0f172a;" onclick="deleteComment('${p.id}', ${index})">삭제</button>
-                            </div>
+                            <button class="btn-main" style="padding:2px 6px; font-size:0.65rem; background:#f87171; color:#0f172a;" onclick="deleteComment('${p.id}', ${index})">삭제</button>
                         </div>
                     </div>
                 `).join('')}
             </div>
-            
             <div style="display:flex; flex-direction:column; gap:6px; border:1px solid var(--border); padding:8px; border-radius:6px; background:#1e293b; margin-top:15px;">
                 <div id="commentInputDiv" class="editor-area" style="min-height:45px; padding:6px; background:#f8fafc; color:#191919;" contenteditable="true" placeholder="댓글 입력 또는 사진 Ctrl+V..."></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:4px;">
@@ -1021,46 +1325,8 @@
         if (!post.comments) post.comments = [];
         post.comments.push({ date: new Date().toLocaleString(), text });
         localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-
-        if (db) {
-            db.collection("blog_posts").doc(String(id)).update({ comments: post.comments })
-              .catch(err => console.error("댓글 동기화 실패:", err));
-        }
-
+        if (db) db.collection("blog_posts").doc(String(id)).update({ comments: post.comments }).catch(err => console.error(err));
         openPostDetail(id);
-    }
-
-    function editComment(postId, commentIndex) {
-        const textDiv = document.getElementById(`comment-text-${postId}-${commentIndex}`);
-        const currentContent = textDiv.innerHTML;
-        
-        textDiv.innerHTML = `
-            <div contenteditable="true" id="editCommentBox-${postId}-${commentIndex}" style="background:#f8fafc; color:#191919; padding:6px; border-radius:4px; min-height:35px; outline:none;">${currentContent}</div>
-            <div style="display:flex; justify-content:flex-end; gap:4px; margin-top:4px;">
-                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#475569; color:white;" onclick="openPostDetail('${postId}')">취소</button>
-                <button class="btn-main" style="padding:2px 8px; font-size:0.65rem; background:#38bdf8; color:#0f172a;" onclick="saveEditedComment('${postId}', ${commentIndex})">저장</button>
-            </div>
-        `;
-        setupPasteImage(document.getElementById(`editCommentBox-${postId}-${commentIndex}`));
-    }
-
-    function saveEditedComment(postId, commentIndex) {
-        const editBox = document.getElementById(`editCommentBox-${postId}-${commentIndex}`);
-        const newText = editBox.innerHTML.trim();
-        if(!newText) return;
-
-        const post = blogPosts.find(p => p.id === postId);
-        if(post && post.comments && post.comments[commentIndex]) {
-            post.comments[commentIndex].text = newText;
-            localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-
-            if (db) {
-                db.collection("blog_posts").doc(String(postId)).update({ comments: post.comments })
-                  .catch(err => console.error("댓글 수정 동기화 실패:", err));
-            }
-
-            openPostDetail(postId);
-        }
     }
 
     function deleteComment(postId, commentIndex) {
@@ -1068,53 +1334,36 @@
         if(post && post.comments) {
             post.comments.splice(commentIndex, 1);
             localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-
-            if (db) {
-                db.collection("blog_posts").doc(String(postId)).update({ comments: post.comments })
-                  .catch(err => console.error("댓글 삭제 동기화 실패:", err));
-            }
-
+            if (db) db.collection("blog_posts").doc(String(postId)).update({ comments: post.comments }).catch(err => console.error(err));
             openPostDetail(postId);
         }
     }
 
-    // ✨ [파이어베이스 동기화 반영] 글 삭제 함수
     function deletePost(id) {
         if(confirm("정말 삭제하시겠습니까?")) {
             blogPosts = blogPosts.filter(p => p.id !== id);
             localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
-
-            if (db) {
-                db.collection("blog_posts").doc(String(id)).delete()
-                  .catch(err => console.error("클라우드 삭제 실패:", err));
-            }
-
+            if (db) db.collection("blog_posts").doc(String(id)).delete().catch(err => console.error(err));
             switchBlogTab('list');
         }
     }
 
-    // ✨ [파이어베이스 동기화 반영] 앱 실행 시 클라우드에서 최신 글 불러오기 (순서 보장형)
     async function initBlogData() {
         if (db) {
             try {
                 const snapshot = await db.collection("blog_posts").get();
                 if (!snapshot.empty) {
                     let cloudPosts = [];
-                    snapshot.forEach(doc => {
-                        cloudPosts.push(doc.data());
-                    });
+                    snapshot.forEach(doc => cloudPosts.push(doc.data()));
                     cloudPosts.sort((a, b) => (a.isPinned === b.isPinned ? new Date(b.date) - new Date(a.date) : a.isPinned ? -1 : 1));
                     blogPosts = cloudPosts;
                     localStorage.setItem('my_blog_posts_final_v10', JSON.stringify(blogPosts));
                 }
-            } catch (e) {
-                console.log("클라우드 데이터 로드 실패, 로컬 데이터 사용:", e);
-            }
+            } catch (e) { console.log("클라우드 로드 실패:", e); }
         }
         renderPostList();
     }
 
-    // 앱 시작 시 클라우드 데이터를 완전히 기다린 후 화면 렌더링 실행
     initBlogData();
 </script>
 </body>
