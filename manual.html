@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>기본 매뉴얼</title>
+    <title>임상 기본 매뉴얼</title>
     <!-- Firebase SDK 로드 (클라우드 저장용) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -55,32 +55,62 @@
             gap: 8px;
         }
 
-        .menu-select-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
+        /* 🗂️ 1단계 메인 과 선택 탭 (이미지 스타일) */
+        .main-tab-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
         }
-
-        .menu-card-btn {
-            background: #ffffff;
-            border: 2px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 20px 15px;
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: bold;
+        .main-tab {
+            padding: 10px 22px;
+            border-radius: 24px;
+            background: #f1f5f9;
             color: #1e293b;
+            font-size: 0.95rem;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            border: 1px solid #cbd5e1;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: all 0.2s;
+        }
+        .main-tab:hover { background: #e2e8f0; }
+        .main-tab.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
         }
 
-        .menu-card-btn:hover {
-            border-color: #0284c7;
-            background-color: #f0f9ff;
-            color: #0284c7;
-            transform: translateY(-2px);
+        /* 🗂️ 2단계 수술별 가로 필터 탭 (동적 연동) */
+        .sub-filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+        .filter-chip {
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #cbd5e1;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            transition: all 0.15s;
+        }
+        .filter-chip:hover { background: #f8fafc; border-color: #2563eb; color: #2563eb; }
+        .filter-chip.active {
+            background: #ffffff;
+            color: #2563eb;
+            border: 2px solid #2563eb;
+            font-weight: bold;
         }
 
         .manual-section {
@@ -124,7 +154,7 @@
         #floatingToolbar input[type="color"] { width: 22px; height: 22px; padding: 0; vertical-align: middle; border: none; background: transparent; cursor: pointer; }
 
         .bottom-add-btn-area { text-align: center; margin-top: 20px; margin-bottom: 20px; }
-        .btn-success-lg { background-color: #10b981; color: white; padding: 10px 20px; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); width: 100%; }
+        .btn-success-lg { background-color: #10b981; color: white; padding: 12px 20px; font-size: 0.95rem; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); width: 100%; }
         .btn-success-lg:hover { background-color: #059669; }
 
         .btn-emoji { background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 2px 4px; vertical-align: middle; }
@@ -132,14 +162,14 @@
         .card-status { font-size: 0.75rem; color: #16a34a; font-weight: bold; display: none; margin-right: 4px; }
 
         /* 카드 및 접기/펼치기 스타일 */
-        .sub-card { background: white; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); position: relative; }
+        .sub-card { background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative; }
         .sub-title { 
-            background: #f8fafc; 
-            font-size: 14px; 
+            background: #ffffff; 
+            font-size: 1rem; 
             font-weight: bold; 
             color: #1e293b; 
-            padding: 10px 12px; 
-            border-bottom: 1px solid #cbd5e1; 
+            padding: 14px 16px; 
+            border-bottom: 1px solid #e2e8f0; 
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
@@ -150,7 +180,7 @@
         .sub-title-left {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             flex: 1;
         }
 
@@ -175,17 +205,19 @@
         }
         
         .manual-container-box { display: flex; flex-direction: column; }
-        .manual-row-block { border-bottom: none; padding: 8px 12px; background-color: #ffffff; transition: background-color 0.2s; }
-        .row-header-bar { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; color: #1e293b; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #e2e8f0; }
+        .manual-row-block { border-bottom: 1px solid #f1f5f9; padding: 12px 16px; background-color: #ffffff; }
+        .manual-row-block:last-child { border-bottom: none; }
         
-        .editable-th { outline: none; min-height: 18px; font-weight: bold; font-size: 13px; flex: 1; color: #1e293b; }
+        .row-header-bar { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; color: #1e293b; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        
+        .editable-th { outline: none; min-height: 18px; font-weight: bold; font-size: 0.9rem; flex: 1; color: #1e293b; }
         .row-action-group { display: flex; align-items: center; gap: 8px; }
         .row-bg-picker { width: 22px; height: 22px; border: none; background: transparent; cursor: pointer; padding: 0; vertical-align: middle; }
         .btn-row-del { background: none; border: none; color: #ef4444; font-size: 0.9rem; font-weight: bold; cursor: pointer; padding: 2px 4px; }
         .btn-row-del:hover { color: #b91c1c; }
 
-        .editable-cell { outline: none; background: transparent; min-height: 22px; line-height: 1.5; white-space: pre-wrap; font-size: 13px; padding: 2px; }
-        .editable-cell:focus { background-color: rgba(255,255,255,0.8); box-shadow: inset 0 0 0 2px #bae6fd; border-radius: 2px; }
+        .editable-cell { outline: none; background: transparent; min-height: 24px; line-height: 1.6; white-space: pre-wrap; font-size: 0.9rem; padding: 4px; }
+        .editable-cell:focus { background-color: rgba(255,255,255,0.8); box-shadow: inset 0 0 0 2px #bae6fd; border-radius: 4px; }
 
         /* 행 추가 인서터 바 */
         .row-inserter-wrapper { position: relative; height: 6px; background: transparent; cursor: pointer; }
@@ -193,7 +225,7 @@
         .row-inserter-btn { display: none; position: absolute; left: 50%; transform: translate(-50%, -50%); background: #0284c7; color: white; border: none; font-size: 0.7rem; font-weight: bold; padding: 2px 10px; border-radius: 10px; cursor: pointer; z-index: 10; }
         .row-inserter-wrapper:hover .row-inserter-btn { display: block; }
 
-        .badge { display: inline-block; padding: 2px 6px; font-size: 11px; font-weight: bold; border-radius: 4px; color: white; }
+        .badge { display: inline-block; padding: 3px 8px; font-size: 0.78rem; font-weight: bold; border-radius: 6px; color: white; }
         .badge-ns { background-color: #2563eb; }
         .badge-os { background-color: #059669; }
         .badge-gs { background-color: #7c3aed; }
@@ -232,47 +264,50 @@
         <div class="header-area">
             <h2>
                 📖 기본 매뉴얼 
-                <span style="font-size: 1.1rem; margin-left: 5px;">
+                <span style="font-size: 1rem;">
                     <a href="index.html" style="text-decoration: none;" title="메인으로 가기">🏠</a>
-                    <span onclick="goBackList()" style="cursor: pointer; margin-left: 4px;" title="메뉴 선택으로">⬅️</span>
                 </span>
             </h2>
         </div>
 
-        <!-- 🔘 선택 버튼 그리드 -->
-        <div id="selectorView" class="menu-select-grid">
-            <div class="menu-card-btn" onclick="showManual('ns')">🧠 신경외과 (NS)</div>
-            <div class="menu-card-btn" onclick="showManual('os')">🦴 정형외과 (OS)</div>
-            <div class="menu-card-btn" onclick="showManual('gs')">🔪 일반외과 (GS)</div>
-            <div class="menu-card-btn" onclick="showManual('checkup')">🩺 검진 센터</div>
+        <!-- 🗂️ 1단계 메인 과 선택 탭 -->
+        <div class="main-tab-bar">
+            <div class="main-tab active" onclick="switchMainTab('ns', this)">NS</div>
+            <div class="main-tab" onclick="switchMainTab('os', this)">OS</div>
+            <div class="main-tab" onclick="switchMainTab('gs', this)">GS</div>
+            <div class="main-tab" onclick="switchMainTab('chk', this)">검진</div>
         </div>
 
-        <!-- 각 과별 섹션 -->
-        <div id="manual_ns" class="manual-section">
+        <!-- 각 과별 섹션 컨테이너 생성 -->
+        <div id="section_ns" class="manual-section active">
+            <div id="nsFilterBar" class="sub-filter-bar"></div>
             <div id="nsTableContainer"></div>
             <div class="bottom-add-btn-area">
-                <button class="btn-success-lg" onclick="addNewTableCard('nsTableContainer')">➕ 새 표(항목) 추가</button>
+                <button class="btn-success-lg" onclick="addNewTableCard('nsTableContainer', 'ns', 'NS')">➕ 새로운 수술 매뉴얼 카드 추가</button>
             </div>
         </div>
 
-        <div id="manual_os" class="manual-section">
+        <div id="section_os" class="manual-section">
+            <div id="osFilterBar" class="sub-filter-bar"></div>
             <div id="osTableContainer"></div>
             <div class="bottom-add-btn-area">
-                <button class="btn-success-lg" onclick="addNewTableCard('osTableContainer')">➕ 새 표(항목) 추가</button>
+                <button class="btn-success-lg" onclick="addNewTableCard('osTableContainer', 'os', 'OS')">➕ 새로운 수술 매뉴얼 카드 추가</button>
             </div>
         </div>
 
-        <div id="manual_gs" class="manual-section">
+        <div id="section_gs" class="manual-section">
+            <div id="gsFilterBar" class="sub-filter-bar"></div>
             <div id="gsTableContainer"></div>
             <div class="bottom-add-btn-area">
-                <button class="btn-success-lg" onclick="addNewTableCard('gsTableContainer')">➕ 새 표(항목) 추가</button>
+                <button class="btn-success-lg" onclick="addNewTableCard('gsTableContainer', 'gs', 'GS')">➕ 새로운 수술 매뉴얼 카드 추가</button>
             </div>
         </div>
 
-        <div id="manual_checkup" class="manual-section">
+        <div id="section_chk" class="manual-section">
+            <div id="chkFilterBar" class="sub-filter-bar"></div>
             <div id="chkTableContainer"></div>
             <div class="bottom-add-btn-area">
-                <button class="btn-success-lg" onclick="addNewTableCard('chkTableContainer')">➕ 새 표(항목) 추가</button>
+                <button class="btn-success-lg" onclick="addNewTableCard('chkTableContainer', 'chk', '검진')">➕ 새로운 수술 매뉴얼 카드 추가</button>
             </div>
         </div>
     </div>
@@ -286,7 +321,6 @@
     </div>
 
     <script>
-        // ===== Firebase 클라우드 연동 설정 =====
         const firebaseConfig = {
             apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
             authDomain: "tncnaaa.firebaseapp.com",
@@ -305,8 +339,8 @@
         }
 
         const defaultNsHtml = `
-            <div class="sub-card" style="border-color: #fca5a5;">
-                <div class="sub-title" style="background-color: #fef2f2; color: #991b1b;" onclick="toggleCardCollapse(this, event)">
+            <div class="sub-card" data-category="공통">
+                <div class="sub-title" onclick="toggleCardCollapse(this, event)">
                     <div class="sub-title-left">
                         <span class="toggle-arrow">▼</span>
                         <div class="editable-cell" contenteditable="true" style="font-weight:bold;" onclick="event.stopPropagation()">⚠️ 필독 공통 주의사항</div>
@@ -314,37 +348,37 @@
                     <div onclick="event.stopPropagation()">
                         <span class="card-status">저장됨!</span>
                         <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
-                        <button class="btn-small-x" onclick="deleteCard(this)" title="삭제">x</button>
+                        <button class="btn-small-x" onclick="deleteCard(this, 'ns')" title="삭제">x</button>
                     </div>
                 </div>
-                <div class="card-content-area editable-cell" style="padding: 10px 12px;" contenteditable="true">• 모든 수술환자: 혈전제 복용 여부 반드시 사전 확인
+                <div class="card-content-area editable-cell" style="padding: 12px 16px;" contenteditable="true">• 모든 수술환자: 혈전제 복용 여부 반드시 사전 확인
 • 당뇨 환자: 기본 검사 + HbA1c 추가 검사</div>
             </div>
 
-            <div class="sub-card">
+            <div class="sub-card" data-category="VP수술">
                 <div class="sub-title" onclick="toggleCardCollapse(this, event)">
                     <div class="sub-title-left">
                         <span class="toggle-arrow">▼</span>
-                        <div class="editable-cell" contenteditable="true" onclick="event.stopPropagation()"><span class="badge badge-ns">NS</span> VP 수술환자</div>
+                        <div class="editable-cell" contenteditable="true" onclick="event.stopPropagation()"><span class="badge badge-ns">NS</span> VP 수술 환자</div>
                     </div>
                     <div onclick="event.stopPropagation()">
                         <span class="card-status">저장됨!</span>
                         <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
-                        <button class="btn-small-x" onclick="deleteCard(this)" title="삭제">x</button>
+                        <button class="btn-small-x" onclick="deleteCard(this, 'ns')" title="삭제">x</button>
                     </div>
                 </div>
                 <div class="manual-container-box">
                     <div class="manual-row-block">
                         <div class="row-header-bar" style="background-color: #f1f5f9;">
                             <div class="editable-th" contenteditable="true">기본 검사</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this, 'ns')" title="행 삭제">x</button></div>
                         </div>
                         <div class="editable-cell" contenteditable="true">기본검사 + BMD + 당뇨환자 HbA1c</div>
                     </div>
                     <div class="manual-row-block">
                         <div class="row-header-bar" style="background-color: #f1f5f9;">
                             <div class="editable-th" contenteditable="true">POD#1</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this, 'ns')" title="행 삭제">x</button></div>
                         </div>
                         <div class="editable-cell" contenteditable="true">• L-MR 2S (마킹: T12 or L1)\n• L-A/L\n• anti po로 변경</div>
                     </div>
@@ -353,23 +387,23 @@
         `;
 
         const defaultOsHtml = `
-            <div class="sub-card">
+            <div class="sub-card" data-category="TKR수술">
                 <div class="sub-title" onclick="toggleCardCollapse(this, event)">
                     <div class="sub-title-left">
                         <span class="toggle-arrow">▼</span>
-                        <div class="editable-cell" contenteditable="true" onclick="event.stopPropagation()"><span class="badge badge-os">OS</span> A/S 및 수술환자</div>
+                        <div class="editable-cell" contenteditable="true" onclick="event.stopPropagation()"><span class="badge badge-os">OS</span> TKR 수술 환자</div>
                     </div>
                     <div onclick="event.stopPropagation()">
                         <span class="card-status">저장됨!</span>
                         <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
-                        <button class="btn-small-x" onclick="deleteCard(this)" title="삭제">x</button>
+                        <button class="btn-small-x" onclick="deleteCard(this, 'os')" title="삭제">x</button>
                     </div>
                 </div>
                 <div class="manual-container-box">
                     <div class="manual-row-block">
                         <div class="row-header-bar" style="background-color: #f1f5f9;">
                             <div class="editable-th" contenteditable="true">입원/OR Prep</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this, 'os')" title="행 삭제">x</button></div>
                         </div>
                         <div class="editable-cell" contenteditable="true">• 기본검사 + (당뇨) HbA1c\n• 항생제: 케포돈 1v</div>
                     </div>
@@ -378,39 +412,32 @@
         `;
 
         const defaultGsHtml = `
-            <div class="sub-card">
+            <div class="sub-card" data-category="복강경수술">
                 <div class="sub-title" onclick="toggleCardCollapse(this, event)">
                     <div class="sub-title-left">
                         <span class="toggle-arrow">▼</span>
-                        <div class="editable-cell" contenteditable="true" onclick="event.stopPropagation()"><span class="badge badge-gs">GS</span> 복강경 수술 (담낭/충수) 환자</div>
+                        <div class="editable-cell" contenteditable="true" onclick="event.stopPropagation()"><span class="badge badge-gs">GS</span> 복강경 수술 (담낭/충수)</div>
                     </div>
                     <div onclick="event.stopPropagation()">
                         <span class="card-status">저장됨!</span>
                         <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
-                        <button class="btn-small-x" onclick="deleteCard(this)" title="삭제">x</button>
+                        <button class="btn-small-x" onclick="deleteCard(this, 'gs')" title="삭제">x</button>
                     </div>
                 </div>
                 <div class="manual-container-box">
                     <div class="manual-row-block">
                         <div class="row-header-bar" style="background-color: #f1f5f9;">
                             <div class="editable-th" contenteditable="true">입원/OR Prep</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this, 'gs')" title="행 삭제">x</button></div>
                         </div>
                         <div class="editable-cell" contenteditable="true">• NPO 시작 시간 확인\n• 수술 전 혈액검사 및 EKG, CXR 확인</div>
-                    </div>
-                    <div class="manual-row-block">
-                        <div class="row-header-bar" style="background-color: #f1f5f9;">
-                            <div class="editable-th" contenteditable="true">POD#1</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
-                        </div>
-                        <div class="editable-cell" contenteditable="true">• 가스 배출(Flatus) 여부 확인 후 식이 진행\n• Wound dressing 및 Pain control 확인</div>
                     </div>
                 </div>
             </div>
         `;
 
         const defaultChkHtml = `
-            <div class="sub-card">
+            <div class="sub-card" data-category="VIP검진">
                 <div class="sub-title" onclick="toggleCardCollapse(this, event)">
                     <div class="sub-title-left">
                         <span class="toggle-arrow">▼</span>
@@ -419,14 +446,14 @@
                     <div onclick="event.stopPropagation()">
                         <span class="card-status">저장됨!</span>
                         <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
-                        <button class="btn-small-x" onclick="deleteCard(this)" title="삭제">x</button>
+                        <button class="btn-small-x" onclick="deleteCard(this, 'chk')" title="삭제">x</button>
                     </div>
                 </div>
                 <div class="manual-container-box">
                     <div class="manual-row-block">
                         <div class="row-header-bar" style="background-color: #f1f5f9;">
                             <div class="editable-th" contenteditable="true">내시경 및 용종</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this, 'chk')" title="행 삭제">x</button></div>
                         </div>
                         <div class="editable-cell" contenteditable="true">• 내시경 Bx. 협진 안내 및 식이 조절</div>
                     </div>
@@ -434,12 +461,16 @@
             </div>
         `;
 
-        // ☁️ 데이터 로드
         window.addEventListener('DOMContentLoaded', async () => {
             await loadDataFromCloudOrLocal('ns', 'nsTableContainer', defaultNsHtml);
             await loadDataFromCloudOrLocal('os', 'osTableContainer', defaultOsHtml);
             await loadDataFromCloudOrLocal('gs', 'gsTableContainer', defaultGsHtml);
             await loadDataFromCloudOrLocal('chk', 'chkTableContainer', defaultChkHtml);
+
+            refreshFilters('ns');
+            refreshFilters('os');
+            refreshFilters('gs');
+            refreshFilters('chk');
         });
 
         async function loadDataFromCloudOrLocal(type, containerId, defaultHtml) {
@@ -450,12 +481,8 @@
                 try {
                     const docRef = db.collection("manuals").doc(type);
                     const doc = await docRef.get();
-                    if (doc.exists) {
-                        rawHtml = doc.data().content;
-                    }
-                } catch(e) {
-                    console.log("클라우드 로드 실패, 로컬 데이터 사용:", e);
-                }
+                    if (doc.exists) rawHtml = doc.data().content;
+                } catch(e) { console.log("클라우드 로드 실패:", e); }
             }
 
             if (!rawHtml) {
@@ -465,7 +492,6 @@
             container.innerHTML = rebuildBlockStructure(rawHtml);
         }
 
-        // 💾 저장 함수 (로컬 + 클라우드 동시 저장)
         async function autoSaveContainer(container) {
             let type = '';
             if (container.id === 'nsTableContainer') type = 'ns';
@@ -481,9 +507,7 @@
             if (db) {
                 try {
                     await db.collection("manuals").doc(type).set({ content: contentHtml });
-                } catch(e) {
-                    console.log("클라우드 저장 실패:", e);
-                }
+                } catch(e) { console.log("클라우드 저장 실패:", e); }
             }
         }
 
@@ -503,7 +527,6 @@
                 box.innerHTML = newHtml;
             });
 
-            // 서브타이틀 접기 화살표 및 구조 보정
             const cards = doc.querySelectorAll('.sub-card');
             cards.forEach(card => {
                 const title = card.querySelector('.sub-title');
@@ -524,31 +547,136 @@
             return doc.body.innerHTML;
         }
 
-        // 📂 카드 접기/펼치기 토글 함수
+        function switchMainTab(sectionKey, tabEl) {
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.manual-section').forEach(s => s.classList.remove('active'));
+            tabEl.classList.add('active');
+            document.getElementById('section_' + sectionKey).classList.add('active');
+        }
+
+        function refreshFilters(sectionKey) {
+            const section = document.getElementById('section_' + sectionKey);
+            const filterBar = document.getElementById(sectionKey + 'FilterBar');
+            const cards = section.querySelectorAll('.sub-card');
+            
+            let categories = [];
+            cards.forEach(card => {
+                const cat = card.getAttribute('data-category');
+                if (cat && !categories.includes(cat)) categories.push(cat);
+            });
+
+            let filterHtml = `<div class="filter-chip active" onclick="filterCards('${sectionKey}', 'all', this)">전체</div>`;
+            categories.forEach(cat => {
+                filterHtml += `<div class="filter-chip" onclick="filterCards('${sectionKey}', '${cat}', this)">${cat}</div>`;
+            });
+            filterBar.innerHTML = filterHtml;
+        }
+
+        function filterCards(sectionKey, category, chipEl) {
+            const section = document.getElementById('section_' + sectionKey);
+            section.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            chipEl.classList.add('active');
+
+            const cards = section.querySelectorAll('.sub-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
         function toggleCardCollapse(titleEl, event) {
             const card = titleEl.closest('.sub-card');
             card.classList.toggle('collapsed');
         }
 
+        function addNewTableCard(containerId, sectionKey, deptBadgeName) {
+            const container = document.getElementById(containerId);
+            const newCard = document.createElement('div');
+            newCard.className = 'sub-card';
+            newCard.setAttribute('data-category', '새수술');
+            newCard.innerHTML = `
+                <div class="sub-title" onclick="toggleCardCollapse(this, event)">
+                    <div class="sub-title-left">
+                        <span class="toggle-arrow">▼</span>
+                        <div class="editable-cell" contenteditable="true" style="font-weight:bold;" onclick="event.stopPropagation()" onblur="updateCardCategory(this, '${sectionKey}')"><span class="badge badge-${sectionKey}">${deptBadgeName}</span> 새수술 환자</div>
+                    </div>
+                    <div onclick="event.stopPropagation()">
+                        <span class="card-status">저장!</span>
+                        <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
+                        <button class="btn-small-x" onclick="deleteCard(this, '${sectionKey}')" title="삭제">x</button>
+                    </div>
+                </div>
+                <div class="manual-container-box">
+                    <div class="row-inserter-wrapper" onclick="addRowBlockAbove(this)"><button class="row-inserter-btn">+ 행 추가</button></div>
+                    <div class="manual-row-block">
+                        <div class="row-header-bar" style="background-color: #f1f5f9;">
+                            <div class="editable-th" contenteditable="true">기본 검사</div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this, '${sectionKey}')" title="행 삭제">x</button></div>
+                        </div>
+                        <div class="editable-cell" contenteditable="true">내용을 입력하세요</div>
+                    </div>
+                    <div class="row-inserter-wrapper" onclick="addRowBlockBelow(this)"><button class="row-inserter-btn">+ 행 추가</button></div>
+                </div>
+            `;
+            container.appendChild(newCard);
+            refreshFilters(sectionKey);
+            autoSaveContainer(container);
+        }
+
+        function updateCardCategory(cellEl, sectionKey) {
+            const card = cellEl.closest('.sub-card');
+            const text = cellEl.textContent.trim();
+            // 텍스트 내용 중 일부를 카테고리명으로 추출 (예: '새수술 환자' -> '새수술')
+            const catName = text.replace(/^(NS|OS|GS|검진)\s*/i, '').replace(/환자/g, '').trim() || '기타';
+            card.setAttribute('data-category', catName);
+            refreshFilters(sectionKey);
+            autoSaveContainer(card.parentElement);
+        }
+
+        function saveSingleCard(button) {
+            const card = button.closest('.sub-card');
+            const statusMsg = card.querySelector('.card-status');
+            const container = card.parentElement;
+
+            autoSaveContainer(container);
+            statusMsg.style.display = 'inline';
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 1500);
+        }
+
+        function deleteCard(button, sectionKey) {
+            if (confirm('이 표 항목을 삭제하시겠습니까?')) {
+                const card = button.closest('.sub-card');
+                const container = card.parentElement;
+                card.remove();
+                refreshFilters(sectionKey);
+                autoSaveContainer(container);
+            }
+        }
+
         function addRowBlockAbove(wrapper) {
             const box = wrapper.closest('.manual-container-box');
+            const container = box.parentElement.parentElement;
             const newBlockHtml = `
                 <div class="row-inserter-wrapper" onclick="addRowBlockAbove(this)"><button class="row-inserter-btn">+ 행 추가</button></div>
                 <div class="manual-row-block">
                     <div class="row-header-bar" style="background-color: #f1f5f9;">
                         <div class="editable-th" contenteditable="true">새 항목</div>
-                        <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                        <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
                     </div>
                     <div class="editable-cell" contenteditable="true">내용을 입력하세요</div>
                 </div>
             `;
             const currentBlock = wrapper.nextElementSibling;
             currentBlock.insertAdjacentHTML('beforebegin', newBlockHtml);
-            autoSaveContainer(box.closest('.manual-section').querySelector('[id$="TableContainer"]'));
+            autoSaveContainer(container.querySelector('[id$="TableContainer"]'));
         }
 
         function addRowBlockBelow(wrapper) {
             const box = wrapper.closest('.manual-container-box');
+            const container = box.parentElement.parentElement;
             const currentBlock = wrapper.previousElementSibling;
             
             if (currentBlock && currentBlock.classList.contains('manual-row-block')) {
@@ -556,14 +684,14 @@
                     <div class="manual-row-block">
                         <div class="row-header-bar" style="background-color: #f1f5f9;">
                             <div class="editable-th" contenteditable="true">새 항목</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
+                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
                         </div>
                         <div class="editable-cell" contenteditable="true">내용을 입력하세요</div>
                     </div>
                     <div class="row-inserter-wrapper" onclick="addRowBlockBelow(this)"><button class="row-inserter-btn">+ 행 추가</button></div>
                 `;
                 currentBlock.insertAdjacentHTML('afterend', newBlockHtml);
-                autoSaveContainer(box.closest('.manual-section').querySelector('[id$="TableContainer"]'));
+                autoSaveContainer(container.querySelector('[id$="TableContainer"]'));
             }
         }
 
@@ -576,6 +704,7 @@
         function delRowBlock(btn) {
             const block = btn.closest('.manual-row-block');
             const box = block.closest('.manual-container-box');
+            const container = box.parentElement.parentElement;
             const blocks = box.querySelectorAll('.manual-row-block');
 
             if (blocks.length <= 1) {
@@ -589,7 +718,7 @@
             else if (next && next.classList.contains('row-inserter-wrapper')) next.remove();
 
             block.remove();
-            autoSaveContainer(box.closest('.manual-section').querySelector('[id$="TableContainer"]'));
+            autoSaveContainer(container.querySelector('[id$="TableContainer"]'));
         }
 
         /* 🪄 단축키(-> -> →, ++ -> ▪︎) 즉시 가로채기 처리 */
@@ -734,72 +863,6 @@
         function closeImagePopup() {
             document.getElementById('imageModal').style.display = 'none';
         }
-
-        function addNewTableCard(containerId) {
-            const container = document.getElementById(containerId);
-            const newCard = document.createElement('div');
-            newCard.className = 'sub-card';
-            newCard.innerHTML = `
-                <div class="sub-title" onclick="toggleCardCollapse(this, event)">
-                    <div class="sub-title-left">
-                        <span class="toggle-arrow">▼</span>
-                        <div class="editable-cell" contenteditable="true" style="font-weight:bold;" onclick="event.stopPropagation()">새로운 수술</div>
-                    </div>
-                    <div onclick="event.stopPropagation()">
-                        <span class="card-status">저장!</span>
-                        <button class="btn-emoji" onclick="saveSingleCard(this)" title="저장">💾</button>
-                        <button class="btn-small-x" onclick="deleteCard(this)" title="삭제">x</button>
-                    </div>
-                </div>
-                <div class="manual-container-box">
-                    <div class="row-inserter-wrapper" onclick="addRowBlockAbove(this)"><button class="row-inserter-btn">+ 행 추가</button></div>
-                    <div class="manual-row-block">
-                        <div class="row-header-bar" style="background-color: #f1f5f9;">
-                            <div class="editable-th" contenteditable="true">항목명</div>
-                            <div class="row-action-group"><input type="color" class="row-bg-picker" value="#f1f5f9" title="제목바 배경색 지정" onchange="changeRowHeaderBg(this)"><button class="btn-row-del" onclick="delRowBlock(this)" title="행 삭제">x</button></div>
-                        </div>
-                        <div class="editable-cell" contenteditable="true">내용</div>
-                    </div>
-                    <div class="row-inserter-wrapper" onclick="addRowBlockBelow(this)"><button class="row-inserter-btn">+ 행 추가</button></div>
-                </div>
-            `;
-            container.appendChild(newCard);
-            autoSaveContainer(container);
-        }
-
-        function saveSingleCard(button) {
-            const card = button.closest('.sub-card');
-            const statusMsg = card.querySelector('.card-status');
-            const container = card.parentElement;
-
-            autoSaveContainer(container);
-
-            statusMsg.style.display = 'inline';
-            setTimeout(() => { statusMsg.style.display = 'none'; }, 1500);
-        }
-
-        function deleteCard(button) {
-            if (confirm('이 표 항목을 삭제하시겠습니까?')) {
-                const card = button.closest('.sub-card');
-                const container = card.parentElement;
-                card.remove();
-                autoSaveContainer(container);
-            }
-        }
-
-        function showManual(type) {
-            document.getElementById('selectorView').style.display = 'none';
-            document.querySelectorAll('.manual-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('manual_' + type).classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function goBackList() {
-            document.querySelectorAll('.manual-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('selectorView').style.display = 'grid';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
     </script>
-
 </body>
 </html>
