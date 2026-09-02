@@ -269,23 +269,23 @@
         </div>
 
         <div class="calc-group">
-            <label for="ivVolume">1. 남은 수액/혈액 양 (mL 또는 cc)</label>
-            <input type="number" id="ivVolume" placeholder="예: 500 또는 300" inputmode="numeric">
+            <label for="ivVolume">남은 양</label>
+            <input type="number" id="ivVolume" placeholder="" inputmode="numeric">
         </div>
 
         <div class="calc-group">
-            <label for="ivHours">2. 남은 시간 (시간)</label>
-            <input type="number" id="ivHours" placeholder="예: 8 (수혈은 보통 1.5~3)" step="0.1" inputmode="decimal">
+            <label for="ivHours">남은 시간</label>
+            <input type="number" id="ivHours" placeholder="" step="0.1" inputmode="decimal">
         </div>
 
         <div class="calc-group">
-            <label for="ivDropFactor">3. 수액/수혈 세트 종류</label>
+            <label for="ivDropFactor">세트 종류</label>
             <select id="ivDropFactor">
-                <option value="20" selected>성인 일반 수액세트 (20 gtt/cc)</option>
-                <option value="15">성인 수액세트 일부 (15 gtt/cc)</option>
-                <option value="15">수혈 세트 (일반 15 gtt/cc)</option>
-                <option value="10">수혈 세트 일부 (10 gtt/cc)</option>
-                <option value="60">소아용 미세 수액세트 (60 gtt/cc)</option>
+                <option value="20" selected>20 gtt/cc</option>
+                <option value="15">15 gtt/cc</option>
+                <option value="15">수혈 일반(15 gtt/cc)</option>
+                <option value="10">수혈 일부(10 gtt/cc)</option>
+                <option value="60">소아용(60 gtt/cc)</option>
             </select>
         </div>
 
@@ -293,7 +293,7 @@
 
         <!-- 결과 표시 박스 -->
         <div id="resultBox" class="result-box">
-            <div class="result-title">📊 주입 속도 계산 결과</div>
+            <div class="result-title">📊 계산 결과</div>
             
             <div class="result-row">
                 <span class="result-label">⏱️ 시간당 주입 속도:</span>
@@ -315,7 +315,7 @@
         <div class="transfusion-guide">
             <div class="guide-header-row">
                 <div class="guide-title">🩸 혈액제제별 표준 투여 기준</div>
-                <button class="btn-reaction" onclick="openReactionModal()">🚨 수혈 부작용 & 대처</button>
+                <button class="btn-reaction" onclick="openReactionModal()">🚨 수혈 부작용</button>
             </div>
             
             <table class="guide-table">
