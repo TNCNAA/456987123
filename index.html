@@ -1,16 +1,105 @@
 <!DOCTYPE html>
-<a href="blog.html" class="btn-main">📝 내 블로그 가기</a>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>✨ 업무 포털 ✨</title>
+    <title>✨ 업무 ✨</title>
     <link href="https://hangeul.pstatic.net/hangeul_font/css/nanum-square-round.css" rel="stylesheet">
+    
+    <!-- 🟢 Firebase SDK 불러오기 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+            authDomain: "tncnaaa.firebaseapp.com",
+            databaseURL: "https://tncnaaa-default-rtdb.firebaseio.com",
+            projectId: "tncnaaa",
+            storageBucket: "tncnaaa.firebasestorage.app",
+            messagingSenderId: "822557545187",
+            appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 페이지 로드 시 초기 비밀번호 확인 및 생성
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('loginOverlay').style.display = 'none';
+            }
+
+            try {
+                const pwRef = doc(db, "settings", "portal");
+                const docSnap = await getDoc(pwRef);
+                if (!docSnap.exists()) {
+                    await setDoc(pwRef, { password: "1234" });
+                }
+            } catch (error) {
+                console.error("Firebase 초기화 에러:", error);
+            }
+        });
+
+        window.checkEnter = function(e) {
+            if (e.key === 'Enter') window.tryLogin();
+        };
+
+        // 로그인 시도 (Firebase에서 최신 비밀번호 조회)
+        window.tryLogin = async function() {
+            const inputVal = document.getElementById('pwInput').value;
+            const errorMsg = document.getElementById('loginError');
+
+            try {
+                const pwRef = doc(db, "settings", "portal");
+                const docSnap = await getDoc(pwRef);
+                const savedPw = docSnap.exists() ? docSnap.data().password : "1234";
+
+                if (inputVal === savedPw) {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    document.getElementById('loginOverlay').style.display = 'none';
+                } else {
+                    errorMsg.style.display = 'block';
+                    document.getElementById('pwInput').value = '';
+                }
+            } catch (error) {
+                alert("로그인 중 오류가 발생했어요! 🥲");
+                console.error(error);
+            }
+        };
+
+        // 비밀번호 변경 (Firebase 데이터 업데이트)
+        window.changePassword = async function() {
+            try {
+                const pwRef = doc(db, "settings", "portal");
+                const docSnap = await getDoc(pwRef);
+                const savedPw = docSnap.exists() ? docSnap.data().password : "1234";
+
+                const currentPw = prompt("기존 비밀번호🔑");
+
+                if (currentPw === savedPw) {
+                    const newPw = prompt("새로운 비밀번호✨");
+                    if (newPw && newPw.trim() !== "") {
+                        await updateDoc(pwRef, { password: newPw.trim() });
+                        alert("비밀번호 변경완료");
+                    } else {
+                        alert("비밀번호 변경취소");
+                    }
+                } else if (currentPw !== null) {
+                    alert("기존 비밀번호가 올바르지 않아요! 🥲");
+                }
+            } catch (error) {
+                alert("비밀번호 변경 중 오류가 발생했어요! 🥲");
+                console.error(error);
+            }
+        };
+    </script>
+
     <style>
         :root {
             --bg-color: #fff9f5;
             --card-bg: #ffffff;
-            --primary-color: #ffb7b2;
+            --primary-color: #221430;
             --secondary-color: #ffdac1;
             --text-color: #555555;
             --title-color: #ff9aa2;
@@ -125,78 +214,29 @@
     <!-- 🔒 잠금 화면 -->
     <div id="loginOverlay">
         <div class="login-box">
-            <h3>🧸 </h3>
-            <input type="password" id="pwInput" placeholder="🐾" onkeypress="checkEnter(event)">
-            <button onclick="tryLogin()">(❁´◡`❁)</button>
+            <h3>🧸🧸🧸🧸</h3>
+            <input type="password" id="pwInput" placeholder="" onkeypress="checkEnter(event)">
+            <button onclick="tryLogin()">PASS</button>
             <div id="loginError" class="login-error">앗, 비밀번호가 틀렸어요! 🥺</div>
         </div>
     </div>
 
     <!-- 메인 포털 화면 -->
     <div class="menu-box">
-        <h1>🌸 업무 포털 🌸</h1>
                 
         <!-- 각 기능별 파일 링크 버튼들 -->
-        <a href="manual.html" class="nav-btn" style="background: #ffdac1; color: #333;">📖 메뉴얼</a>
-        <a href="nurse.html" class="nav-btn" style="background: #ffb7b2;">💊 혈액검사</a>
-        <a href="photo.html" class="nav-btn" style="background: #b5ead7; color: #333;">📷 사진</a>
-        <a href="iv_calc.html" class="nav-btn" style="background: #c7ceea; color: #333;">💧 수액 계산기</a>
+        <a href="manual.html" class="nav-btn" style="background: #ffdac1; color: #333;">메뉴얼</a>
+        <a href="nurse.html" class="nav-btn" style="background: #b5ead7; color: #333;">혈액검사</a>
+        <a href="photo.html" class="nav-btn" style="background: #b5ead7; color: #333;">사진</a>
+        <a href="iv_calc.html" class="nav-btn" style="background: #c7ceea; color: #333;">계산기</a>
+        <a href="blog.html" class="nav-btn" style="background: #b5ead7; color: #333;">Blog</a>
+        <a href="memo.html" class="nav-btn" style="background: #b5ead7; color: #333;">메모</a>
 
         <!-- 비밀번호 변경 버튼 -->
         <div class="settings-area">
-            <button class="pwd-change-btn" onclick="changePassword()">비밀번호 변경하기 🔒</button>
+            <button class="pwd-change-btn" onclick="changePassword()">비밀번호 변경 🔒</button>
         </div>
     </div>
-
-    <script>
-        // 초기 비밀번호 설정 (저장된 게 없으면 기본 '1234')
-        if (!localStorage.getItem('portal_main_password')) {
-            localStorage.setItem('portal_main_password', '1234');
-        }
-
-        // 👈 핵심: 페이지가 로드될 때 이미 로그인한 적이 있는지 확인
-        window.addEventListener('DOMContentLoaded', () => {
-            if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                document.getElementById('loginOverlay').style.display = 'none';
-            }
-        });
-
-        function checkEnter(e) {
-            if (e.key === 'Enter') tryLogin();
-        }
-
-        function tryLogin() {
-            const inputVal = document.getElementById('pwInput').value;
-            const savedPw = localStorage.getItem('portal_main_password');
-            const errorMsg = document.getElementById('loginError');
-
-            if (inputVal === savedPw) {
-                // 👈 핵심: 로그인 성공 시 세션 스토리지에 기록 남기기
-                sessionStorage.setItem('isLoggedIn', 'true');
-                document.getElementById('loginOverlay').style.display = 'none';
-            } else {
-                errorMsg.style.display = 'block';
-                document.getElementById('pwInput').value = '';
-            }
-        }
-
-        function changePassword() {
-            const currentPw = prompt("기존 비밀번호를 입력해주세요 🔑");
-            const savedPw = localStorage.getItem('portal_main_password');
-
-            if (currentPw === savedPw) {
-                const newPw = prompt("새로운 비밀번호를 입력해주세요 ✨");
-                if (newPw && newPw.trim() !== "") {
-                    localStorage.setItem('portal_main_password', newPw.trim());
-                    alert("비밀번호가 예쁘게 변경되었습니다! 💖");
-                } else {
-                    alert("비밀번호 변경이 취소되었어요.");
-                }
-            } else if (currentPw !== null) {
-                alert("기존 비밀번호가 올바르지 않아요! 🥲");
-            }
-        }
-    </script>
 
 </body>
 </html>
