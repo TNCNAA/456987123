@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>간호사 임상 통합 시스템</title>
+    <title>혈액검사</title>
     <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -614,7 +614,7 @@
     <div class="tab-header-wrapper">
         <div class="tab-title-area">
             <h1>
-                🩺 임상 업무 통합 시스템 
+                🩺 혈액검사 
                 <a href="index.html" style="text-decoration: none; margin-left: 3px;" title="메인으로 가기">🏠</a>
             </h1>
         </div>
@@ -623,9 +623,6 @@
         <div id="bookmarkTabs" class="bookmark-tabs">
             <button class="tab-btn active" onclick="switchTab('basic')">기본</button>
             <button class="tab-btn" onclick="switchTab('extended')">확장</button>
-            <button class="tab-btn" onclick="switchTab('work_d')">D근무</button>
-            <button class="tab-btn" onclick="switchTab('work_e')">E근무</button>
-            <button class="tab-btn" onclick="switchTab('work_n')">N근무</button>
             <button class="tab-btn" onclick="switchTab('memo')">📝 메모</button>
             <button class="tab-btn" onclick="switchTab('notice')">📢 공지</button>
         </div>
@@ -772,85 +769,8 @@
         </div>
     </div>
 
-    <!-- [TAB 3] D근무 -->
-    <div id="tab_work_d" class="tab-content">
-        <div class="panel-box">
-            <div class="panel-header">
-                <div class="panel-title">☀️ D 근무 체크리스트</div>
-                <div class="editor-btn-group">
-                    <div class="toolbar-group">
-                        <span class="toolbar-label">🎨 색</span>
-                        <input type="color" id="workDForeColor" class="color-picker" value="#000000">
-                        <button class="btn btn-apply" onclick="applyColor('workDInput', 'foreColor', 'workDForeColor')">적용</button>
-                    </div>
-                    <div class="toolbar-group">
-                        <span class="toolbar-label">🖍️ 펜</span>
-                        <input type="color" id="workDHiliteColor" class="color-picker" value="#fef08a">
-                        <button class="btn btn-apply" onclick="applyColor('workDInput', 'hiliteColor', 'workDHiliteColor')">적용</button>
-                    </div>
-                    <button class="btn btn-primary" onclick="saveWork('d')">저장</button>
-                </div>
-            </div>
-            <span id="workDStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
-            <div class="editor-container">
-                <div id="workDInput" class="editor-div" contenteditable="true"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- [TAB 4] E근무 -->
-    <div id="tab_work_e" class="tab-content">
-        <div class="panel-box">
-            <div class="panel-header">
-                <div class="panel-title">🌆 E 근무 체크리스트</div>
-                <div class="editor-btn-group">
-                    <div class="toolbar-group">
-                        <span class="toolbar-label">🎨 색</span>
-                        <input type="color" id="workEForeColor" class="color-picker" value="#000000">
-                        <button class="btn btn-apply" onclick="applyColor('workEInput', 'foreColor', 'workEForeColor')">적용</button>
-                    </div>
-                    <div class="toolbar-group">
-                        <span class="toolbar-label">🖍️ 펜</span>
-                        <input type="color" id="workEHiliteColor" class="color-picker" value="#fef08a">
-                        <button class="btn btn-apply" onclick="applyColor('workEInput', 'hiliteColor', 'workEHiliteColor')">적용</button>
-                    </div>
-                    <button class="btn btn-primary" onclick="saveWork('e')">저장</button>
-                </div>
-            </div>
-            <span id="workEStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
-            <div class="editor-container">
-                <div id="workEInput" class="editor-div" contenteditable="true"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- [TAB 5] N근무 -->
-    <div id="tab_work_n" class="tab-content">
-        <div class="panel-box">
-            <div class="panel-header">
-                <div class="panel-title">🌙 N 근무 체크리스트</div>
-                <div class="editor-btn-group">
-                    <div class="toolbar-group">
-                        <span class="toolbar-label">🎨 색</span>
-                        <input type="color" id="workNForeColor" class="color-picker" value="#000000">
-                        <button class="btn btn-apply" onclick="applyColor('workNInput', 'foreColor', 'workNForeColor')">적용</button>
-                    </div>
-                    <div class="toolbar-group">
-                        <span class="toolbar-label">🖍️ 펜</span>
-                        <input type="color" id="workNHiliteColor" class="color-picker" value="#fef08a">
-                        <button class="btn btn-apply" onclick="applyColor('workNInput', 'hiliteColor', 'workNHiliteColor')">적용</button>
-                    </div>
-                    <button class="btn btn-primary" onclick="saveWork('n')">저장</button>
-                </div>
-            </div>
-            <span id="workNStatus" class="status-msg" style="margin-bottom:6px; display:block;">✓ 저장되었습니다!</span>
-            <div class="editor-container">
-                <div id="workNInput" class="editor-div" contenteditable="true"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- [TAB 6] 📝 메모장 (2열, 시간 삭제, 제목만 표기, 빈 내용 시작) -->
+  
+    <!-- [TAB 3] 📝 메모장 -->
     <div id="tab_memo" class="tab-content">
         <div class="panel-box">
             <div class="panel-header">
@@ -894,7 +814,7 @@
         </div>
     </div>
 
-    <!-- [TAB 7] 📢 공지사항 -->
+    <!-- [TAB 4] 📢 공지사항 -->
     <div id="tab_notice" class="tab-content">
         <div class="panel-box">
             <div class="panel-header">
