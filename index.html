@@ -94,7 +94,12 @@
             }
         };
     </script>
-
+@media (max-width: 768px) {
+    body {
+        align-items: flex-start; /* 👈 위쪽 정렬로 변경 */
+        padding-top: 40px;      /* 👈 원하는 만큼 위쪽 여백 조절 (숫자가 작을수록 더 위로 올라감) */
+    }
+}
     <style>
         :root {
             --bg-color: #fff9f5;
