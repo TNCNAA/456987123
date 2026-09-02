@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>수액 계산기</title>
+    <title>수액 & 수혈 계산기</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -14,7 +14,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 640px;
             margin: 0 auto;
             background: white;
             padding: 25px;
@@ -23,7 +23,6 @@
             position: relative;
         }
 
-        /* 📱 모바일 화면 최적화 */
         @media screen and (max-width: 768px) {
             body { padding: 4px !important; }
             .container {
@@ -50,9 +49,7 @@
             gap: 8px;
         }
 
-        .calc-group {
-            margin-bottom: 15px;
-        }
+        .calc-group { margin-bottom: 15px; }
 
         .calc-group label {
             display: block;
@@ -91,18 +88,14 @@
             box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
             transition: background-color 0.2s;
         }
+        .calc-btn:hover { background-color: #0369a1; }
 
-        .calc-btn:hover {
-            background-color: #0369a1;
-        }
-
-        /* 결과 카드 영역 */
         .result-box {
-            margin-top: 25px;
+            margin-top: 20px;
             background: #f0f9ff;
             border: 2px solid #bae6fd;
             border-radius: 10px;
-            padding: 20px;
+            padding: 18px;
             display: none;
         }
 
@@ -123,20 +116,144 @@
             font-size: 0.95rem;
         }
 
-        .result-label {
-            color: #64748b;
-            font-weight: 600;
+        .result-label { color: #64748b; font-weight: 600; }
+        .result-value { font-size: 1.15rem; font-weight: bold; color: #0f172a; }
+        .highlight-val { color: #0284c7; }
+
+        /* 🩸 수혈 가이드 영역 */
+        .transfusion-guide {
+            margin-top: 25px;
+            border-top: 2px dashed #cbd5e1;
+            padding-top: 18px;
         }
 
-        .result-value {
-            font-size: 1.15rem;
+        .guide-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .guide-title {
+            font-size: 1rem;
             font-weight: bold;
-            color: #0f172a;
+            color: #991b1b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .highlight-val {
-            color: #0284c7;
+        .btn-reaction {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+            transition: 0.15s;
         }
+        .btn-reaction:hover { background: #dc2626; }
+
+        .guide-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .guide-table th {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 8px 10px;
+            border-bottom: 1px solid #fecaca;
+            text-align: left;
+        }
+
+        .guide-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        .guide-table tr:last-child td { border-bottom: none; }
+        .badge-blood {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        /* 🚨 수혈 부작용 모달창 */
+        .reaction-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .reaction-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 540px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .reaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #fee2e2;
+            padding-bottom: 8px;
+        }
+
+        .reaction-header h3 { color: #b91c1c; font-size: 1.1rem; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer; }
+
+        .reaction-step {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .reaction-step b { color: #9f1239; }
+
+        .reaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.83rem;
+        }
+
+        .reaction-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 10px;
+            background: #f8fafc;
+        }
+        .reaction-item-title { font-weight: bold; color: #0f172a; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -144,7 +261,7 @@
     <div class="container">
         <div class="header-area">
             <h2>
-                💧수액 계산기 
+                💧 수액 & 수혈 계산기 
                 <span style="font-size: 1rem;">
                     <a href="index.html" style="text-decoration: none;" title="메인으로 가기">🏠</a>
                 </span>
@@ -152,21 +269,22 @@
         </div>
 
         <div class="calc-group">
-            <label for="ivVolume">1. 남은 수액 양 (mL 또는 cc)</label>
-            <input type="number" id="ivVolume" placeholder="예: 500" inputmode="numeric">
+            <label for="ivVolume">1. 남은 수액/혈액 양 (mL 또는 cc)</label>
+            <input type="number" id="ivVolume" placeholder="예: 500 또는 300" inputmode="numeric">
         </div>
 
         <div class="calc-group">
             <label for="ivHours">2. 남은 시간 (시간)</label>
-            <input type="number" id="ivHours" placeholder="예: 8" step="0.1" inputmode="decimal">
+            <input type="number" id="ivHours" placeholder="예: 8 (수혈은 보통 1.5~3)" step="0.1" inputmode="decimal">
         </div>
 
         <div class="calc-group">
-            <label for="ivDropFactor">3. 수액 세트 종류 (방울수 계수)</label>
+            <label for="ivDropFactor">3. 수액/수혈 세트 종류</label>
             <select id="ivDropFactor">
                 <option value="20" selected>성인 일반 수액세트 (20 gtt/cc)</option>
                 <option value="15">성인 수액세트 일부 (15 gtt/cc)</option>
-                <option value="10">수혈 세트 또는 일부 (10 gtt/cc)</option>
+                <option value="15">수혈 세트 (일반 15 gtt/cc)</option>
+                <option value="10">수혈 세트 일부 (10 gtt/cc)</option>
                 <option value="60">소아용 미세 수액세트 (60 gtt/cc)</option>
             </select>
         </div>
@@ -175,7 +293,7 @@
 
         <!-- 결과 표시 박스 -->
         <div id="resultBox" class="result-box">
-            <div class="result-title">📊 수액 주입 속도 계산 결과</div>
+            <div class="result-title">📊 주입 속도 계산 결과</div>
             
             <div class="result-row">
                 <span class="result-label">⏱️ 시간당 주입 속도:</span>
@@ -192,6 +310,97 @@
                 <span class="result-value"><span id="resSecDrop" class="highlight-val">0</span> 초 / 방울</span>
             </div>
         </div>
+
+        <!-- 🩸 수혈 제제별 주입 시간 및 1일 기준 가이드 -->
+        <div class="transfusion-guide">
+            <div class="guide-header-row">
+                <div class="guide-title">🩸 혈액제제별 표준 투여 기준</div>
+                <button class="btn-reaction" onclick="openReactionModal()">🚨 수혈 부작용 & 대처</button>
+            </div>
+            
+            <table class="guide-table">
+                <thead>
+                    <tr>
+                        <th>혈액 종류</th>
+                        <th>1회/1일 기준</th>
+                        <th>투여 시간</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge-blood">농축적혈구 (RBC)</span></td>
+                        <td>통상 <b>하루 1~2U</b><br><span style="color:#64748b; font-size:0.75rem;">(1U당 Hb 약 1g/dL 상승)</span></td>
+                        <td><b>1.5 ~ 3시간</b><br><span style="color:#ef4444; font-size:0.72rem;">(반드시 4시간 이내 완료)</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-blood">신선동결혈장 (FFP)</span></td>
+                        <td><b>10~15 mL/kg</b><br><span style="color:#64748b; font-size:0.75rem;">(성인 보통 3~4U 동시 투여)</span></td>
+                        <td><b>30분 ~ 1시간</b><br><span style="color:#64748b; font-size:0.72rem;">(해동 후 즉시 투여)</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-blood">농축혈소판 (PC)</span></td>
+                        <td>1회 <b>6~8 Units</b></td>
+                        <td><b>30분 이내</b> (빠르게 점적)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-blood">성분채집혈소판 (SDP)</span></td>
+                        <td>1회 <b>1 Unit</b> (PC 6~8개분)</td>
+                        <td><b>30분 ~ 1시간</b></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-blood">동결침전제제 (Cryo)</span></td>
+                        <td>1회 <b>6~10 Units</b></td>
+                        <td><b>15 ~ 30분</b> (신속 투여)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 🚨 수혈 부작용 팝업 모달 -->
+    <div id="reactionModal" class="reaction-modal" onclick="closeReactionModal()">
+        <div class="reaction-content" onclick="event.stopPropagation()">
+            <div class="reaction-header">
+                <h3>🚨 수혈 부작용 발생 시 즉각 대처 가이드</h3>
+                <button class="close-btn" onclick="closeReactionModal()">&times;</button>
+            </div>
+
+            <!-- 핵심 대처 4단계 -->
+            <div class="reaction-step">
+                <b>⚡ 즉각 조치 순서 (골든타임):</b><br>
+                1. <b>즉시 수혈 중단</b> (IV 라인은 유지하되 N/S로 KVO 유지)<br>
+                2. <b>환자 활력징후(V/S) 측정</b> 및 기도 확보<br>
+                3. <b>주치의 및 혈액은행 즉시 노티</b><br>
+                4. 혈액백, 튜브, 환자 혈액/소변 검체 채취 후 검사실 인계
+            </div>
+
+            <!-- 주요 부작용 분류 -->
+            <div class="reaction-list">
+                <div class="reaction-item">
+                    <div class="reaction-item-title">1. 발열성 비용혈성 반응 (FNHTR) - 가장 흔함</div>
+                    <div>• <b>증상:</b> 수혈 중/직후 1°C 이상 체온 상승, 오한, 두통</div>
+                    <div>• <b>중재:</b> 주치의 보고 후 해열제(타이레놀 등) 투여 검토</div>
+                </div>
+
+                <div class="reaction-item">
+                    <div class="reaction-item-title">2. 알레르기 / 아나필락시스 반응</div>
+                    <div>• <b>증상:</b> 두드러기, 소양감, 호흡곤란, 저혈압, 천명음</div>
+                    <div>• <b>중재:</b> 항히스타민제(페니라민), 필요 시 에피네프린 투여</div>
+                </div>
+
+                <div class="reaction-item">
+                    <div class="reaction-item-title">3. 급성 용혈성 수혈 부작용 (AHTR) - 치명적</div>
+                    <div>• <b>증상:</b> 혈액형 부적합, 작열감, 옆구리 통증, 혈색소뇨(붉은 소변), 쇼크</div>
+                    <div>• <b>중재:</b> 적극적 수액 요법, 이뇨제 투여로 급성 신부전 예방</div>
+                </div>
+
+                <div class="reaction-item">
+                    <div class="reaction-item-title">4. 순환 과부하 (TACO)</div>
+                    <div>• <b>증상:</b> 호흡곤란, 기침, 혈압 상승, 폐부종 (고령/심부전 환자)</div>
+                    <div>• <b>중재:</b> 상체 거상(Fowler's position), 산소 공급, Lasix 투여</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -201,25 +410,27 @@
             const dropFactor = parseFloat(document.getElementById('ivDropFactor').value);
 
             if (isNaN(volume) || isNaN(hours) || volume <= 0 || hours <= 0) {
-                alert('남은 수액 양과 시간을 정확하게 입력해 주세요.');
+                alert('남은 용량과 시간을 정확하게 입력해 주세요.');
                 return;
             }
 
-            // 1. 시간당 cc/hr = 총 남은 용량(mL) / 남은 시간(시간)
             const ccHr = volume / hours;
-
-            // 2. 분당 방울수 (gtt/min) = (총 용량(mL) × 방울계수) / (남은 시간(시간) × 60분)
             const gttMin = (ccHr * dropFactor) / 60;
-
-            // 3. 몇 초에 한 방울 = 60초 / 분당 방울수
             const secPerDrop = 60 / gttMin;
 
-            // 결과 화면에 반영
             document.getElementById('resCcHr').textContent = ccHr.toFixed(1);
             document.getElementById('resGttMin').textContent = gttMin.toFixed(1);
             document.getElementById('resSecDrop').textContent = secPerDrop.toFixed(1);
 
             document.getElementById('resultBox').style.display = 'block';
+        }
+
+        function openReactionModal() {
+            document.getElementById('reactionModal').style.display = 'flex';
+        }
+
+        function closeReactionModal() {
+            document.getElementById('reactionModal').style.display = 'none';
         }
     </script>
 
