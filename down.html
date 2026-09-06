@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Firebase 파일 업로더</title>
+    <!-- Firebase SDK 로드 (App, Firestore, Storage) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .upload-card {
+            width: 100%;
+            max-width: 520px;
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        h2 { font-size: 18px; color: #1e293b; text-align: center; }
+
+        /* 드래그 앤 드롭 업로드 영역 */
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 24px 16px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .drop-zone.dragover {
+            border-color: #0253c7;
+            background: #eff6ff;
+        }
+        .drop-zone-icon { font-size: 32px; margin-bottom: 6px; }
+        .drop-zone-text { font-size: 13px; color: #64748b; }
+
+        /* 진행률 바 */
+        .progress-container {
+            display: none;
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 12px;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #0253c7;
+            transition: width 0.2s ease;
+        }
+        .status-text {
+            font-size: 12px;
+            color: #475569;
+            text-align: center;
+            min-height: 16px;
+        }
+
+        /* 파일 목록 영역 */
+        .file-list-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+            max-width: 70%;
+        }
+        .file-name {
+            font-weight: 600;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .file-meta { font-size: 11px; color: #94a3b8; }
+        .file-actions { display: flex; gap: 6px; }
+        .btn-download {
+            background: #0253c7;
+            color: #fff;
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .btn-delete {
+            background: #ff5252;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="upload-card">
+    <h2>📁 파일 클라우드 업로더</h2>
+
+    <!-- 드래그 & 드롭 및 파일 선택 -->
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-zone-icon">☁️</div>
+        <div class="drop-zone-text">클릭하거나 파일을 여기로 끌어다 놓으세요</div>
+    </div>
+    <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
+
+    <!-- 업로드 진행률 바 -->
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="status-text" id="statusText"></div>
+
+    <!-- 업로드 완료된 파일 목록 -->
+    <div class="file-list-wrap" id="fileList"></div>
+</div>
+
+<script>
+    // ===== Firebase 설정 =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
+        authDomain: "tncnaaa.firebaseapp.com",
+        projectId: "tncnaaa",
+        storageBucket: "tncnaaa.firebasestorage.app",
+        messagingSenderId: "822557545187",
+        appId: "1:822557545187:web:e18ac197649be1164b6bd6"
+    };
+
+    let db = null;
+    let storage = null;
+
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        storage = firebase.storage();
+    } catch(e) {
+        console.error("Firebase 초기화 에러:", e);
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.getElementById('progressContainer');
+    const statusText = document.getElementById('statusText');
+    const fileListEl = document.getElementById('fileList');
+
+    // 드래그 앤 드롭 이벤트
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            uploadFileToFirebase(e.dataTransfer.files[0]);
+        }
+    });
+
+    function handleFileSelect(event) {
+        if (event.target.files.length > 0) {
+            uploadFileToFirebase(event.target.files[0]);
+        }
+    }
+
+    // 파일 크기 가독성 포맷 (KB, MB)
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // Firebase Storage & Firestore 업로드 로직
+    function uploadFileToFirebase(file) {
+        if (!storage || !db) {
+            alert('Firebase가 올바르게 연결되지 않았습니다.');
+            return;
+        }
+
+        const fileName = `${Date.now()}_${file.name}`;
+        const storageRef = storage.ref(`uploads/${fileName}`);
+        const uploadTask = storageRef.put(file);
+
+        progressContainer.style.display = 'block';
+        statusText.innerText = '업로드 중...';
+
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                progressBar.style.width = progress + '%';
+                statusText.innerText = `업로드 중 (${Math.round(progress)}%)`;
+            }, 
+            (error) => {
+                console.error("업로드 실패:", error);
+                alert("업로드 실패: Firebase Storage 보안 규칙을 확인해 주세요.");
+                progressContainer.style.display = 'none';
+                statusText.innerText = '업로드 실패';
+            }, 
+            async () => {
+                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                
+                const fileDoc = {
+                    id: String(Date.now()),
+                    originalName: file.name,
+                    storagePath: `uploads/${fileName}`,
+                    url: downloadURL,
+                    size: formatBytes(file.size),
+                    createdAt: new Date().toLocaleDateString()
+                };
+
+                // 메타데이터 Firestore 저장
+                await db.collection("uploaded_files").doc(fileDoc.id).set(fileDoc);
+
+                progressBar.style.width = '100%';
+                statusText.innerText = '업로드 완료!';
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    statusText.innerText = '';
+                }, 2000);
+
+                document.getElementById('fileInput').value = '';
+                loadFiles();
+            }
+        );
+    }
+
+    // 파일 목록 불러오기 (Firestore)
+    async function loadFiles() {
+        if (!db) return;
+        try {
+            const snapshot = await db.collection("uploaded_files").get();
+            let files = [];
+            snapshot.forEach(doc => files.push(doc.data()));
+            
+            files.sort((a, b) => Number(b.id) - Number(a.id));
+
+            if (files.length === 0) {
+                fileListEl.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8; font-size:12px;">업로드된 파일이 없습니다.</div>`;
+                return;
+            }
+
+            fileListEl.innerHTML = files.map(f => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <span class="file-name" title="${f.originalName}">${f.originalName}</span>
+                        <span class="file-meta">${f.size} · ${f.createdAt}</span>
+                    </div>
+                    <div class="file-actions">
+                        <a href="${f.url}" target="_blank" rel="noopener noreferrer" class="btn-download">열기</a>
+                        <button class="btn-delete" onclick="deleteFile('${f.id}', '${f.storagePath}')">삭제</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error("목록 불러오기 실패:", e);
+        }
+    }
+
+    // 파일 삭제
+    async function deleteFile(docId, storagePath) {
+        if (!confirm("해당 파일을 삭제하시겠습니까?")) return;
+
+        try {
+            if (storagePath) {
+                await storage.ref(storagePath).delete();
+            }
+            await db.collection("uploaded_files").doc(docId).delete();
+            loadFiles();
+        } catch (e) {
+            console.error("파일 삭제 실패:", e);
+            alert("파일 삭제 중 오류가 발생했습니다.");
+        }
+    }
+
+    // 최초 실행 시 파일 목록 로드
+    loadFiles();
+</script>
+
+</body>
+</html>
