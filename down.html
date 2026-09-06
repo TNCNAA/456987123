@@ -3,240 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>파일 저장소 (Downloader)</title>
-    <!-- Firebase SDK 로드 -->
+    <title>파일 저장소 (무료 Firestore 버전)</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
-        body {
-            background-color: #eef2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 12px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-
-        .header {
-            background: #0253c7;
-            color: #ffffff;
-            padding: 14px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .header a {
-            color: #ffffff;
-            text-decoration: none;
-            font-size: 18px;
-        }
-
-        /* 파일 드래그 앤 드롭 업로드 영역 */
-        .upload-section {
-            padding: 16px;
-            border-bottom: 1px solid #edf2f7;
-        }
-
-        .drop-zone {
-            border: 2px dashed #cbd5e1;
-            border-radius: 10px;
-            padding: 24px 12px;
-            text-align: center;
-            background: #f8fafc;
-            cursor: pointer;
-            transition: border-color 0.2s, background-color 0.2s;
-        }
-
-        .drop-zone:hover, .drop-zone.dragover {
-            border-color: #0253c7;
-            background: #eff6ff;
-        }
-
-        .drop-zone-icon {
-            font-size: 32px;
-            margin-bottom: 6px;
-            color: #0253c7;
-        }
-
-        .drop-zone-text {
-            font-size: 13px;
-            color: #475569;
-            font-weight: 500;
-        }
-
-        /* 프로그레스 바 */
-        .progress-wrapper {
-            margin-top: 10px;
-            display: none;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: #0253c7;
-            transition: width 0.1s;
-        }
-
-        .progress-status {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* 파일 목록 영역 */
-        .file-list-section {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .file-list-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 4px;
-        }
-
-        .file-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .file-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            overflow: hidden;
-        }
-
-        .file-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1e293b;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .file-meta {
-            font-size: 11px;
-            color: #94a3b8;
-        }
-
-        .file-actions {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .btn-download {
-            background: #0253c7;
-            color: #ffffff;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .btn-delete {
-            background: #fee2e2;
-            color: #ef4444;
-            border: none;
-            padding: 6px 8px;
-            border-radius: 5px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        body { background-color: #eef2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 12px; }
+        .container { width: 100%; max-width: 600px; background: #ffffff; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e2e8f0; }
+        .header { background: #0253c7; color: #ffffff; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 16px; display: flex; align-items: center; gap: 6px; }
+        .header a { color: #ffffff; text-decoration: none; font-size: 18px; }
+        .upload-section { padding: 16px; border-bottom: 1px solid #edf2f7; }
+        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 24px 12px; text-align: center; background: #f8fafc; cursor: pointer; transition: 0.2s; }
+        .drop-zone:hover { border-color: #0253c7; background: #eff6ff; }
+        .drop-zone-icon { font-size: 32px; margin-bottom: 6px; color: #0253c7; }
+        .drop-zone-text { font-size: 13px; color: #475569; font-weight: 500; }
+        .file-list-section { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .file-list-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; color: #1e293b; margin-bottom: 4px; }
+        .file-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .file-info { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+        .file-name { font-size: 13px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-meta { font-size: 11px; color: #94a3b8; }
+        .file-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+        .btn-download { background: #0253c7; color: #ffffff; border: none; padding: 6px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .btn-delete { background: #fee2e2; color: #ef4444; border: none; padding: 6px 8px; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>📦 파일 저장소</h1>
+        <h1>📦 파일 저장소 (무료)</h1>
         <a href="index.html" title="홈으로">🏠</a>
     </div>
 
-    <!-- 업로드 섹션 -->
     <div class="upload-section">
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
             <div class="drop-zone-icon">📁</div>
-            <div class="drop-zone-text">클릭하거나 파일을 여기로 끌어다 놓으세요</div>
+            <div class="drop-zone-text">클릭하여 파일 선택 (최대 750KB)</div>
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
-        </div>
-
-        <div class="progress-wrapper" id="progressWrapper">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="progress-status">
-                <span id="progressText">업로드 중...</span>
-                <span id="progressPercent">0%</span>
-            </div>
         </div>
     </div>
 
-    <!-- 파일 목록 섹션 -->
     <div class="file-list-section">
         <div class="file-list-header">
             <span>등록된 파일 목록</span>
             <span id="fileCount" style="color: #0253c7;">0개</span>
         </div>
-        <div id="fileListContainer" style="display: flex; flex-direction: column; gap: 8px;">
-            <!-- 파일 항목 렌더링 -->
-        </div>
+        <div id="fileListContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
 </div>
 
@@ -251,122 +66,58 @@
     };
 
     let db = null;
-    let storage = null;
-
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
-        storage = firebase.storage();
     } catch(e) {
         console.error("Firebase 초기화 오류:", e);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        setupDragAndDrop();
-        loadFiles();
-    });
-
-    // 드래그 앤 드롭 이벤트 설정
-    function setupDragAndDrop() {
-        const dropZone = document.getElementById('dropZone');
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.add('dragover');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropZone.classList.remove('dragover');
-            }, false);
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if (files && files.length > 0) {
-                uploadFile(files[0]);
-            }
-        });
-    }
+    document.addEventListener('DOMContentLoaded', loadFiles);
 
     function handleFileSelect(e) {
         const file = e.target.files && e.target.files[0];
-        if (file) {
-            uploadFile(file);
-        }
-    }
+        if (!file) return;
 
-    // 파일 업로드 처리
-    function uploadFile(file) {
-        if (!storage || !db) {
-            alert('Firebase 설정이 연결되지 않았습니다.');
+        // Firestore 1MB 제한 대비 750KB 이하 권장
+        if (file.size > 750 * 1024) {
+            alert("Firestore 무료 저장 한도로 인해 750KB 이하 파일만 업로드할 수 있습니다.");
+            e.target.value = '';
             return;
         }
 
-        const progressWrapper = document.getElementById('progressWrapper');
-        const progressFill = document.getElementById('progressFill');
-        const progressPercent = document.getElementById('progressPercent');
-        const progressText = document.getElementById('progressText');
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const base64Data = event.target.result;
+            const fileData = {
+                name: file.name,
+                type: file.type || 'application/octet-stream',
+                size: (file.size / 1024).toFixed(1) + ' KB',
+                data: base64Data,
+                uploadedAt: new Date().toLocaleDateString()
+            };
 
-        progressWrapper.style.display = 'block';
-        progressFill.style.width = '0%';
-        progressPercent.innerText = '0%';
-        progressText.innerText = '업로드 중...';
-
-        const storagePath = 'downloads/' + Date.now() + '_' + file.name;
-        const storageRef = storage.ref().child(storagePath);
-        const uploadTask = storageRef.put(file);
-
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressFill.style.width = progress.toFixed(1) + '%';
-                progressPercent.innerText = progress.toFixed(0) + '%';
-            },
-            (error) => {
-                console.error("업로드 오류:", error);
-                alert("업로드 중 문제가 발생했습니다.");
-                progressWrapper.style.display = 'none';
-            },
-            () => {
-                uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                    const fileData = {
-                        name: file.name,
-                        size: (file.size / 1024).toFixed(1) + ' KB',
-                        url: downloadURL,
-                        storagePath: storagePath,
-                        uploadedAt: new Date().toLocaleDateString()
-                    };
-
-                    db.collection("uploaded_files").add(fileData).then(() => {
-                        progressWrapper.style.display = 'none';
-                        document.getElementById('fileInput').value = '';
-                        loadFiles();
-                    });
-                });
-            }
-        );
+            db.collection("free_uploaded_files").add(fileData).then(() => {
+                document.getElementById('fileInput').value = '';
+                loadFiles();
+            }).catch(err => {
+                console.error("저장 실패:", err);
+                alert("파일 저장에 실패했습니다.");
+            });
+        };
+        reader.readAsDataURL(file);
     }
 
-    // 파일 목록 불러오기
     function loadFiles() {
         if (!db) return;
 
-        db.collection("uploaded_files").get().then((snapshot) => {
+        db.collection("free_uploaded_files").get().then((snapshot) => {
             const listContainer = document.getElementById('fileListContainer');
             const fileCount = document.getElementById('fileCount');
             listContainer.innerHTML = '';
 
             let docs = [];
-            snapshot.forEach(doc => {
-                docs.push({ id: doc.id, ...doc.data() });
-            });
-
+            snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
             fileCount.innerText = docs.length + '개';
 
             if (docs.length === 0) {
@@ -383,30 +134,18 @@
                         <span class="file-meta">${file.size} · ${file.uploadedAt}</span>
                     </div>
                     <div class="file-actions">
-                        <a class="btn-download" href="${file.url}" target="_blank" download="${file.name}">다운로드</a>
-                        <button class="btn-delete" onclick="deleteFile('${file.id}', '${file.storagePath}')">삭제</button>
+                        <a class="btn-download" href="${file.data}" download="${file.name}">다운로드</a>
+                        <button class="btn-delete" onclick="deleteFile('${file.id}')">삭제</button>
                     </div>
                 `;
                 listContainer.appendChild(item);
             });
-        }).catch(err => {
-            console.error("파일 목록 로드 실패:", err);
         });
     }
 
-    // 파일 삭제 처리
-    function deleteFile(docId, storagePath) {
+    function deleteFile(docId) {
         if (!confirm("파일을 삭제하시겠습니까?")) return;
-
-        if (storagePath) {
-            storage.ref().child(storagePath).delete().catch(err => console.log("스토리지 삭제 무시/오류:", err));
-        }
-
-        db.collection("uploaded_files").doc(docId).delete().then(() => {
-            loadFiles();
-        }).catch(err => {
-            console.error("문서 삭제 실패:", err);
-        });
+        db.collection("free_uploaded_files").doc(docId).delete().then(loadFiles);
     }
 </script>
 
