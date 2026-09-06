@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>✨ 업무 ✨</title>
     <link href="https://hangeul.pstatic.net/hangeul_font/css/nanum-square-round.css" rel="stylesheet">
-    
     <!-- 🟢 Firebase SDK 불러오기 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
         const firebaseConfig = {
             apiKey: "AIzaSyCHe6Ibe8WBzceMnWJxmQrKJQw10Jmmkmg",
             authDomain: "tncnaaa.firebaseapp.com",
@@ -19,16 +17,13 @@
             messagingSenderId: "822557545187",
             appId: "1:822557545187:web:e18ac197649be1164b6bd6"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
         // 페이지 로드 시 초기 비밀번호 확인 및 생성
         window.addEventListener('DOMContentLoaded', async () => {
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
                 document.getElementById('loginOverlay').style.display = 'none';
             }
-
             try {
                 const pwRef = doc(db, "settings", "portal");
                 const docSnap = await getDoc(pwRef);
@@ -39,21 +34,17 @@
                 console.error("Firebase 초기화 에러:", error);
             }
         });
-
         window.checkEnter = function(e) {
             if (e.key === 'Enter') window.tryLogin();
         };
-
         // 로그인 시도 (Firebase에서 최신 비밀번호 조회)
         window.tryLogin = async function() {
             const inputVal = document.getElementById('pwInput').value;
             const errorMsg = document.getElementById('loginError');
-
             try {
                 const pwRef = doc(db, "settings", "portal");
                 const docSnap = await getDoc(pwRef);
                 const savedPw = docSnap.exists() ? docSnap.data().password : "1234";
-
                 if (inputVal === savedPw) {
                     sessionStorage.setItem('isLoggedIn', 'true');
                     document.getElementById('loginOverlay').style.display = 'none';
@@ -66,16 +57,13 @@
                 console.error(error);
             }
         };
-
         // 비밀번호 변경 (Firebase 데이터 업데이트)
         window.changePassword = async function() {
             try {
                 const pwRef = doc(db, "settings", "portal");
                 const docSnap = await getDoc(pwRef);
                 const savedPw = docSnap.exists() ? docSnap.data().password : "1234";
-
                 const currentPw = prompt("기존 비밀번호🔑");
-
                 if (currentPw === savedPw) {
                     const newPw = prompt("새로운 비밀번호✨");
                     if (newPw && newPw.trim() !== "") {
@@ -93,7 +81,6 @@
             }
         };
     </script>
-
     <style>
         :root {
             --bg-color: #fff9f5;
@@ -103,21 +90,18 @@
             --text-color: #555555;
             --title-color: #ff9aa2;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body { 
-            font-family: 'NanumSquareRound', sans-serif; 
-            background-color: var(--bg-color); 
+        body {
+            font-family: 'NanumSquareRound', sans-serif;
+            background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0; 
-            min-height: 100vh; 
-            display: flex;         
-            justify-content: center; 
-            align-items: center; 
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
-
         /* 🔒 로그인 잠금 화면 */
         #loginOverlay {
             position: fixed;
@@ -128,7 +112,6 @@
             align-items: center;
             z-index: 9999;
         }
-
         .login-box {
             background: var(--card-bg);
             padding: 35px 25px;
@@ -139,7 +122,6 @@
             box-shadow: 0 10px 30px rgba(255, 183, 178, 0.25);
             border: 3px solid var(--secondary-color);
         }
-
         .login-box h3 { color: var(--title-color); margin-bottom: 10px; font-size: 1.5rem; }
         .login-box input {
             width: 100%;
@@ -154,7 +136,6 @@
             background: var(--bg-color);
             color: var(--text-color);
         }
-
         .login-box button {
             background: var(--primary-color);
             color: white;
@@ -169,44 +150,39 @@
             box-shadow: 0 4px 15px rgba(255, 183, 178, 0.4);
         }
         .login-error { color: #ff6b6b; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold; }
-
         /* 메인 포털 화면 */
-        .menu-box { 
-            background: var(--card-bg); 
-            width: 100%;             
-            max-width: 450px;        
-            padding: 35px 30px; 
-            border-radius: 25px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            text-align: center;      
+        .menu-box {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            padding: 35px 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
             border: 3px solid var(--secondary-color);
         }
-
         h1 { color: var(--title-color); margin-bottom: 25px; font-size: 1.6rem; }
-        
-        .nav-btn { 
-            display: block; 
-            width: 100%; 
-            padding: 14px; 
-            margin-bottom: 12px; 
-            background: var(--primary-color); 
-            color: white; 
-            border: none; 
-            border-radius: 15px; 
-            font-size: 1.05rem; 
+        .nav-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.05rem;
             font-family: 'NanumSquareRound', sans-serif;
-            font-weight: bold; 
-            cursor: pointer; 
-            text-decoration: none; 
-            box-sizing: border-box; 
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             transition: transform 0.1s, opacity 0.2s;
         }
         .nav-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-
         .settings-area { margin-top: 25px; border-top: 2px dashed #eee; padding-top: 15px; text-align: center; }
         .pwd-change-btn { background: none; border: none; color: #888; font-family: 'NanumSquareRound', sans-serif; font-size: 0.85rem; cursor: pointer; text-decoration: underline; }
-
         /* 📱 모바일 전용: 상단 정렬 및 위쪽 여백 조정 */
         @media (max-width: 768px) {
             body {
@@ -217,7 +193,6 @@
     </style>
 </head>
 <body>
-
     <!-- 🔒 잠금 화면 -->
     <div id="loginOverlay">
         <div class="login-box">
@@ -227,10 +202,8 @@
             <div id="loginError" class="login-error">앗, 비밀번호가 틀렸어요! 🥺</div>
         </div>
     </div>
-
     <!-- 메인 포털 화면 -->
     <div class="menu-box">
-                
         <!-- 각 기능별 파일 링크 버튼들 -->
         <a href="manual.html" class="nav-btn" style="background: #ffdac1; color: #333;">메뉴얼</a>
         <a href="nurse.html" class="nav-btn" style="background: #b5ead7; color: #333;">혈액검사</a>
@@ -238,12 +211,12 @@
         <a href="iv_calc.html" class="nav-btn" style="background: #c7ceea; color: #333;">계산기</a>
         <a href="blog.html" class="nav-btn" style="background: #b5ead7; color: #333;">Blog</a>
         <a href="memo.html" class="nav-btn" style="background: #eff95b; color: #333;">메모</a>
-
+        <a href="down.html" class="nav-btn" style="background: #b5ead7; color: #333;">다운</a>
         <!-- 비밀번호 변경 버튼 -->
         <div class="settings-area">
             <button class="pwd-change-btn" onclick="changePassword()">비밀번호 변경 🔒</button>
         </div>
     </div>
-
 </body>
 </html>
+
