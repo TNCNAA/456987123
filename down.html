@@ -16,9 +16,9 @@
         .header a { color: #ffffff; text-decoration: none; font-size: 18px; }
         .upload-section { padding: 16px; border-bottom: 1px solid #edf2f7; }
         .drop-zone { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 24px 12px; text-align: center; background: #f8fafc; cursor: pointer; transition: 0.2s; }
-        .drop-zone:hover { border-color: #0253c7; background: #eff6ff; }
-        .drop-zone-icon { font-size: 32px; margin-bottom: 6px; color: #0253c7; }
-        .drop-zone-text { font-size: 13px; color: #475569; font-weight: 500; }
+        .drop-zone:hover, .drop-zone.dragover { border-color: #0253c7; background: #eff6ff; }
+        .drop-zone-icon { font-size: 32px; margin-bottom: 6px; color: #0253c7; pointer-events: none; }
+        .drop-zone-text { font-size: 13px; color: #475569; font-weight: 500; pointer-events: none; }
         .file-list-section { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
         .file-list-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; color: #1e293b; margin-bottom: 4px; }
         .file-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -41,7 +41,7 @@
     <div class="upload-section">
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
             <div class="drop-zone-icon">📁</div>
-            <div class="drop-zone-text">클릭하여 파일 선택 (최대 750KB)</div>
+            <div class="drop-zone-text">클릭하거나 파일을 여기로 끌어다 놓으세요 (최대 750KB)</div>
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
         </div>
     </div>
@@ -73,16 +73,62 @@
         console.error("Firebase 초기화 오류:", e);
     }
 
-    document.addEventListener('DOMContentLoaded', loadFiles);
+    document.addEventListener('DOMContentLoaded', () => {
+        setupDragAndDrop();
+        loadFiles();
+    });
 
+    // 드래그 앤 드롭(끌어오기) 이벤트 리스너 등록
+    function setupDragAndDrop() {
+        const dropZone = document.getElementById('dropZone');
+
+        // 브라우저 기본 드래그 동작(파일 바로 열기 등) 방지
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            window.addEventListener(eventName, preventDefaults, false);
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // 박스 위로 올렸을 때 하이라이트 스타일 적용
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        // 벗어나거나 드롭했을 때 스타일 해제
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        // 파일 드롭 시 처리
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                processFile(files[0]);
+            }
+        });
+    }
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // 파일 선택(클릭) 시 처리
     function handleFileSelect(e) {
         const file = e.target.files && e.target.files[0];
+        if (file) {
+            processFile(file);
+        }
+    }
+
+    // 공통 파일 업로드/저장 함수
+    function processFile(file) {
         if (!file) return;
 
         // Firestore 1MB 제한 대비 750KB 이하 권장
         if (file.size > 750 * 1024) {
             alert("Firestore 무료 저장 한도로 인해 750KB 이하 파일만 업로드할 수 있습니다.");
-            e.target.value = '';
+            document.getElementById('fileInput').value = '';
             return;
         }
 
@@ -97,13 +143,15 @@
                 uploadedAt: new Date().toLocaleDateString()
             };
 
-            db.collection("free_uploaded_files").add(fileData).then(() => {
-                document.getElementById('fileInput').value = '';
-                loadFiles();
-            }).catch(err => {
-                console.error("저장 실패:", err);
-                alert("파일 저장에 실패했습니다.");
-            });
+            if (db) {
+                db.collection("free_uploaded_files").add(fileData).then(() => {
+                    document.getElementById('fileInput').value = '';
+                    loadFiles();
+                }).catch(err => {
+                    console.error("저장 실패:", err);
+                    alert("파일 저장에 실패했습니다.");
+                });
+            }
         };
         reader.readAsDataURL(file);
     }
